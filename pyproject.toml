@@ -1,0 +1,40 @@
+[project]
+name = "your-project-name"
+version = "0.1.0"
+
+[tool.black]
+# Базовая конфигурация Black
+line-length = 88
+target-version = ['py312']
+include = '\.pyi?$'
+
+[tool.ruff]
+# Настройка линтинга с помощью Ruff
+line-length = 88
+target-version = "py312"
+select = [
+  "E", "F", "W",  # Базовые правила flake8 (Error, Pyflakes, Warning)
+  "B",   # flake8-bugbear - поиск common gotchas
+  "I",   # isort - сортировка импортов (активируется автоматически)
+  "UP",  # pyupgrade - модернизация синтаксиса до новейших версий Python
+]
+ignore = ["F401"]  # ⭐ ОБЯЗАТЕЛЬНО: Игнорируем "Imported but unused"
+unfixable = ["B008", "B905"] # Пример: правила, которые Ruff не должен автоматически исправлять
+
+# Настройка сортировки импортов (как у isort)
+[tool.ruff.lint.isort]
+known-first-party = ["your_project"] # Укажите имя вашего пакета, чтобы импорты из него сортировались правильно :cite[3]
+
+[tool.mypy]
+# Базовая конфигурация mypy
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+strict_optional = true
+no_implicit_optional = true
+plugins = [
+    "mypy_drf_plugin.main",
+    "mypy_django_plugin.main"
+]
+disable_error_code = ["var-annotated"]

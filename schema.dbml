@@ -1,0 +1,513 @@
+Project "None" {
+  database_type: 'SQLite'
+  Note: '''None
+  Last Updated At 12-23-2025 12:03PM UTC'''
+}
+
+enum spells.char_characterclass_hit_die {
+  "2" [note: '''d2''']
+  "4" [note: '''d4''']
+  "6" [note: '''d6''']
+  "8" [note: '''d8''']
+  "10" [note: '''d10''']
+  "12" [note: '''d12''']
+  "20" [note: '''d20''']
+  "100" [note: '''d100''']
+}
+
+enum spells.char_characterclass_magic_type {
+  "FC" [note: '''Полный заклинатель''']
+  "HC" [note: '''Полузаклинатель''']
+  "TC" [note: '''Треть-заклинатель''']
+  "NC" [note: '''Немагический класс''']
+}
+
+enum spells.char_characterclass_spellcasting_ability {
+  "STR" [note: '''Сила''']
+  "DEX" [note: '''Ловкость''']
+  "CON" [note: '''Телосложение''']
+  "INT" [note: '''Интеллект''']
+  "WIS" [note: '''Мудрость''']
+  "CHA" [note: '''Харизма''']
+}
+
+enum spells.char_effect_category {
+  "COND" [note: '''Состояние''']
+  "CTRL" [note: '''Контроль''']
+  "DEBF" [note: '''Ослабление''']
+  "BUFF" [note: '''Усиление''']
+  "UTIL" [note: '''Полезный эффект''']
+  "MOVE" [note: '''Перемещение''']
+  "TP" [note: '''Телепортация''']
+  "HEAL" [note: '''Исцеление''']
+  "DMG" [note: '''Урон''']
+  "PROT" [note: '''Защита''']
+  "TMUT" [note: '''Трансмутация''']
+}
+
+enum spells.char_person_alignment {
+  "LG" [note: '''Законно-добрый''']
+  "NG" [note: '''Нейтрально-добрый''']
+  "CG" [note: '''Хаотично-добрый''']
+  "LN" [note: '''Законно-нейтральный''']
+  "TN" [note: '''Истинно-нейтральный''']
+  "CN" [note: '''Хаотично-нейтральный''']
+  "LE" [note: '''Законно-злой''']
+  "NE" [note: '''Нейтрально-злой''']
+  "CE" [note: '''Хаотично-злой''']
+}
+
+enum spells.char_person_spellcasting_ability {
+  "STR" [note: '''Сила''']
+  "DEX" [note: '''Ловкость''']
+  "CON" [note: '''Телосложение''']
+  "INT" [note: '''Интеллект''']
+  "WIS" [note: '''Мудрость''']
+  "CHA" [note: '''Харизма''']
+}
+
+enum spells.char_spell_attack_type {
+  "ATTACK" [note: '''Бросок атаки''']
+  "SAVE" [note: '''Спасбросок''']
+  "AUTO" [note: '''Автоматическое''']
+  "MIXED" [note: '''Комбинированное''']
+  "NONE" [note: '''Нет броска''']
+}
+
+enum spells.char_spell_saving_throw_ability {
+  "STR" [note: '''Сила''']
+  "DEX" [note: '''Ловкость''']
+  "CON" [note: '''Телосложение''']
+  "INT" [note: '''Интеллект''']
+  "WIS" [note: '''Мудрость''']
+  "CHA" [note: '''Харизма''']
+}
+
+enum spells.integer_spell_level {
+  "0" [note: '''lv0''']
+  "1" [note: '''lv1''']
+  "2" [note: '''lv2''']
+  "3" [note: '''lv3''']
+  "4" [note: '''lv4''']
+  "5" [note: '''lv5''']
+  "6" [note: '''lv6''']
+  "7" [note: '''lv7''']
+  "8" [note: '''lv8''']
+  "9" [note: '''lv9''']
+}
+
+Table spells.CharacterClass {
+  Note: '''
+Класс персонажа
+
+*DB table: spells_characterclass*'''
+
+  id auto [pk, unique, not null]
+  name char [unique, not null]
+  description text [not null]
+  magic_type spells.char_characterclass_magic_type [default:`"NC"`, not null]
+  hit_die spells.char_characterclass_hit_die [note: '''Кость хитов''', default:`8`, not null]
+  spellcasting_ability spells.char_characterclass_spellcasting_ability [note: '''Заклинательная характеристика''', default:`"WIS"`, not null]
+
+  indexes {
+    (name) [unique, name: 'spells_characterclass_name_key', type: btree]
+    (id) [pk, unique, name: 'spells_characterclass_pkey', type: btree]
+  }
+}
+
+
+Table spells.DamageType {
+  Note: '''
+Тип наносимого урона
+
+*DB table: spells_damagetype*'''
+
+  id auto [pk, unique, not null]
+  name char [not null]
+  description text [not null]
+  is_magic boolean [default:`True`, not null]
+
+  indexes {
+    (id) [pk, unique, name: 'spells_damagetype_pkey', type: btree]
+  }
+}
+
+
+Table spells.Effect {
+  Note: '''
+Эффекты от заклинания
+
+*DB table: spells_effect*'''
+
+  id auto [pk, unique, not null]
+  name char [not null]
+  description text [not null]
+  category spells.char_effect_category [not null]
+  duration char [note: '''Время действия эффекта''', not null]
+  damage_type_id foreign_key [note: '''Тип урона при наличии''', null]
+
+  indexes {
+    (damage_type_id) [name: 'spells_effect_damage_type_id_196b2c14', type: btree]
+    (id) [pk, unique, name: 'spells_effect_pkey', type: btree]
+  }
+}
+ref: spells.Effect.damage_type_id > spells.DamageType.id
+
+
+Table spells.MagicSchool {
+  Note: '''
+Школа заклинания
+
+*DB table: spells_magicschool*'''
+
+  id auto [pk, unique, not null]
+  name char [not null]
+  description text [not null]
+  color char [default:`"#3498db"`, not null]
+
+  indexes {
+    (id) [pk, unique, name: 'spells_magicschool_pkey', type: btree]
+  }
+}
+
+
+Table spells.MaterialComponent {
+  Note: '''
+Материальный компонент
+
+*DB table: spells_materialcomponent*'''
+
+  id auto [pk, unique, not null]
+  name text [not null]
+  description text [null]
+  cost decimal [note: '''Стоимость в ЗМ''', default:`0`, null]
+  is_consumable boolean [note: '''Расходуется ли компонент при касте заклинания''', default:`False`, not null]
+  is_focus boolean [note: '''Является ли фокусировкой для заклинания''', default:`False`, not null]
+
+  indexes {
+    (id) [pk, unique, name: 'spells_materialcomponent_pkey', type: btree]
+  }
+}
+
+
+Table spells.Person {
+  Note: '''
+Персонаж игрока
+
+*DB table: spells_person*'''
+
+  id auto [pk, unique, not null]
+  name char [not null]
+  player_id foreign_key [null]
+  character_class_id foreign_key [null]
+  subclass_id foreign_key [null]
+  primary_class_level integer [default:`1`, not null]
+  race char [not null]
+  subrace char [not null]
+  alignment spells.char_person_alignment [not null]
+  background char [not null]
+  strength integer [default:`10`, not null]
+  dexterity integer [default:`10`, not null]
+  constitution integer [default:`10`, not null]
+  intelligence integer [default:`10`, not null]
+  wisdom integer [default:`10`, not null]
+  charisma integer [default:`10`, not null]
+  max_hit_points integer [default:`10`, not null]
+  current_hit_points integer [default:`10`, not null]
+  temporary_hit_points integer [default:`0`, not null]
+  armor_class integer [default:`10`, not null]
+  initiative_bonus integer [default:`0`, not null]
+  speed integer [note: '''Скорость в футах''', default:`30`, not null]
+  proficiency_bonus integer [default:`2`, not null]
+  spellcasting_ability spells.char_person_spellcasting_ability [note: '''Заклинательная характеристика''', not null]
+  is_multiclass boolean [default:`False`, not null]
+  second_class_id foreign_key [null]
+  second_subclass_id foreign_key [null]
+  second_class_level integer [default:`0`, not null]
+  warlock_level integer [note: '''Уровень колдуна (если мультикласс)''', default:`0`, not null]
+  is_active boolean [default:`True`, not null]
+  is_favorite boolean [default:`False`, not null]
+  is_public boolean [note: '''Могут ли другие игроки видеть''', default:`False`, not null]
+  created_at date_time [default:`django.utils.timezone.now()`, not null]
+  updated_at date_time [not null]
+
+  indexes {
+    (character_class_id) [name: 'spells_person_character_class_id_2d04ebb8', type: btree]
+    (id) [pk, unique, name: 'spells_person_pkey', type: btree]
+    (player_id) [name: 'spells_person_player_id_442c36de', type: btree]
+    (second_class_id) [name: 'spells_person_second_class_id_8ac1bbcb', type: btree]
+    (second_subclass_id) [name: 'spells_person_second_subclass_id_6eac4bc7', type: btree]
+    (subclass_id) [name: 'spells_person_subclass_id_2a0bacec', type: btree]
+  }
+}
+ref: spells.Person.player_id > spells.Player.id
+ref: spells.Person.character_class_id > spells.CharacterClass.id
+ref: spells.Person.subclass_id > spells.Subclass.id
+ref: spells.Person.second_class_id > spells.CharacterClass.id
+ref: spells.Person.second_subclass_id > spells.Subclass.id
+
+
+Table spells.Player {
+  Note: '''
+Игрок (пользователь системы)
+
+*DB table: spells_player*'''
+
+  id auto [pk, unique, not null]
+  user_id one_to_one [unique, not null]
+  nickname char [not null]
+  bio text [note: '''Краткое описание персонажа''', not null]
+  experience_points integer [note: '''Опыт игрока (не персонажей)''', default:`0`, not null]
+  favorite_class_id foreign_key [null]
+  telegram_id char [not null]
+  avatar image [null]
+  created_at date_time [default:`django.utils.timezone.now()`, not null]
+  last_login date_time [default:`django.utils.timezone.now()`, not null]
+
+  indexes {
+    (favorite_class_id) [name: 'spells_player_favorite_class_id_4ffc3713', type: btree]
+    (id) [pk, unique, name: 'spells_player_pkey', type: btree]
+    (user_id) [unique, name: 'spells_player_user_id_key', type: btree]
+  }
+}
+ref: spells.Player.user_id - auth.User.id
+ref: spells.Player.favorite_class_id > spells.CharacterClass.id
+
+
+Table spells.Spell {
+  Note: '''
+Заклинание
+
+*DB table: spells_spell*'''
+
+  id auto [pk, unique, not null]
+  name char [unique, not null]
+  level spells.integer_spell_level [default:`0`, not null]
+  time_id foreign_key [null]
+  school_id foreign_key [null]
+  verbal_component boolean [note: '''Вербальный компонент''', default:`False`, not null]
+  somatic_component boolean [note: '''Соматический компонент''', default:`False`, not null]
+  range char [note: '''Дистанция (по умолчанию в футах)''', not null]
+  duration char [not null]
+  concentration boolean [default:`False`, not null]
+  ritual boolean [default:`False`, not null]
+  description text [not null]
+  higher_level text [note: '''На более высоком уровне''', not null]
+  attack_type spells.char_spell_attack_type [default:`"NONE"`, not null]
+  saving_throw_ability spells.char_spell_saving_throw_ability [note: '''Характеристика для спасброска (если требуется)''', not null]
+  source_book char [not null]
+  page_number integer [null]
+  is_official boolean [default:`True`, not null]
+  created_by_id foreign_key [note: '''Пользователь, добавивший заклинание''', null]
+  created_at date_time [default:`django.utils.timezone.now()`, not null]
+  updated_at date_time [not null]
+
+  indexes {
+    (attack_type) [name: 'spells_spel_attack__10b351_idx', type: btree]
+    (concentration) [name: 'spells_spel_concent_a6dcd4_idx', type: btree]
+    (level) [name: 'spells_spel_level_d3ad5e_idx', type: btree]
+    (ritual) [name: 'spells_spel_ritual_7adbfb_idx', type: btree]
+    (school_id) [name: 'spells_spel_school__502d03_idx', type: btree]
+    (created_by_id) [name: 'spells_spell_created_by_id_d98d14d4', type: btree]
+    (name) [unique, name: 'spells_spell_name_key', type: btree]
+    (id) [pk, unique, name: 'spells_spell_pkey', type: btree]
+    (school_id) [name: 'spells_spell_school_id_f7269ba3', type: btree]
+    (time_id) [name: 'spells_spell_time_id_ae4e6fae', type: btree]
+  }
+}
+ref: spells.Spell.time_id > spells.SpellTime.id
+ref: spells.Spell.school_id > spells.MagicSchool.id
+ref: spells.Spell.created_by_id > spells.Player.id
+
+
+Table spells.SpellTime {
+  Note: '''
+Время накладывания заклинания
+
+*DB table: spells_spelltime*'''
+
+  id auto [pk, unique, not null]
+  time char [not null]
+  description text [not null]
+
+  indexes {
+    (id) [pk, unique, name: 'spells_spelltime_pkey', type: btree]
+  }
+}
+
+
+Table spells.Spellbook {
+  Note: '''
+Спеллбук - один из наборов заклинаний персонажа
+(у одного персонажа может быть несколько спеллбуков,
+у одного игрока - несколько персонажей)
+
+
+*DB table: spells_spellbook*'''
+
+  id auto [pk, unique, not null]
+  name char [not null]
+  description text [not null]
+  owner_id foreign_key [not null]
+  is_active boolean [note: '''Активен ли этот спеллбук''', default:`True`, not null]
+  is_shared boolean [note: '''Доступен ли для других игроков''', default:`False`, not null]
+  max_spell_slots_1 integer [default:`0`, not null]
+  max_spell_slots_2 integer [default:`0`, not null]
+  max_spell_slots_3 integer [default:`0`, not null]
+  max_spell_slots_4 integer [default:`0`, not null]
+  max_spell_slots_5 integer [default:`0`, not null]
+  max_spell_slots_6 integer [default:`0`, not null]
+  max_spell_slots_7 integer [default:`0`, not null]
+  max_spell_slots_8 integer [default:`0`, not null]
+  max_spell_slots_9 integer [default:`0`, not null]
+  current_spell_slots_1 integer [default:`0`, not null]
+  current_spell_slots_2 integer [default:`0`, not null]
+  current_spell_slots_3 integer [default:`0`, not null]
+  current_spell_slots_4 integer [default:`0`, not null]
+  current_spell_slots_5 integer [default:`0`, not null]
+  current_spell_slots_6 integer [default:`0`, not null]
+  current_spell_slots_7 integer [default:`0`, not null]
+  current_spell_slots_8 integer [default:`0`, not null]
+  current_spell_slots_9 integer [default:`0`, not null]
+  warlock_slot_level integer [default:`0`, not null]
+  warlock_max_slots integer [default:`0`, not null]
+  warlock_current_slots integer [default:`0`, not null]
+  created_at date_time [default:`django.utils.timezone.now()`, not null]
+  updated_at date_time [not null]
+  last_used date_time [null]
+
+  indexes {
+    (owner_id) [name: 'spells_spellbook_owner_id_0811938f', type: btree]
+    (id) [pk, unique, name: 'spells_spellbook_pkey', type: btree]
+  }
+}
+ref: spells.Spellbook.owner_id > spells.Person.id
+
+
+Table spells.Subclass {
+  Note: '''
+Подкласс/архетип персонажа
+
+*DB table: spells_subclass*'''
+
+  id auto [pk, unique, not null]
+  name char [not null]
+  description text [not null]
+  character_class_id foreign_key [not null]
+  features_description text [not null]
+  level_gained integer [note: '''На каком уровне класса получается этот подкласс''', default:`3`, not null]
+
+  indexes {
+    (character_class_id) [name: 'spells_subclass_character_class_id_dc9d2cb0', type: btree]
+    (name,character_class_id) [unique, name: 'spells_subclass_name_character_class_id_9a62eff9_uniq', type: btree]
+    (id) [pk, unique, name: 'spells_subclass_pkey', type: btree]
+  }
+}
+ref: spells.Subclass.character_class_id > spells.CharacterClass.id
+
+
+Table spells.spell_aviable_classes {
+  Note: '''
+This is a Many-To-Many linking table autogenerated by Django.
+
+*DB table: spells_spell_aviable_classes*'''
+
+  id auto [pk, not null]
+  characterclass_id auto
+  spell_id auto
+
+  indexes {
+    (characterclass_id) [name: 'spells_spell_aviable_classes_characterclass_id_167628ce', type: btree]
+    (id) [pk, unique, name: 'spells_spell_aviable_classes_pkey', type: btree]
+    (spell_id,characterclass_id) [unique, name: 'spells_spell_aviable_classes_spell_id_characterclass_id_303f1468_uniq', type: btree]
+    (spell_id) [name: 'spells_spell_aviable_classes_spell_id_f89c9f04', type: btree]
+  }
+}
+ref: spells.Spell.id > spells.spell_aviable_classes.spell_id
+ref: spells.CharacterClass.id > spells.spell_aviable_classes.characterclass_id
+
+
+Table spells.spell_aviable_subclasses {
+  Note: '''
+This is a Many-To-Many linking table autogenerated by Django.
+
+*DB table: spells_spell_aviable_subclasses*'''
+
+  id auto [pk, not null]
+  subclass_id auto
+  spell_id auto
+
+  indexes {
+    (id) [pk, unique, name: 'spells_spell_aviable_subclasses_pkey', type: btree]
+    (spell_id) [name: 'spells_spell_aviable_subclasses_spell_id_be934410', type: btree]
+    (spell_id,subclass_id) [unique, name: 'spells_spell_aviable_subclasses_spell_id_subclass_id_4e519afe_uniq', type: btree]
+    (subclass_id) [name: 'spells_spell_aviable_subclasses_subclass_id_60b327d3', type: btree]
+  }
+}
+ref: spells.Spell.id > spells.spell_aviable_subclasses.spell_id
+ref: spells.Subclass.id > spells.spell_aviable_subclasses.subclass_id
+
+
+Table spells.spell_effects {
+  Note: '''
+This is a Many-To-Many linking table autogenerated by Django.
+
+*DB table: spells_spell_effects*'''
+
+  id auto [pk, not null]
+  effect_id auto
+  spell_id auto
+
+  indexes {
+    (effect_id) [name: 'spells_spell_effects_effect_id_1b7df85f', type: btree]
+    (id) [pk, unique, name: 'spells_spell_effects_pkey', type: btree]
+    (spell_id) [name: 'spells_spell_effects_spell_id_e9ba27a7', type: btree]
+    (spell_id,effect_id) [unique, name: 'spells_spell_effects_spell_id_effect_id_10415f64_uniq', type: btree]
+  }
+}
+ref: spells.Spell.id > spells.spell_effects.spell_id
+ref: spells.Effect.id > spells.spell_effects.effect_id
+
+
+Table spells.spell_material_components {
+  Note: '''
+This is a Many-To-Many linking table autogenerated by Django.
+
+*DB table: spells_spell_material_components*'''
+
+  id auto [pk, not null]
+  materialcomponent_id auto
+  spell_id auto
+
+  indexes {
+    (materialcomponent_id) [name: 'spells_spell_material_components_materialcomponent_id_cf3bf561', type: btree]
+    (id) [pk, unique, name: 'spells_spell_material_components_pkey', type: btree]
+    (spell_id) [name: 'spells_spell_material_components_spell_id_74f54452', type: btree]
+    (spell_id,materialcomponent_id) [unique, name: 'spells_spell_material_components_spell_id_materialcomponent_id_3331adda_uniq', type: btree]
+  }
+}
+ref: spells.Spell.id > spells.spell_material_components.spell_id
+ref: spells.MaterialComponent.id > spells.spell_material_components.materialcomponent_id
+
+
+Table spells.spellbook_spells {
+  Note: '''
+This is a Many-To-Many linking table autogenerated by Django.
+
+*DB table: spells_spellbook_spells*'''
+
+  id auto [pk, not null]
+  spell_id auto
+  spellbook_id auto
+
+  indexes {
+    (id) [pk, unique, name: 'spells_spellbook_spells_pkey', type: btree]
+    (spell_id) [name: 'spells_spellbook_spells_spell_id_78d0608c', type: btree]
+    (spellbook_id) [name: 'spells_spellbook_spells_spellbook_id_2d11fd39', type: btree]
+    (spellbook_id,spell_id) [unique, name: 'spells_spellbook_spells_spellbook_id_spell_id_63cb1d5f_uniq', type: btree]
+  }
+}
+ref: spells.Spellbook.id > spells.spellbook_spells.spellbook_id
+ref: spells.Spell.id > spells.spellbook_spells.spell_id
+
+

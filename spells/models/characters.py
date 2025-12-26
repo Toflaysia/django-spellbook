@@ -15,7 +15,7 @@ class CharacterClass(models.Model):
     magic_type = models.CharField(
         max_length=2, choices=MagicType.choices, default=MagicType.NON_CASTER, verbose_name="Магический тип"
     )
-    hit_die = models.CharField(
+    hit_die = models.IntegerField(
         max_length=10, choices=Dice.choices, default=Dice.d8, help_text="Кость хитов", verbose_name="Кости хитов"
     )
     spellcasting_ability = models.CharField(

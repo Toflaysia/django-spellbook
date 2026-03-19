@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "spells",
     "django_dbml",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [

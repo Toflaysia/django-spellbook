@@ -144,7 +144,11 @@ class Spell(models.Model):
     somatic_component = models.BooleanField(
         default=False, help_text="Соматический компонент", verbose_name="Соматический компонент"
     )
-    material_components = models.ManyToManyField(MaterialComponent, verbose_name="Материальный компонент")
+    material_components = models.ManyToManyField(
+        MaterialComponent,
+        blank=True,
+        verbose_name="Материальный компонент",
+    )
 
     # Дистанция
     range = models.CharField(
@@ -203,7 +207,8 @@ class Spell(models.Model):
 
     def __str__(self):
         level_str = "Заговор" if self.level == 0 else f"{self.level} уровень"
-        return f"{self.name} ({level_str}, {self.school.name})"
+        school_name = self.school.name if self.school else "Без школы"
+        return f"{self.name} ({level_str}, {school_name})"
 
     @property
     def is_cantrip(self):

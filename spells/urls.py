@@ -2,6 +2,7 @@ from django.urls import path
 from spells.views.character_classes import CharacterClassListView
 from spells.views.registration import RegistrationView
 from spells.views.subclasses import SubclassListView
+from spells.views.spells import SpellDetailView, SpellListView
 
 from spells.views.characters import (
     CharacterDetailView,
@@ -54,5 +55,15 @@ urlpatterns = [
         "subclasses/",
         SubclassListView.as_view(),
         name="subclass_list",
+    ),
+        path(
+        "spells/",
+        SpellListView.as_view(),
+        name="spell_list",
+    ),
+    path(
+        "spells/<int:pk>/",
+        SpellDetailView.as_view(),
+        name="spell_detail",
     ),
 ]

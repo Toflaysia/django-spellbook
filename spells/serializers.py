@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from spells.models import CharacterClass, Person, Subclass
+from spells.models import CharacterClass, Person, Spell, Subclass
 
 
 class CharacterSerializer(serializers.ModelSerializer):
@@ -137,3 +137,47 @@ class SubclassSerializer(serializers.ModelSerializer):
             "features_description",
             "level_gained",
         ]
+class SpellSerializer(serializers.ModelSerializer):
+    school_name = serializers.CharField(
+        source="school.name",
+        read_only=True,
+        default=None,
+    )
+    casting_time = serializers.CharField(
+        source="time.time",
+        read_only=True,
+        default=None,
+    )
+
+    class Meta:
+        model = Spell
+        fields = [
+            "id",
+            "name",
+            "level",
+            "time",
+            "casting_time",
+            "school",
+            "school_name",
+            "verbal_component",
+            "somatic_component",
+            "material_components",
+            "range",
+            "duration",
+            "concentration",
+            "ritual",
+            "description",
+            "higher_level",
+            "attack_type",
+            "saving_throw_ability",
+            "effects",
+            "aviable_classes",
+            "aviable_subclasses",
+            "source_book",
+            "page_number",
+            "is_official",
+            "created_by",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields

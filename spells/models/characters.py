@@ -19,7 +19,6 @@ class CharacterClass(models.Model):
         verbose_name="Магический тип",
     )
     hit_die = models.IntegerField(
-        max_length=10,
         choices=Dice.choices,
         default=Dice.d8,
         help_text="Кость хитов",
@@ -240,11 +239,21 @@ class Person(models.Model):
 
     @property
     def spellcasting_modifier(self):
-        """Модификатор заклинательной характеристики"""
-        if not self.spellcasting_ability:
+        """Модификатор заклинательной характеристики."""
+        ability_fields = {
+            "STR": "strength",
+            "DEX": "dexterity",
+            "CON": "constitution",
+            "INT": "intelligence",
+            "WIS": "wisdom",
+            "CHA": "charisma",
+        }
+
+        field_name = ability_fields.get(self.spellcasting_ability)
+        if field_name is None:
             return 0
 
-        ability_score = getattr(self, self.spellcasting_ability.lower(), 10)
+        ability_score = getattr(self, field_name)
         return (ability_score - 10) // 2
 
     @property

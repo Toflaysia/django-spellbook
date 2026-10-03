@@ -104,6 +104,10 @@ class CharacterSerializer(serializers.ModelSerializer):
                 errors["subclass"] = (
                     "Подкласс должен принадлежать выбранному классу."
                 )
+            elif current_value("primary_class_level") < subclass.level_gained:
+                errors["subclass"] = (
+                    f"Этот подкласс доступен с уровня {subclass.level_gained}."
+                )
 
         if errors:
             raise serializers.ValidationError(errors)

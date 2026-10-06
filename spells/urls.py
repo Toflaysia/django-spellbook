@@ -4,6 +4,25 @@ from spells.views.registration import RegistrationView
 from spells.views.subclasses import SubclassListView
 from spells.views.spells import SpellDetailView, SpellListView
 
+from spells.views.spellbooks import (
+    SpellbookDetailView,
+    SpellbookListCreateView,
+    SpellbookRestView,
+    SpellbookUseSlotView,
+)
+from spells.views.spellbooks import (
+    SpellbookDetailView,
+    SpellbookListCreateView,
+    SpellbookUseSlotView,
+)
+from spells.views.spellbooks import (
+    SpellbookDetailView,
+    SpellbookListCreateView,
+)
+from spells.views.custom_spells import (
+    CustomSpellDetailView,
+    CustomSpellListCreateView,
+)
 from spells.views.characters import (
     CharacterDetailView,
     CharacterListCreateView,
@@ -65,5 +84,35 @@ urlpatterns = [
         "spells/<int:pk>/",
         SpellDetailView.as_view(),
         name="spell_detail",
+    ),
+        path(
+        "my-spells/",
+        CustomSpellListCreateView.as_view(),
+        name="custom_spell_list",
+    ),
+    path(
+        "my-spells/<int:pk>/",
+        CustomSpellDetailView.as_view(),
+        name="custom_spell_detail",
+    ),
+        path(
+        "spellbooks/",
+        SpellbookListCreateView.as_view(),
+        name="spellbook_list",
+    ),
+    path(
+        "spellbooks/<int:pk>/",
+        SpellbookDetailView.as_view(),
+        name="spellbook_detail",
+    ),
+        path(
+        "spellbooks/<int:pk>/use-slot/",
+        SpellbookUseSlotView.as_view(),
+        name="spellbook_use_slot",
+    ),
+        path(
+        "spellbooks/<int:pk>/rest/",
+        SpellbookRestView.as_view(),
+        name="spellbook_rest",
     ),
 ]

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Мои персонажи — Spellbook</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #11121a;
+            color: #ececf3;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        header {
+            border-bottom: 1px solid #303144;
+            background: #191a25;
+        }
+
+        .header-content,
+        main {
+            width: min(1100px, 100%);
+            margin: auto;
+            padding: 24px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            font-size: 24px;
+            font-weight: 700;
+            color: #c4b5fd;
+        }
+
+        .user {
+            color: #b6b7cb;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .intro,
+        .muted {
+            color: #b6b7cb;
+        }
+
+        .search {
+            display: flex;
+            gap: 12px;
+            margin: 28px 0;
+        }
+
+        input {
+            width: 100%;
+            min-width: 0;
+            padding: 13px 16px;
+            border: 1px solid #45465f;
+            border-radius: 10px;
+            background: #1d1e2b;
+            color: #fff;
+            font: inherit;
+        }
+
+        button {
+            padding: 13px 20px;
+            border: 0;
+            border-radius: 10px;
+            background: #c4b5fd;
+            color: #21163c;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        a {
+            color: #c4b5fd;
+        }
+
+        :focus-visible {
+            outline: 3px solid #e9d5ff;
+            outline-offset: 4px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            padding: 24px;
+            border: 1px solid #36374d;
+            border-radius: 16px;
+            background: #1c1d2a;
+        }
+
+        .card h2 {
+            margin: 0 0 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .level {
+            color: #c4b5fd;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: flex;
+            gap: 24px;
+            margin: 22px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat strong,
+        .stat span {
+            display: block;
+        }
+
+        .stat strong {
+            font-size: 24px;
+        }
+
+        .stat span {
+            margin-top: 4px;
+            color: #b6b7cb;
+            font-size: 14px;
+        }
+
+        .empty {
+            padding: 36px 0;
+            color: #b6b7cb;
+        }
+
+        @media (max-width: 480px) {
+            .search {
+                flex-direction: column;
+            }
+
+            .header-content,
+            main {
+                padding: 20px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="brand">Spellbook</div>
+            <div class="user">Игрок: {{ request.user.username }}</div>
+        </div>
+    </header>
+
+    <main>
+        <h1>Мои персонажи</h1>
+        <p>
+            <a href="{% url 'character_create_page' %}">
+                + Создать персонажа
+            </a>
+        </p>
+        <p class="intro">
+            Твои герои, их характеристики и запас хитов.
+        </p>
+
+        <form class="search" method="get">
+            <input
+                type="search"
+                name="search"
+                value="{{ search }}"
+                placeholder="Найти персонажа по имени"
+                aria-label="Имя персонажа для поиска"
+            >
+            <button type="submit">Найти</button>
+        </form>
+
+        {% if search %}
+            <p class="muted">
+                Поиск: {{ search }}.
+                <a href="{% url 'character_list_page' %}">Сбросить</a>
+            </p>
+        {% endif %}
+
+        <div class="cards">
+            {% for character in characters %}
+                <article class="card">
+                    <h2>{{ character.name }}</h2>
+                    <p>
+                        <a href="{% url 'character_edit_page' character.pk %}">
+                            Редактировать
+                        </a>
+                        <a href="{% url 'character_delete_page' character.pk %}">
+                            Удалить
+                        </a>
+                    </p>
+
+                    <div class="muted">
+                        {{ character.race|default:"Раса не указана" }}
+                        ·
+                        {{ character.character_class.name|default:"Без класса" }}
+                    </div>
+
+                    <p class="level">Уровень {{ character.level }}</p>
+
+                    <div class="stats">
+                        <div class="stat">
+                            <strong>
+                                {{ character.current_hit_points }}/{{ character.max_hit_points }}
+                            </strong>
+                            <span>Хиты</span>
+                        </div>
+
+                        <div class="stat">
+                            <strong>{{ character.armor_class }}</strong>
+                            <span>Класс доспеха</span>
+                        </div>
+
+                        <div class="stat">
+                            <strong>{{ character.speed }}</strong>
+                            <span>Скорость, футы</span>
+                        </div>
+                    </div>
+
+                    {% if character.is_favorite %}
+                        <p class="muted">Избранный персонаж</p>
+                    {% endif %}
+                </article>
+            {% empty %}
+                <p class="empty">
+                    {% if search %}
+                        По этому имени персонажи не найдены.
+                    {% else %}
+                        У тебя пока нет персонажей.
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+    </main>
+</body>
+</html>

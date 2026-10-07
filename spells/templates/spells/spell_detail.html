@@ -125,7 +125,13 @@
         {% endif %}
 
         <div class="brand">Spellbook</div>
-        <h1>{{ spell.name }}</h1>
+        {% if is_custom %}
+            <p>
+                <a href="{% url 'spell_edit_page' spell.pk %}">
+                    Редактировать заклинание
+                </a>
+            </p>
+        {% endif %}
 
         <p class="muted">
             {% if spell.level == 0 %}

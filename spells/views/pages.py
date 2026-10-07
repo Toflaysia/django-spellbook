@@ -267,3 +267,33 @@ def spell_import_page(request):
         "spells/spell_import.html",
         {"form": form},
     )
+@login_required
+@require_http_methods(["GET", "POST"])
+def spell_edit_page(request, pk):
+    spell = get_object_or_404(
+        Spell,
+        pk=pk,
+        created_by__user=request.user,
+        is_official=False,
+    )
+
+    form = CustomSpellForm(
+        request.POST if request.method == "POST" else None,
+        instance=spell,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        with transaction.atomic():
+            form.save()
+
+        return redirect("spell_detail_page", pk=spell.pk)
+
+    return render(
+        request,
+        "spells/spell_form.html",
+        {
+            "form": form,
+            "editing": True,
+            "spell": spell,
+        },
+    )

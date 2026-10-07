@@ -1,294 +1,237 @@
+{% extends "spells/base.html" %}
 {% load l10n %}
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Мои персонажи — Spellbook</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
+{% block title %}Мои персонажи — Spellbook{% endblock %}
+
+{% block styles %}
+<style>
+    .characters-main {
+        max-width: 1100px;
+        margin: auto;
+        padding: 28px 24px;
+    }
+
+    .characters-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 12px;
+    }
+
+    .characters-heading h1 {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.2;
+    }
+
+    .characters-intro,
+    .character-muted {
+        color: #b6b7cb;
+    }
+
+    .character-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: #c4b5fd;
+        color: #21163c;
+        font: inherit;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .character-button:hover {
+        background: #ddd6fe;
+    }
+
+    .character-button-danger {
+        border-color: #754052;
+        background: transparent;
+        color: #fda4af;
+    }
+
+    .character-button-danger:hover {
+        background: #39232c;
+    }
+
+    .characters-search {
+        display: flex;
+        gap: 12px;
+        margin: 28px 0;
+    }
+
+    .characters-search input {
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+        padding: 12px 16px;
+        border: 1px solid #45465f;
+        border-radius: 8px;
+        background: #1d1e2b;
+        color: #fff;
+        font: inherit;
+    }
+
+    .characters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 20px;
+    }
+
+    .character-card {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid #36374d;
+        border-radius: 16px;
+        background: #1c1d2a;
+    }
+
+    .character-portrait {
+        aspect-ratio: 7 / 8;
+        overflow: hidden;
+        background: #11121a;
+        border-bottom: 1px solid #36374d;
+    }
+
+    .character-portrait img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .character-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #29233d, #171923);
+        color: #c4b5fd;
+        font-size: 80px;
+        font-weight: 600;
+    }
+
+    .character-content {
+        padding: 24px;
+        overflow-wrap: anywhere;
+    }
+
+    .character-content h2 {
+        margin: 0 0 8px;
+        font-size: 24px;
+    }
+
+    .character-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 16px 0;
+    }
+
+    .character-actions .character-button {
+        font-size: 14px;
+    }
+
+    .character-level {
+        color: #c4b5fd;
+        font-weight: 600;
+    }
+
+    .character-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        margin-top: 20px;
+    }
+
+    .character-stat strong,
+    .character-stat span {
+        display: block;
+    }
+
+    .character-stat strong {
+        font-size: 24px;
+    }
+
+    .character-stat span {
+        margin-top: 4px;
+        color: #b6b7cb;
+        font-size: 13px;
+    }
+
+    .characters-empty {
+        grid-column: 1 / -1;
+        padding: 32px 24px;
+        border: 1px dashed #45465f;
+        border-radius: 16px;
+        color: #b6b7cb;
+        text-align: center;
+    }
+
+    @media (max-width: 480px) {
+        .characters-main {
+            padding: 24px 16px;
         }
 
-        body {
-            margin: 0;
-            background: #11121a;
-            color: #ececf3;
-            font-family: "Segoe UI", sans-serif;
+        .characters-search {
+            flex-direction: column;
         }
 
-        header {
-            border-bottom: 1px solid #303144;
-            background: #191a25;
+        .characters-grid {
+            grid-template-columns: 1fr;
         }
+    }
+</style>
+{% endblock %}
 
-        .header-content,
-        main {
-            width: min(1100px, 100%);
-            margin: auto;
-            padding: 24px;
-        }
-
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .brand {
-            font-size: 24px;
-            font-weight: 700;
-            color: #c4b5fd;
-        }
-
-        .user {
-            color: #b6b7cb;
-        }
-
-        h1 {
-            margin-bottom: 8px;
-        }
-
-        .intro,
-        .muted {
-            color: #b6b7cb;
-        }
-
-        .search {
-            display: flex;
-            gap: 12px;
-            margin: 28px 0;
-        }
-
-        input {
-            width: 100%;
-            min-width: 0;
-            padding: 13px 16px;
-            border: 1px solid #45465f;
-            border-radius: 10px;
-            background: #1d1e2b;
-            color: #fff;
-            font: inherit;
-        }
-
-        button {
-            padding: 13px 20px;
-            border: 0;
-            border-radius: 10px;
-            background: #c4b5fd;
-            color: #21163c;
-            font: inherit;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        a {
-            color: #c4b5fd;
-        }
-
-        :focus-visible {
-            outline: 3px solid #e9d5ff;
-            outline-offset: 4px;
-        }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            min-width: 0;
-            overflow: hidden;
-            border: 1px solid #36374d;
-            border-radius: 16px;
-            background: #1c1d2a;
-        }
-
-        .card-portrait {
-            aspect-ratio: 7 / 8;
-            overflow: hidden;
-            background: #11121a;
-            border-bottom: 1px solid #36374d;
-        }
-
-        .card-portrait img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .portrait-placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #29233d, #171923);
-            color: #c4b5fd;
-            font-size: 80px;
-            font-weight: 600;
-        }
-
-        .card-content {
-            padding: 24px;
-        }
-
-        .card h2 {
-            margin: 0 0 8px;
-            overflow-wrap: anywhere;
-        }
-
-        .level {
-            color: #c4b5fd;
-            font-weight: 600;
-        }
-
-        .stats {
-            display: flex;
-            gap: 24px;
-            margin: 22px 0;
-            flex-wrap: wrap;
-        }
-
-        .stat strong,
-        .stat span {
-            display: block;
-        }
-
-        .stat strong {
-            font-size: 24px;
-        }
-
-        .stat span {
-            margin-top: 4px;
-            color: #b6b7cb;
-            font-size: 14px;
-        }
-
-        .empty {
-            padding: 36px 0;
-            color: #b6b7cb;
-        }
-
-        @media (max-width: 480px) {
-            .search {
-                flex-direction: column;
-            }
-
-            .header-content,
-            main {
-                padding: 20px;
-            }
-
-            .cards {
-                grid-template-columns: 1fr;
-            }
-        }
-            .card-actions {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 10px;
-                margin: 16px 0 20px;
-            }
-
-            .card-action {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: 9px 14px;
-                border: 1px solid transparent;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 600;
-                text-decoration: none;
-            }
-
-            .edit-action {
-                background: #c4b5fd;
-                color: #21163c;
-            }
-
-            .edit-action:hover {
-                background: #ddd6fe;
-            }
-
-            .delete-action {
-                background: transparent;
-                color: #fda4af;
-                border-color: #754052;
-            }
-
-            .delete-action:hover {
-                background: #39232c;
-            }
-            .create-character-button {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: 12px 20px;
-                background: #c4b5fd;
-                color: #21163c;
-                border-radius: 10px;
-                font-weight: 600;
-                text-decoration: none;
-            }
-
-            .create-character-button:hover {
-                background: #ddd6fe;
-            }
-    </style>
-</head>
-<body>
-    <header>
-        <div class="header-content">
-            <div class="brand">Spellbook</div>
-            <a href="{% url 'spell_list_page' %}">Заклинания</a>
-            <div class="user">Игрок: {{ request.user.username }}</div>
-            <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit">Выйти</button>
-            </form>
-        </div>
-    </header>
-
-    <main>
+{% block content %}
+<main class="characters-main">
+    <div class="characters-heading">
         <h1>Мои персонажи</h1>
-        <p>
-            <a class="create-character-button" href="{% url 'character_create_page' %}">
-                + Создать персонажа
-            </a>
+
+        <a
+            class="character-button"
+            href="{% url 'character_create_page' %}"
+        >
+            + Создать персонажа
+        </a>
+    </div>
+
+    <p class="characters-intro">
+        Твои герои, их характеристики и запас хитов.
+    </p>
+
+    <form class="characters-search" method="get">
+        <input
+            type="search"
+            name="search"
+            value="{{ search }}"
+            placeholder="Найти персонажа по имени"
+            aria-label="Имя персонажа для поиска"
+        >
+        <button class="character-button" type="submit">
+            Найти
+        </button>
+    </form>
+
+    {% if search %}
+        <p class="character-muted">
+            Поиск: {{ search }}.
+            <a href="{% url 'character_list_page' %}">Сбросить</a>
         </p>
-        <p class="intro">
-            Твои герои, их характеристики и запас хитов.
-        </p>
+    {% endif %}
 
-        <form class="search" method="get">
-            <input
-                type="search"
-                name="search"
-                value="{{ search }}"
-                placeholder="Найти персонажа по имени"
-                aria-label="Имя персонажа для поиска"
-            >
-            <button type="submit">Найти</button>
-        </form>
-
-        {% if search %}
-            <p class="muted">
-                Поиск: {{ search }}.
-                <a href="{% url 'character_list_page' %}">Сбросить</a>
-            </p>
-        {% endif %}
-
-        <div class="cards">
-            {% for character in characters %}
-            <article class="card">
-                <div class="card-portrait">
+    <div class="characters-grid">
+        {% for character in characters %}
+            <article class="character-card">
+                <div class="character-portrait">
                     {% if character.portrait %}
                         <img
                             class="character-portrait-image"
@@ -300,74 +243,86 @@
                             data-zoom="{{ character.portrait_zoom|unlocalize }}"
                         >
                     {% else %}
-                        <div class="portrait-placeholder" aria-hidden="true">
+                        <div class="character-placeholder" aria-hidden="true">
                             {{ character.name|first|upper }}
                         </div>
                     {% endif %}
                 </div>
 
-                <div class="card-content">
+                <div class="character-content">
                     <h2>{{ character.name }}</h2>
-                    <div class="card-actions">
+
+                    <div class="character-muted">
+                        {{ character.race|default:"Раса не указана" }}
+                        ·
+                        {{ character.character_class.name|default:"Без класса" }}
+                    </div>
+
+                    <p class="character-level">
+                        Уровень {{ character.level }}
+                    </p>
+
+                    <div class="character-actions">
                         <a
-                            class="card-action edit-action"
+                            class="character-button"
                             href="{% url 'character_edit_page' character.pk %}"
                         >
                             Редактировать
                         </a>
 
                         <a
-                            class="card-action delete-action"
+                            class="character-button character-button-danger"
                             href="{% url 'character_delete_page' character.pk %}"
                         >
                             Удалить
                         </a>
                     </div>
 
-                    <div class="muted">
-                        {{ character.race|default:"Раса не указана" }}
-                        ·
-                        {{ character.character_class.name|default:"Без класса" }}
-                    </div>
-
-                    <p class="level">Уровень {{ character.level }}</p>
-
-                    <div class="stats">
-                        <div class="stat">
+                    <div class="character-stats">
+                        <div class="character-stat">
                             <strong>
                                 {{ character.current_hit_points }}/{{ character.max_hit_points }}
                             </strong>
                             <span>Хиты</span>
                         </div>
 
-                        <div class="stat">
+                        <div class="character-stat">
                             <strong>{{ character.armor_class }}</strong>
                             <span>Класс доспеха</span>
                         </div>
 
-                        <div class="stat">
+                        <div class="character-stat">
                             <strong>{{ character.speed }}</strong>
                             <span>Скорость, футы</span>
                         </div>
                     </div>
 
                     {% if character.is_favorite %}
-                        <p class="muted">Избранный персонаж</p>
+                        <p class="character-muted">★ Избранный персонаж</p>
                     {% endif %}
-                    </div>
-                </article>
-            {% empty %}
-                <p class="empty">
-                    {% if search %}
-                        По этому имени персонажи не найдены.
-                    {% else %}
-                        У тебя пока нет персонажей.
-                    {% endif %}
-                </p>
-            {% endfor %}
-        </div>
-    </main>
-    <script>
+                </div>
+            </article>
+        {% empty %}
+            <div class="characters-empty">
+                {% if search %}
+                    <p>По этому имени персонажи не найдены.</p>
+                    <a href="{% url 'character_list_page' %}">
+                        Показать всех персонажей
+                    </a>
+                {% else %}
+                    <p>У тебя пока нет персонажей.</p>
+                    <a href="{% url 'character_create_page' %}">
+                        Создать первого персонажа
+                    </a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
     document.querySelectorAll('.character-portrait-image').forEach(
         function (image) {
             const x = Number(image.dataset.positionX);
@@ -380,5 +335,4 @@
         }
     );
 </script>
-</body>
-</html>
+{% endblock %}

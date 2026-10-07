@@ -1,0 +1,192 @@
+{% extends "spells/base.html" %}
+
+{% block title %}Мои спеллбуки — Spellbook{% endblock %}
+
+{% block styles %}
+<style>
+    .books-main {
+        max-width: 1100px;
+        margin: auto;
+        padding: 32px 24px;
+    }
+
+    .books-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .books-heading h1 {
+        margin: 0;
+        font-size: 30px;
+    }
+
+    .books-muted {
+        color: #b8b9cc;
+    }
+
+    .books-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        background: #c4b5fd;
+        color: #21163c;
+        font: inherit;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .books-button:hover {
+        background: #ddd6fe;
+    }
+
+    .books-search {
+        display: flex;
+        gap: 12px;
+        margin: 28px 0;
+    }
+
+    .books-search input {
+        flex: 1;
+        min-width: 0;
+        padding: 12px 16px;
+        border: 1px solid #484960;
+        border-radius: 8px;
+        background: #1d1e2b;
+        color: #fff;
+        font: inherit;
+    }
+
+    .books-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 20px;
+    }
+
+    .book-card {
+        padding: 24px;
+        border: 1px solid #343548;
+        border-radius: 16px;
+        background: #1c1d2a;
+        overflow-wrap: anywhere;
+    }
+
+    .book-card h2 {
+        margin: 0 0 12px;
+        font-size: 23px;
+    }
+
+    .book-count {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: #302943;
+        color: #c4b5fd;
+        font-size: 13px;
+    }
+
+    .books-empty {
+        grid-column: 1 / -1;
+        padding: 32px 24px;
+        border: 1px dashed #484960;
+        border-radius: 16px;
+        color: #b8b9cc;
+        text-align: center;
+    }
+
+    @media (max-width: 480px) {
+        .books-main {
+            padding: 24px 16px;
+        }
+
+        .books-search {
+            flex-direction: column;
+        }
+
+        .books-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="books-main">
+    <div class="books-heading">
+        <h1>Мои спеллбуки</h1>
+
+        {% if has_characters %}
+            <a class="books-button" href="{% url 'spellbook_create_page' %}">
+                + Создать спеллбук
+            </a>
+        {% else %}
+            <a class="books-button" href="{% url 'character_create_page' %}">
+                + Создать персонажа
+            </a>
+        {% endif %}
+    </div>
+
+    <p class="books-muted">
+        Наборы заклинаний и запас ячеек твоих персонажей.
+    </p>
+
+    <form class="books-search" method="get">
+        <input
+            type="search"
+            name="search"
+            value="{{ search }}"
+            placeholder="Название спеллбука или имя персонажа"
+            aria-label="Поиск спеллбука"
+        >
+        <button class="books-button" type="submit">Найти</button>
+    </form>
+
+    {% if search %}
+        <p class="books-muted">
+            Поиск: {{ search }}.
+            <a href="{% url 'spellbook_list_page' %}">Сбросить</a>
+        </p>
+    {% endif %}
+
+    <div class="books-grid">
+        {% for book in spellbooks %}
+            <article class="book-card">
+                    <h2>
+                        <a href="{% url 'spellbook_detail_page' book.pk %}">
+                            {{ book.name }}
+                        </a>
+                    </h2>
+
+                <p class="books-muted">
+                    Персонаж: {{ book.owner.name }}
+                </p>
+
+                {% if book.description %}
+                    <p>{{ book.description|truncatechars:180 }}</p>
+                {% endif %}
+
+                <span class="book-count">
+                    Заклинаний: {{ book.total_spells }}
+                </span>
+            </article>
+        {% empty %}
+            <div class="books-empty">
+                {% if search %}
+                    <p>Спеллбуки не найдены.</p>
+                {% elif has_characters %}
+                    <p>У тебя пока нет спеллбуков.</p>
+                    <p>Создай первый набор заклинаний для своего героя.</p>
+                {% else %}
+                    <p>Чтобы создать спеллбук, сначала создай персонажа.</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</main>
+{% endblock %}

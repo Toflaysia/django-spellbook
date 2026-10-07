@@ -1,152 +1,169 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Регистрация — Spellbook</title>
+{% extends "spells/base.html" %}
 
-    <style>
-        * {
-            box-sizing: border-box;
+{% block title %}Регистрация — Spellbook{% endblock %}
+
+{% block navigation %}{% endblock %}
+
+{% block styles %}
+<style>
+    .auth-main {
+        width: 100%;
+        max-width: 460px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .auth-panel {
+        padding: 28px;
+        background: #1c1d2a;
+        border: 1px solid #343548;
+        border-radius: 16px;
+    }
+
+    .auth-title {
+        margin: 0 0 16px;
+        font-size: 28px;
+        line-height: 1.2;
+    }
+
+    .auth-intro {
+        margin: 0 0 24px;
+        color: #b8b9cc;
+        line-height: 1.6;
+    }
+
+    .auth-field {
+        margin-bottom: 20px;
+    }
+
+    .auth-field label {
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .auth-field input {
+        width: 100%;
+        min-width: 0;
+        padding: 12px;
+        border: 1px solid #484960;
+        border-radius: 8px;
+        background: #11121a;
+        color: #f3f4f6;
+        font: inherit;
+    }
+
+    .auth-help {
+        margin-top: 8px;
+        color: #b8b9cc;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .auth-help ul {
+        margin: 8px 0 0;
+        padding-left: 20px;
+    }
+
+    .auth-help li + li {
+        margin-top: 6px;
+    }
+
+    .auth-submit {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background: #c4b5fd;
+        color: #21163c;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .auth-submit:hover {
+        background: #ddd6fe;
+    }
+
+    .auth-errors {
+        margin-bottom: 20px;
+        color: #fca5a5;
+    }
+
+    .auth-panel .errorlist {
+        margin: 8px 0;
+        padding-left: 20px;
+        color: #fca5a5;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .auth-login {
+        margin: 24px 0 0;
+        color: #b8b9cc;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    @media (max-width: 480px) {
+        .auth-main {
+            margin: 24px auto;
+            padding: 0 16px;
         }
 
-        body {
-            margin: 0;
-            background: #11121a;
-            color: #f3f4f6;
-            font-family: "Segoe UI", sans-serif;
+        .auth-panel {
+            padding: 20px;
         }
+    }
+</style>
+{% endblock %}
 
-        main {
-            max-width: 460px;
-            margin: 60px auto;
-            padding: 24px;
-        }
+{% block content %}
+<main class="auth-main">
+    <section class="auth-panel" aria-labelledby="register-title">
+        <h1 class="auth-title" id="register-title">
+            Создать аккаунт
+        </h1>
 
-        .panel {
-            padding: 28px;
-            background: #1c1d2a;
-            border: 1px solid #343548;
-            border-radius: 16px;
-        }
+        <p class="auth-intro">
+            Создай аккаунт, чтобы сохранять персонажей и книги заклинаний.
+        </p>
 
-        .brand {
-            color: #c4b5fd;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        .page-title {
-            margin: 12px 0 16px;
-            font-size: 28px;
-            font-weight: 600;
-            line-height: 1.2;
-            color: #f3f4f6;
-        }
-        .intro {
-            color: #b8b9cc;
-            line-height: 1.6;
-        }
+        {% if form.non_field_errors %}
+            <div class="auth-errors" role="alert">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
 
-        .field {
-            margin-bottom: 20px;
-        }
+        <form method="post" action="{% url 'register' %}">
+            {% csrf_token %}
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-        }
+            {% for field in form %}
+                <div class="auth-field">
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
 
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #484960;
-            border-radius: 8px;
-            background: #11121a;
-            color: #f3f4f6;
-            font: inherit;
-        }
+                    {{ field }}
 
-        input:focus {
-            outline: 2px solid #c4b5fd;
-            outline-offset: 2px;
-        }
+                    {% if field.help_text %}
+                        <div class="auth-help">
+                            {{ field.help_text|safe }}
+                        </div>
+                    {% endif %}
 
-        button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background: #c4b5fd;
-            color: #11121a;
-            font: inherit;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #ddd6fe;
-        }
-
-        .errors {
-            margin-bottom: 20px;
-            color: #fca5a5;
-            line-height: 1.5;
-        }
-
-        .errorlist {
-            padding-left: 20px;
-            color: #fca5a5;
-        }
-        a {
-            color: #c4b5fd;
-        }       
-    </style>
-</head>
-<body>
-    <main>
-        <div class="panel">
-            <div class="brand">Spellbook</div>
-            <h1 class="page-title">Создать аккаунт</h1> 
-
-            <p class="intro">
-                Создай аккаунт, чтобы сохранять персонажей и книги заклинаний.
-            </p>
-
-            {% if form.non_field_errors %}
-                <div class="errors" role="alert">
-                    {{ form.non_field_errors }}
+                    {{ field.errors }}
                 </div>
-            {% endif %}
+            {% endfor %}
 
-            <form method="post">
-                {% csrf_token %}
+            <button class="auth-submit" type="submit">
+                Зарегистрироваться
+            </button>
+        </form>
 
-                {% for field in form %}
-                    <div class="field">
-                        <label for="{{ field.id_for_label }}">
-                             {{ field.label }}
-                        </label>
-
-                        {{ field }}
-
-                        {% if field.help_text %}
-                            <div class="intro">
-                                {{ field.help_text|safe }}
-                            </div>
-                        {% endif %}
-
-                        {{ field.errors }}
-                    </div>
-                {% endfor %}
-
-                <button type="submit">Зарегистрироваться</button>
-            </form>
-
-            <p class="intro">
-                Уже есть аккаунт?
-                <a href="{% url 'login' %}">Войти</a>
-            </p>
-        </div>
-    </main>
-</body>
-</html>
+        <p class="auth-login">
+            Уже есть аккаунт?
+            <a href="{% url 'login' %}">Войти</a>
+        </p>
+    </section>
+</main>
+{% endblock %}

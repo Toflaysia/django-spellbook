@@ -1,0 +1,272 @@
+{% extends "spells/base.html" %}
+
+{% block title %}Spellbook — персонажи и заклинания D&D{% endblock %}
+
+{% block styles %}
+<style>
+    .home-main {
+        max-width: 1100px;
+        margin: auto;
+        padding: 48px 24px;
+    }
+
+    .home-hero {
+        max-width: 760px;
+        margin-bottom: 40px;
+    }
+
+    .home-eyebrow {
+        margin: 0 0 12px;
+        color: #c4b5fd;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .home-title {
+        margin: 0 0 20px;
+        font-size: clamp(32px, 5vw, 48px);
+        line-height: 1.2;
+    }
+
+    .home-description {
+        margin: 0;
+        color: #b8b9cc;
+        font-size: 18px;
+        line-height: 1.7;
+    }
+
+    .home-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 28px;
+    }
+
+    .home-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 20px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        background: #c4b5fd;
+        color: #21163c;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .home-button:hover {
+        background: #ddd6fe;
+    }
+
+    .home-button-secondary {
+        border-color: #484960;
+        background: transparent;
+        color: #ececf3;
+    }
+
+    .home-button-secondary:hover {
+        background: #292a3c;
+    }
+
+    .home-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .home-card {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        padding: 28px;
+        border: 1px solid #343548;
+        border-radius: 16px;
+        background: #1c1d2a;
+    }
+
+    .home-card-label {
+        margin: 0 0 16px;
+        color: #c4b5fd;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .home-card h2 {
+        margin: 0 0 12px;
+        font-size: 23px;
+        line-height: 1.3;
+    }
+
+    .home-card-description {
+        margin: 0 0 24px;
+        color: #b8b9cc;
+        line-height: 1.7;
+    }
+
+    .home-card-link {
+        align-self: flex-start;
+        margin-top: auto;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .home-card-link:hover {
+        text-decoration: underline;
+    }
+
+    .home-note {
+        margin: 28px 0 0;
+        color: #b8b9cc;
+        font-size: 14px;
+    }
+
+    @media (max-width: 800px) {
+        .home-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .home-main {
+            padding: 32px 16px;
+        }
+
+        .home-card {
+            padding: 22px;
+        }
+
+        .home-description {
+            font-size: 16px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="home-main">
+    <section class="home-hero" aria-labelledby="home-title">
+        <p class="home-eyebrow">Твои приключения начинаются здесь</p>
+
+        <h1 class="home-title" id="home-title">
+            Персонажи и заклинания для твоих приключений в D&D
+        </h1>
+
+        <p class="home-description">
+            Создавай героев, находи официальные заклинания
+            и придумывай собственную магию.
+            Храни всё необходимое для игры в одном месте.
+        </p>
+
+        <div class="home-actions">
+            {% if request.user.is_authenticated %}
+                <a
+                    class="home-button"
+                    href="{% url 'character_list_page' %}"
+                >
+                    Мои персонажи
+                </a>
+
+                <a
+                    class="home-button home-button-secondary"
+                    href="{% url 'spell_list_page' %}"
+                >
+                    Официальные заклинания
+                </a>
+            {% else %}
+                <a
+                    class="home-button"
+                    href="{% url 'register' %}"
+                >
+                    Создать аккаунт
+                </a>
+
+                <a
+                    class="home-button home-button-secondary"
+                    href="{% url 'spell_list_page' %}"
+                >
+                    Смотреть заклинания
+                </a>
+            {% endif %}
+        </div>
+    </section>
+
+    <div class="home-grid">
+        <section class="home-card">
+            <p class="home-card-label">ОБЩИЙ КАТАЛОГ</p>
+            <h2>Официальные заклинания</h2>
+
+            <p class="home-card-description">
+                Заклинания, добавленные администратором.
+                Ищи по названию, уровню и школе магии.
+            </p>
+
+            <a
+                class="home-card-link"
+                href="{% url 'spell_list_page' %}"
+            >
+                Открыть каталог →
+            </a>
+        </section>
+
+        <section class="home-card">
+            <p class="home-card-label">ТВОИ ГЕРОИ</p>
+            <h2>Мои персонажи</h2>
+
+            <p class="home-card-description">
+                Создавай персонажей, добавляй портреты
+                и управляй характеристиками и запасом хитов.
+            </p>
+
+            {% if request.user.is_authenticated %}
+                <a
+                    class="home-card-link"
+                    href="{% url 'character_list_page' %}"
+                >
+                    Открыть персонажей →
+                </a>
+            {% else %}
+                <a
+                    class="home-card-link"
+                    href="{% url 'login' %}?next={% url 'character_list_page' %}"
+                >
+                    Войти и открыть персонажей →
+                </a>
+            {% endif %}
+        </section>
+
+        <section class="home-card">
+            <p class="home-card-label">ТВОЯ МАГИЯ</p>
+            <h2>Мои заклинания</h2>
+
+            <p class="home-card-description">
+                Создавай авторские заклинания или загружай их
+                из JSON-файла для будущих приключений.
+            </p>
+
+            {% if request.user.is_authenticated %}
+                <a
+                    class="home-card-link"
+                    href="{% url 'my_spell_list_page' %}"
+                >
+                    Открыть мои заклинания →
+                </a>
+            {% else %}
+                <a
+                    class="home-card-link"
+                    href="{% url 'login' %}?next={% url 'my_spell_list_page' %}"
+                >
+                    Войти и открыть заклинания →
+                </a>
+            {% endif %}
+        </section>
+    </div>
+
+    {% if not request.user.is_authenticated %}
+        <p class="home-note">
+            Официальные заклинания можно просматривать без регистрации.
+            Для создания персонажей и собственных заклинаний нужен аккаунт.
+        </p>
+    {% endif %}
+</main>
+{% endblock %}

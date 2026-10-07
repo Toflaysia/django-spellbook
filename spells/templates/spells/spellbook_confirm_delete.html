@@ -1,6 +1,6 @@
 {% extends "spells/form_base.html" %}
 
-{% block title %}Удаление персонажа — Spellbook{% endblock %}
+{% block title %}Удаление спеллбука — Spellbook{% endblock %}
 
 {% block styles %}
 <style>
@@ -15,16 +15,12 @@
         border: 1px solid #343548;
         border-radius: 16px;
         background: #1c1d2a;
+        overflow-wrap: anywhere;
     }
 
-    .delete-title {
+    .delete-panel h1 {
         margin: 0 0 20px;
         font-size: 28px;
-        line-height: 1.2;
-    }
-
-    .delete-name {
-        overflow-wrap: anywhere;
     }
 
     .delete-warning {
@@ -40,41 +36,22 @@
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 12px;
+        gap: 16px;
         margin-top: 24px;
     }
 
-    .delete-confirm,
-    .delete-cancel {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 12px 18px;
-        border: 1px solid #45465f;
-        border-radius: 8px;
-        font: inherit;
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
     .delete-confirm {
-        border-color: #754052;
+        padding: 12px 18px;
+        border: 1px solid #754052;
+        border-radius: 8px;
         background: #39232c;
         color: #fda4af;
+        font: inherit;
+        cursor: pointer;
     }
 
     .delete-confirm:hover {
         background: #4b2b37;
-    }
-
-    .delete-cancel {
-        background: #292a3c;
-        color: #ececf3;
-    }
-
-    .delete-cancel:hover {
-        background: #35364b;
     }
 
     @media (max-width: 480px) {
@@ -93,36 +70,30 @@
 {% block content %}
 <main class="delete-main">
     <section class="delete-panel" aria-labelledby="delete-title">
-        <h1 class="delete-title" id="delete-title">
-            Удалить персонажа?
-        </h1>
+        <h1 id="delete-title">Удалить спеллбук?</h1>
 
         <p>
-            Ты собираешься удалить персонажа
-            <strong class="delete-name">«{{ character.name }}»</strong>.
+            Ты собираешься удалить спеллбук
+            <strong>«{{ spellbook.name }}»</strong>
+            персонажа <strong>{{ spellbook.owner.name }}</strong>.
         </p>
 
         <p class="delete-warning">
-            Вместе с персонажем будут удалены все его спеллбуки.
-            Отменить это действие нельзя.
+            Спеллбук и его запас ячеек будут удалены.
+            Персонаж и сами заклинания сохранятся.
+            Отменить удаление нельзя.
         </p>
 
-        <form
-            method="post"
-            action="{% url 'character_delete_page' character.pk %}"
-        >
+        <form method="post">
             {% csrf_token %}
 
             <div class="delete-actions">
-                <a
-                    class="delete-cancel"
-                    href="{% url 'character_list_page' %}"
-                >
+                <a href="{% url 'spellbook_detail_page' spellbook.pk %}">
                     Отмена
                 </a>
 
                 <button class="delete-confirm" type="submit">
-                    Удалить персонажа
+                    Удалить спеллбук
                 </button>
             </div>
         </form>

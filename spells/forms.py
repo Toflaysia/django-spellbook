@@ -1,13 +1,21 @@
+import json
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from spells.models import Person, Spell
-import json
+from django.db.models import Q
+
+from spells.models import Person, Spell, Spellbook
+
 
 class RangeInput(forms.NumberInput):
     input_type = "range"
+
+
 class PortraitInput(forms.ClearableFileInput):
     template_name = "spells/widgets/portrait_input.html"
+
+
 class CharacterCreateForm(forms.ModelForm):
     class Meta:
         model = Person
@@ -50,6 +58,7 @@ class CharacterCreateForm(forms.ModelForm):
                 attrs={"min": 1, "max": 3, "step": 0.1}
             ),
         }
+
     @property
     def field_groups(self):
         groups = [
@@ -66,7 +75,7 @@ class CharacterCreateForm(forms.ModelForm):
                     "is_public",
                 ],
             ),
-                        (
+            (
                 "portrait",
                 "Портрет",
                 [
@@ -114,11 +123,14 @@ class CharacterCreateForm(forms.ModelForm):
             }
             for group_id, title, field_names in groups
         ]
+
     def clean_max_hit_points(self):
         value = self.cleaned_data["max_hit_points"]
 
         if value < 1:
-            raise forms.ValidationError("Хиты должны быть не меньше 1.")
+            raise forms.ValidationError(
+                "Хиты должны быть не меньше 1."
+            )
 
         return value
 
@@ -126,7 +138,9 @@ class CharacterCreateForm(forms.ModelForm):
         value = self.cleaned_data["armor_class"]
 
         if value < 0:
-            raise forms.ValidationError("Класс доспеха не может быть отрицательным.")
+            raise forms.ValidationError(
+                "Класс доспеха не может быть отрицательным."
+            )
 
         return value
 
@@ -134,9 +148,13 @@ class CharacterCreateForm(forms.ModelForm):
         value = self.cleaned_data["speed"]
 
         if value < 0:
-            raise forms.ValidationError("Скорость не может быть отрицательной.")
+            raise forms.ValidationError(
+                "Скорость не может быть отрицательной."
+            )
 
         return value
+
+
 class CharacterEditForm(CharacterCreateForm):
     class Meta(CharacterCreateForm.Meta):
         fields = CharacterCreateForm.Meta.fields + [
@@ -193,6 +211,8 @@ class CharacterEditForm(CharacterCreateForm):
                 )
 
         return cleaned_data
+
+
 class RegistrationForm(UserCreationForm):
     class Meta:
         model = User
@@ -200,6 +220,8 @@ class RegistrationForm(UserCreationForm):
         labels = {
             "username": "Имя пользователя",
         }
+
+
 class CustomSpellForm(forms.ModelForm):
     class Meta:
         model = Spell
@@ -236,6 +258,10 @@ class CustomSpellForm(forms.ModelForm):
         widgets = {
             "description": forms.Textarea(attrs={"rows": 6}),
             "higher_level": forms.Textarea(attrs={"rows": 4}),
+            "material_components": forms.CheckboxSelectMultiple(),
+            "effects": forms.CheckboxSelectMultiple(),
+            "aviable_classes": forms.CheckboxSelectMultiple(),
+            "aviable_subclasses": forms.CheckboxSelectMultiple(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -253,10 +279,8 @@ class CustomSpellForm(forms.ModelForm):
             "aviable_subclasses",
         ]:
             self.fields[field_name].help_text = (
-                "Для выбора нескольких значений удерживай Ctrl "
-                "(на Mac — Command)."
+                "Отметь необходимые значения."
             )
-
     @property
     def field_groups(self):
         groups = [
@@ -342,6 +366,8 @@ class CustomSpellForm(forms.ModelForm):
             )
 
         return cleaned_data
+
+
 class SpellImportForm(forms.Form):
     json_file = forms.FileField(
         label="Файл заклинания",
@@ -393,3 +419,139 @@ class SpellImportForm(forms.Form):
         uploaded_file.seek(0)
 
         return uploaded_file
+
+
+class SpellbookForm(forms.ModelForm):
+    class Meta:
+        model = Spellbook
+        fields = [
+            "name",
+            "description",
+            "owner",
+            "spells",
+            "max_spell_slots_1",
+            "max_spell_slots_2",
+            "max_spell_slots_3",
+            "max_spell_slots_4",
+            "max_spell_slots_5",
+            "max_spell_slots_6",
+            "max_spell_slots_7",
+            "max_spell_slots_8",
+            "max_spell_slots_9",
+            "warlock_slot_level",
+            "warlock_max_slots",
+        ]
+        labels = {
+            "name": "Название спеллбука",
+            "description": "Описание",
+            "owner": "Персонаж",
+            "spells": "Заклинания",
+            "warlock_slot_level": "Уровень ячеек колдуна",
+            "warlock_max_slots": "Количество ячеек колдуна",
+        }
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+            "spells": forms.CheckboxSelectMultiple(),
+        }
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["owner"].queryset = Person.objects.filter(
+            player__user=user,
+        ).order_by("name")
+
+        self.fields["spells"].queryset = (
+            Spell.objects.filter(
+                Q(created_by__user=user, is_official=False)
+                | Q(saved_by_players__user=user, is_official=True)
+            )
+            .distinct()
+            .order_by("level", "name")
+        )
+
+        self.fields["spells"].help_text = (
+            "Отметь заклинания, которые нужно включить в спеллбук."
+        )
+
+        for level in range(1, 10):
+            field = self.fields[f"max_spell_slots_{level}"]
+            field.label = f"Ячейки {level}-го уровня"
+            field.widget.attrs["min"] = 0
+
+        self.fields["warlock_slot_level"].widget.attrs.update(
+            {"min": 0, "max": 5}
+        )
+        self.fields["warlock_max_slots"].widget.attrs["min"] = 0
+
+    @property
+    def field_groups(self):
+        groups = [
+            (
+                "basic",
+                "Основное",
+                ["name", "description", "owner"],
+            ),
+            (
+                "spells",
+                "Заклинания",
+                ["spells"],
+            ),
+            (
+                "slots",
+                "Ячейки заклинаний",
+                [
+                    f"max_spell_slots_{level}"
+                    for level in range(1, 10)
+                ],
+            ),
+            (
+                "warlock",
+                "Ячейки колдуна",
+                ["warlock_slot_level", "warlock_max_slots"],
+            ),
+        ]
+
+        return [
+            {
+                "id": group_id,
+                "title": title,
+                "fields": [self[name] for name in field_names],
+            }
+            for group_id, title, field_names in groups
+        ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        slot_fields = [
+            f"max_spell_slots_{level}"
+            for level in range(1, 10)
+        ] + ["warlock_max_slots"]
+
+        for field_name in slot_fields:
+            value = cleaned_data.get(field_name)
+
+            if value is not None and value < 0:
+                self.add_error(
+                    field_name,
+                    "Количество ячеек не может быть отрицательным.",
+                )
+
+        warlock_level = cleaned_data.get("warlock_slot_level")
+        warlock_slots = cleaned_data.get("warlock_max_slots")
+
+        if warlock_level is not None:
+            if not 0 <= warlock_level <= 5:
+                self.add_error(
+                    "warlock_slot_level",
+                    "Укажи уровень от 0 до 5.",
+                )
+            elif warlock_slots is not None and warlock_slots > 0:
+                if warlock_level == 0:
+                    self.add_error(
+                        "warlock_slot_level",
+                        "Для ячеек колдуна укажи уровень от 1 до 5.",
+                    )
+
+        return cleaned_data

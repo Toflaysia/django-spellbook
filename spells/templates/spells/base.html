@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{% block title %}Spellbook{% endblock %}</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #11121a;
+            color: #ececf3;
+            font-family: "Segoe UI", sans-serif;
+            line-height: 1.6;
+        }
+
+        a {
+            color: #c4b5fd;
+        }
+
+        .site-header {
+            background: #191a25;
+            border-bottom: 1px solid #343548;
+        }
+
+        .site-header-inner {
+            max-width: 1100px;
+            margin: auto;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .site-brand {
+            color: #c4b5fd;
+            font-size: 24px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .site-nav {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .site-nav a {
+            text-decoration: none;
+        }
+
+        .site-nav a:hover {
+            text-decoration: underline;
+        }
+
+        .site-account {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .site-username {
+            color: #b8b9cc;
+            overflow-wrap: anywhere;
+        }
+
+        .site-header .site-logout-form {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+        }
+
+        :focus-visible {
+            outline: 2px solid #c4b5fd;
+            outline-offset: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .site-header-inner {
+                padding: 16px;
+            }
+
+            .site-account {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+    </style>
+
+    {% block styles %}{% endblock %}
+
+    <style>
+        /*
+         * Общие стили расположены после стилей страниц,
+         * чтобы кнопки выглядели одинаково.
+         */
+
+        body :is(
+            button:not([role="tab"]),
+            .btn,
+            .books-button,
+            .spell-button,
+            .collection-actions a,
+            .collection-remove,
+            .book-actions a,
+            .book-form-actions a,
+            .character-form-actions a,
+            .delete-actions a,
+            .site-account > a
+        ) {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: auto;
+            min-height: 44px;
+            padding: 10px 18px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            background: #c4b5fd;
+            color: #21163c;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.4;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: middle;
+            cursor: pointer;
+            transition:
+                background-color 0.15s ease,
+                border-color 0.15s ease,
+                box-shadow 0.15s ease;
+        }
+
+        body :is(
+            button:not([role="tab"]),
+            .btn,
+            .books-button,
+            .spell-button,
+            .collection-actions a,
+            .collection-remove,
+            .book-actions a,
+            .book-form-actions a,
+            .character-form-actions a,
+            .delete-actions a,
+            .site-account > a
+        ):hover {
+            background: #ddd6fe;
+            color: #21163c;
+            text-decoration: none;
+            box-shadow: 0 3px 12px rgb(196 181 253 / 15%);
+        }
+
+        /* Дополнительные действия. */
+        body :is(
+            .btn-secondary,
+            .site-logout-button,
+            .spell-button,
+            .book-actions a,
+            .book-form-actions a,
+            .character-form-actions a,
+            .delete-actions a,
+            .delete-cancel,
+            .site-account > a
+        ) {
+            border-color: #484960;
+            background: #252637;
+            color: #ececf3;
+        }
+
+        body :is(
+            .btn-secondary,
+            .site-logout-button,
+            .spell-button,
+            .book-actions a,
+            .book-form-actions a,
+            .character-form-actions a,
+            .delete-actions a,
+            .delete-cancel,
+            .site-account > a
+        ):hover {
+            border-color: #81719f;
+            background: #343047;
+            color: #f5f3ff;
+            box-shadow: 0 3px 12px rgb(0 0 0 / 15%);
+        }
+
+        /* Загрузка заклинания из JSON. */
+        body .collection-actions a[href*="/import"] {
+            border-color: #484960;
+            background: #252637;
+            color: #ececf3;
+        }
+
+        body .collection-actions a[href*="/import"]:hover {
+            border-color: #81719f;
+            background: #343047;
+            color: #f5f3ff;
+        }
+
+        /* Удаление и очистка. */
+        body :is(
+            .btn-danger,
+            .delete-confirm,
+            .collection-remove,
+            .spell-button-danger,
+            .book-actions .book-delete-link,
+            #clear-portrait-button
+        ) {
+            border-color: #754052;
+            background: #30202a;
+            color: #fda4af;
+        }
+
+        body :is(
+            .btn-danger,
+            .delete-confirm,
+            .collection-remove,
+            .spell-button-danger,
+            .book-actions .book-delete-link,
+            #clear-portrait-button
+        ):hover {
+            border-color: #a4536b;
+            background: #4b2b37;
+            color: #fecdd3;
+            box-shadow: 0 3px 12px rgb(251 113 133 / 12%);
+        }
+
+        /* Компактные кнопки управления ячейками. */
+        body .book-slot-actions button {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-color: #514365;
+            background: #302943;
+            color: #ddd6fe;
+            font-size: 24px;
+        }
+
+        body .book-slot-actions button:hover {
+            border-color: #a78bfa;
+            background: #44365e;
+            color: #fff;
+        }
+
+        /* Недоступные кнопки. */
+        body button:not([role="tab"]):disabled,
+        body button:not([role="tab"]):disabled:hover {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body button,
+            body .btn,
+            body .books-button,
+            body .spell-button,
+            body .collection-actions a,
+            body .collection-remove,
+            body .book-actions a,
+            body .book-form-actions a,
+            body .character-form-actions a,
+            body .delete-actions a,
+            body .site-account > a {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% block header %}
+    <header class="site-header">
+        <div class="site-header-inner">
+            {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}
+                <div class="site-brand">Spellbook</div>
+            {% else %}
+                <a class="site-brand" href="{% url 'home_page' %}">
+                    Spellbook
+                </a>
+            {% endif %}
+
+            {% block navigation %}
+            <nav class="site-nav" aria-label="Основное меню">
+                <a href="{% url 'spell_list_page' %}">
+                    Официальные заклинания
+                </a>
+
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'character_list_page' %}">
+                        Мои персонажи
+                    </a>
+
+                    <a href="{% url 'my_spell_list_page' %}">
+                        Мои заклинания
+                    </a>
+
+                    <a href="{% url 'spellbook_list_page' %}">
+                        Мои спеллбуки
+                    </a>
+                {% endif %}
+            </nav>
+
+            <div class="site-account">
+                {% if request.user.is_authenticated %}
+                    <span class="site-username">
+                        {{ request.user.username }}
+                    </span>
+
+                    <form
+                        class="site-logout-form"
+                        method="post"
+                        action="{% url 'logout' %}"
+                    >
+                        {% csrf_token %}
+                        <button class="site-logout-button" type="submit">
+                            Выйти
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}">Войти</a>
+                    <a href="{% url 'register' %}">Создать аккаунт</a>
+                {% endif %}
+            </div>
+            {% endblock navigation %}
+        </div>
+    </header>
+    {% endblock header %}
+
+    {% block content %}{% endblock %}
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

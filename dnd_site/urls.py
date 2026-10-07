@@ -16,11 +16,23 @@ from spells.views.pages import (
     my_spell_list_page,
     spell_import_page,
     spell_edit_page,
-
+    home_page,
+    spell_save_page,
+    spell_unsave_page,
+    official_spell_import_page,
+    official_spell_create_page,
+    spell_delete_page,
+    spellbook_list_page,
+    spellbook_create_page,
+    spellbook_detail_page,
+    spellbook_slot_change_page,
+    spellbook_edit_page,
+    spellbook_delete_page,
 )
 
 urlpatterns = [
-    path("", character_list_page, name="character_list_page"),
+    path("", home_page, name="home_page"),
+    path("characters/", character_list_page, name="character_list_page"),
     path("spells/", spell_list_page, name="spell_list_page"),
     path(
         "spells/new/",
@@ -83,7 +95,61 @@ urlpatterns = [
         register_page,
         name="register",
     ),
-
+    path(
+        "spells/<int:pk>/save/",
+        spell_save_page,
+        name="spell_save_page",
+    ),
+        path(
+        "spells/<int:pk>/unsave/",
+        spell_unsave_page,
+        name="spell_unsave_page",
+    ),
+        path(
+        "spells/official/import/",
+        official_spell_import_page,
+        name="official_spell_import_page",
+    ),
+    path(
+        "spells/official/create/",
+        official_spell_create_page,
+        name="official_spell_create_page",
+    ),
+        path(
+        "spells/<int:pk>/delete/",
+        spell_delete_page,
+        name="spell_delete_page",
+    ),
+        path(
+        "spellbooks/",
+        spellbook_list_page,
+        name="spellbook_list_page",
+    ),
+    path(
+        "spellbooks/new/",
+        spellbook_create_page,
+        name="spellbook_create_page",
+    ),
+        path(
+        "spellbooks/<int:pk>/",
+        spellbook_detail_page,
+        name="spellbook_detail_page",
+    ),
+        path(
+        "spellbooks/<int:pk>/slots/change/",
+        spellbook_slot_change_page,
+        name="spellbook_slot_change_page",
+    ),
+        path(
+        "spellbooks/<int:pk>/edit/",
+        spellbook_edit_page,
+        name="spellbook_edit_page",
+    ),
+    path(
+        "spellbooks/<int:pk>/delete/",
+        spellbook_delete_page,
+        name="spellbook_delete_page",
+    ),
 ]
 if settings.DEBUG:
     urlpatterns += static(

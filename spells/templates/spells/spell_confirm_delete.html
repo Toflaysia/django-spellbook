@@ -1,6 +1,6 @@
 {% extends "spells/form_base.html" %}
 
-{% block title %}Удаление персонажа — Spellbook{% endblock %}
+{% block title %}Удаление заклинания — Spellbook{% endblock %}
 
 {% block styles %}
 <style>
@@ -15,16 +15,13 @@
         border: 1px solid #343548;
         border-radius: 16px;
         background: #1c1d2a;
+        overflow-wrap: anywhere;
     }
 
-    .delete-title {
+    .delete-panel h1 {
         margin: 0 0 20px;
         font-size: 28px;
         line-height: 1.2;
-    }
-
-    .delete-name {
-        overflow-wrap: anywhere;
     }
 
     .delete-warning {
@@ -93,36 +90,35 @@
 {% block content %}
 <main class="delete-main">
     <section class="delete-panel" aria-labelledby="delete-title">
-        <h1 class="delete-title" id="delete-title">
-            Удалить персонажа?
-        </h1>
+        <h1 id="delete-title">Удалить заклинание?</h1>
 
         <p>
-            Ты собираешься удалить персонажа
-            <strong class="delete-name">«{{ character.name }}»</strong>.
+            Ты собираешься удалить авторское заклинание
+            <strong>«{{ spell.name }}»</strong>.
         </p>
 
         <p class="delete-warning">
-            Вместе с персонажем будут удалены все его спеллбуки.
+            Заклинание будет удалено из базы данных
+            и из всех спеллбуков, в которых используется.
             Отменить это действие нельзя.
         </p>
 
         <form
             method="post"
-            action="{% url 'character_delete_page' character.pk %}"
+            action="{% url 'spell_delete_page' spell.pk %}"
         >
             {% csrf_token %}
 
             <div class="delete-actions">
                 <a
                     class="delete-cancel"
-                    href="{% url 'character_list_page' %}"
+                    href="{% url 'spell_detail_page' spell.pk %}"
                 >
                     Отмена
                 </a>
 
                 <button class="delete-confirm" type="submit">
-                    Удалить персонажа
+                    Удалить заклинание
                 </button>
             </div>
         </form>

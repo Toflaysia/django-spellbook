@@ -1,0 +1,22 @@
+{% extends "spells/base.html" %}
+
+{% block navigation %}
+<div class="site-account">
+    {% if request.user.is_authenticated %}
+        <span class="site-username">
+            {{ request.user.username }}
+        </span>
+
+        <form
+            class="site-logout-form"
+            method="post"
+            action="{% url 'logout' %}"
+        >
+            {% csrf_token %}
+            <button class="site-logout-button" type="submit">
+                Выйти
+            </button>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

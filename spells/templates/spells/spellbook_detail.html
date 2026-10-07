@@ -1,0 +1,273 @@
+{% extends "spells/base.html" %}
+
+{% block title %}{{ spellbook.name }} — Spellbook{% endblock %}
+
+{% block styles %}
+<style>
+    .book-main {
+        max-width: 1000px;
+        margin: auto;
+        padding: 32px 24px;
+        overflow-wrap: anywhere;
+    }
+
+    .book-main h1 {
+        margin: 24px 0 12px;
+        font-size: 30px;
+    }
+
+    .book-muted {
+        color: #b8b9cc;
+    }
+
+    .book-panel {
+        margin-top: 24px;
+        padding: 24px;
+        border: 1px solid #343548;
+        border-radius: 16px;
+        background: #1c1d2a;
+    }
+
+    .book-panel h2 {
+        margin: 0 0 20px;
+        font-size: 22px;
+    }
+
+    .book-slots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .book-slot {
+        padding: 12px 16px;
+        border: 1px solid #484960;
+        border-radius: 8px;
+        background: #292a3c;
+    }
+
+    .book-spells {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .book-spells li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 0;
+    }
+
+    .book-spells li + li {
+        border-top: 1px solid #343548;
+    }
+
+    .book-spell-level {
+        flex-shrink: 0;
+        color: #b8b9cc;
+        font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+        .book-main {
+            padding: 24px 16px;
+        }
+
+        .book-panel {
+            padding: 20px;
+        }
+
+        .book-spells li {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 6px;
+        }
+    }
+    .book-slot-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .book-slot-actions button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border: 1px solid #484960;
+        border-radius: 8px;
+        background: #302943;
+        color: #c4b5fd;
+        font: inherit;
+        font-size: 22px;
+        cursor: pointer;
+    }
+
+    .book-slot-actions button:hover {
+        background: #403557;
+    }
+
+    .book-slot-actions button:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
+    .book-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin: 16px 0;
+    }
+
+    .book-actions .book-delete-link {
+        color: #fda4af;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="book-main">
+    <a href="{% url 'spellbook_list_page' %}">← Мои спеллбуки</a>
+
+    <h1>{{ spellbook.name }}</h1>
+    <div class="book-actions">
+        <a href="{% url 'spellbook_edit_page' spellbook.pk %}">
+            Редактировать
+        </a>
+
+        <a
+            class="book-delete-link"
+            href="{% url 'spellbook_delete_page' spellbook.pk %}"
+        >
+            Удалить
+        </a>
+    </div>
+    <p class="book-muted">
+        Персонаж:
+        <a href="{% url 'character_edit_page' spellbook.owner.pk %}">
+            {{ spellbook.owner.name }}
+        </a>
+    </p>
+
+    {% if spellbook.description %}
+        <div>{{ spellbook.description|linebreaks }}</div>
+    {% endif %}
+
+    <section class="book-panel">
+        <h2>Ячейки заклинаний</h2>
+
+        <div class="book-slots">
+            {% for slot in slots %}
+                <div class="book-slot">
+                    <div>{{ slot.level }}-й уровень</div>
+                    <strong>{{ slot.current }} / {{ slot.maximum }}</strong>
+
+                    <form
+                        class="book-slot-actions"
+                        method="post"
+                        action="{% url 'spellbook_slot_change_page' spellbook.pk %}"
+                    >
+                        {% csrf_token %}
+                        <input type="hidden" name="slot" value="{{ slot.level }}">
+
+                        <button
+                            type="submit"
+                            name="action"
+                            value="spend"
+                            aria-label="Потратить ячейку {{ slot.level }}-го уровня"
+                            {% if slot.current == 0 %}disabled{% endif %}
+                        >
+                            −
+                        </button>
+
+                        <button
+                            type="submit"
+                            name="action"
+                            value="restore"
+                            aria-label="Восстановить ячейку {{ slot.level }}-го уровня"
+                            {% if slot.current >= slot.maximum %}disabled{% endif %}
+                        >
+                            +
+                        </button>
+                    </form>
+                </div>
+            {% empty %}
+                <p class="book-muted">
+                    Обычные ячейки не настроены.
+                </p>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% if spellbook.warlock_max_slots %}
+        <section class="book-panel">
+            <h2>Ячейки колдуна</h2>
+
+            <p class="book-muted">
+                Уровень ячеек: {{ spellbook.warlock_slot_level }}
+            </p>
+
+            <strong>
+                {{ spellbook.warlock_current_slots }}
+                / {{ spellbook.warlock_max_slots }}
+            </strong>
+            <form
+                class="book-slot-actions"
+                method="post"
+                action="{% url 'spellbook_slot_change_page' spellbook.pk %}"
+            >
+                {% csrf_token %}
+                <input type="hidden" name="slot" value="warlock">
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="spend"
+                    aria-label="Потратить ячейку колдуна"
+                    {% if spellbook.warlock_current_slots == 0 %}disabled{% endif %}
+                >
+                    −
+                </button>
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="restore"
+                    aria-label="Восстановить ячейку колдуна"
+                    {% if spellbook.warlock_current_slots >= spellbook.warlock_max_slots %}disabled{% endif %}
+                >
+                    +
+                </button>
+            </form>
+        </section>
+    {% endif %}
+
+    <section class="book-panel">
+        <h2>Заклинания</h2>
+
+        <ul class="book-spells">
+            {% for spell in spells %}
+                <li>
+                    <a href="{% url 'spell_detail_page' spell.pk %}">
+                        {{ spell.name }}
+                    </a>
+
+                    <span class="book-spell-level">
+                        {% if spell.level == 0 %}
+                            Заговор
+                        {% else %}
+                            {{ spell.level }}-й уровень
+                        {% endif %}
+                    </span>
+                </li>
+            {% empty %}
+                <li class="book-muted">
+                    В этом спеллбуке пока нет заклинаний.
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+</main>
+{% endblock %}

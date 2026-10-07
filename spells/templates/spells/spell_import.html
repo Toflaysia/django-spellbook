@@ -1,114 +1,188 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Загрузка заклинания — Spellbook</title>
+{% extends "spells/form_base.html" %}
 
-    <style>
-        * {
-            box-sizing: border-box;
+{% block title %}Загрузка заклинания — Spellbook{% endblock %}
+
+{% block styles %}
+<style>
+    .import-main {
+        max-width: 760px;
+        margin: auto;
+        padding: 32px 24px;
+    }
+
+    .import-main h1 {
+        margin: 24px 0 12px;
+        font-size: 30px;
+        line-height: 1.2;
+    }
+
+    .import-intro {
+        color: #b8b9cc;
+        line-height: 1.7;
+    }
+
+    .import-panel {
+        margin-top: 24px;
+        padding: 28px;
+        border: 1px solid #343548;
+        border-radius: 16px;
+        background: #1c1d2a;
+    }
+
+    .import-panel label {
+        display: block;
+        margin-bottom: 12px;
+        font-weight: 600;
+    }
+
+    .import-panel input[type="file"] {
+        width: 100%;
+        min-width: 0;
+        padding: 12px;
+        border: 1px dashed #484960;
+        border-radius: 8px;
+        background: #11121a;
+        color: #f3f4f6;
+        font: inherit;
+    }
+
+    .import-panel input[type="file"]::file-selector-button {
+        margin-right: 12px;
+        padding: 8px 12px;
+        border: 1px solid #484960;
+        border-radius: 6px;
+        background: #292a3c;
+        color: #ececf3;
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .import-help {
+        margin: 12px 0;
+        color: #b8b9cc;
+        font-size: 13px;
+    }
+
+    .import-note {
+        margin-top: 24px;
+        padding: 16px;
+        border-radius: 8px;
+        background: #29233e;
+        color: #ddd6fe;
+        font-size: 14px;
+    }
+
+    .import-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 24px;
+    }
+
+    .import-submit {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        background: #c4b5fd;
+        color: #21163c;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .import-submit:hover {
+        background: #ddd6fe;
+    }
+
+    .import-panel .errorlist {
+        padding-left: 20px;
+        color: #fca5a5;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 480px) {
+        .import-main {
+            padding: 24px 16px;
         }
 
-        body {
-            margin: 0;
-            background: #11121a;
-            color: #ececf3;
-            font-family: "Segoe UI", sans-serif;
+        .import-panel {
+            padding: 20px;
         }
+    }
+</style>
+{% endblock %}
 
-        main {
-            max-width: 720px;
-            margin: auto;
-            padding: 32px 24px;
-        }
+{% block content %}
+<main class="import-main">
+    {% if official_import %}
+        <a href="{% url 'spell_list_page' %}">
+            ← Официальные заклинания
+        </a>
+    {% else %}
+        <a href="{% url 'my_spell_list_page' %}">
+            ← Мои заклинания
+        </a>
+    {% endif %}
 
-        a {
-            color: #c4b5fd;
-        }
+    <h1>Загрузить заклинание</h1>
 
-        h1 {
-            margin-top: 28px;
-        }
+    <p class="import-intro">
+        Выбери JSON-файл одного заклинания.
+        После загрузки откроется форма, где можно проверить
+        и изменить его параметры.
+    </p>
 
-        p {
-            color: #b6b7cb;
-            line-height: 1.6;
-        }
+    <form
+        class="import-panel"
+        method="post"
+                action="{% if official_import %}{% url 'official_spell_import_page' %}{% else %}{% url 'spell_import_page' %}{% endif %}"
+        enctype="multipart/form-data"
+    >
+        {% csrf_token %}
 
-        form {
-            margin-top: 24px;
-            padding: 24px;
-            border: 1px solid #36374d;
-            border-radius: 16px;
-            background: #1c1d2a;
-        }
+        {% if form.non_field_errors %}
+            <div role="alert">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
 
-        label {
-            display: block;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
+        <label for="{{ form.json_file.id_for_label }}">
+            {{ form.json_file.label }}
+        </label>
 
-        input[type="file"] {
-            width: 100%;
-            font: inherit;
-        }
+        {{ form.json_file }}
 
-        button {
-            margin-top: 20px;
-            padding: 12px 20px;
-            border: 0;
-            border-radius: 10px;
-            background: #c4b5fd;
-            color: #21163c;
-            font: inherit;
-            font-weight: 600;
-            cursor: pointer;
-        }
+        {% if form.json_file.errors %}
+            <div role="alert">
+                {{ form.json_file.errors }}
+            </div>
+        {% endif %}
 
-        button:hover {
-            background: #ddd6fe;
-        }
-
-        .errorlist {
-            color: #fca5a5;
-        }
-
-        :focus-visible {
-            outline: 3px solid #e9d5ff;
-            outline-offset: 4px;
-        }
-    </style>
-</head>
-<body>
-    <main>
-        <a href="{% url 'my_spell_list_page' %}">← Мои заклинания</a>
-
-        <h1>Загрузить заклинание</h1>
-
-        <p>
-            Выбери JSON-файл одного заклинания.
-            После загрузки проверь данные в форме.
-            Заклинание появится в твоём списке после сохранения.
+        <p class="import-help">
+            {{ form.json_file.help_text }}
         </p>
 
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
+        <p class="import-note">
+            {% if official_import %}
+                После проверки нажми «Создать официальное заклинание».
+                Оно появится в общем каталоге для всех пользователей.
+            {% else %}
+                Загрузка заполняет форму.
+                Заклинание появится в твоей коллекции после
+                нажатия «Создать заклинание».
+            {% endif %}
+        </p>
 
-            {{ form.non_field_errors }}
-            {{ form.json_file.errors }}
+        <div class="import-actions">
+            <button class="import-submit" type="submit">
+                Загрузить и проверить
+            </button>
 
-            <label for="{{ form.json_file.id_for_label }}">
-                {{ form.json_file.label }}
-            </label>
-
-            {{ form.json_file }}
-
-            <p>{{ form.json_file.help_text }}</p>
-
-            <button type="submit">Загрузить и проверить</button>
-        </form>
-    </main>
-</body>
-</html>
+            <a href="{% if official_import %}{% url 'spell_list_page' %}{% else %}{% url 'my_spell_list_page' %}{% endif %}">
+                Отмена
+            </a>
+        </div>
+    </form>
+</main>
+{% endblock %}

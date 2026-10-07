@@ -4,15 +4,16 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth import login
 from django.db import transaction
 from django.db.models import Q
-
+from spells.spell_import import build_spell_initial
 from spells.forms import (
     CharacterCreateForm,
     CharacterEditForm,
     RegistrationForm,
     CustomSpellForm,
+    SpellImportForm,
 )
 from spells.models import Person, Player, Spell, MagicSchool
-
+from spells.spell_import import build_spell_initial
 
 @login_required
 def character_list_page(request):
@@ -242,4 +243,27 @@ def my_spell_list_page(request):
             "spells": spells,
             "search": search,
         },
+    )
+@login_required
+@require_http_methods(["GET", "POST"])
+def spell_import_page(request):
+    form = SpellImportForm(
+        request.POST if request.method == "POST" else None,
+        request.FILES if request.method == "POST" else None,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        initial = build_spell_initial(form.import_data)
+        spell_form = CustomSpellForm(initial=initial)
+
+        return render(
+            request,
+            "spells/spell_form.html",
+            {"form": spell_form},
+        )
+
+    return render(
+        request,
+        "spells/spell_import.html",
+        {"form": form},
     )

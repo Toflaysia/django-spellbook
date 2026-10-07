@@ -176,6 +176,35 @@
                 grid-template-columns: 1fr;
             }
         }
+        .catalog-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 18px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .primary-button {
+            background: #c4b5fd;
+            color: #21163c;
+        }
+
+        .primary-button:hover {
+            background: #ddd6fe;
+        }
+
+        .secondary-button {
+            background: #1d1e2b;
+            color: #c4b5fd;
+            border-color: #45465f;
+        }
+
+        .secondary-button:hover {
+            background: #292a3c;
+        }
     </style>
 </head>
 <body>
@@ -190,16 +219,22 @@
         <h1>Каталог заклинаний</h1>
 
         <p class="muted">
-            Официальные заклинания: поиск по имени, уровню и школе магии.
+            Найди магию для своего персонажа.
         </p>
 
         {% if request.user.is_authenticated %}
             <div class="page-actions">
-                <a href="{% url 'my_spell_list_page' %}">
+                <a
+                    class="catalog-button secondary-button"
+                    href="{% url 'my_spell_list_page' %}"
+                >
                     Мои заклинания
                 </a>
 
-                <a href="{% url 'spell_create_page' %}">
+                <a
+                    class="catalog-button primary-button"
+                    href="{% url 'spell_create_page' %}"
+                >
                     + Создать заклинание
                 </a>
             </div>

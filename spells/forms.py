@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from spells.models import Person, Spell
+import json
 
 class RangeInput(forms.NumberInput):
     input_type = "range"
@@ -341,3 +342,54 @@ class CustomSpellForm(forms.ModelForm):
             )
 
         return cleaned_data
+class SpellImportForm(forms.Form):
+    json_file = forms.FileField(
+        label="Файл заклинания",
+        help_text="Выбери файл в формате JSON. Максимальный размер — 1 МБ.",
+        widget=forms.ClearableFileInput(
+            attrs={"accept": ".json,application/json"}
+        ),
+    )
+
+    def clean_json_file(self):
+        uploaded_file = self.cleaned_data["json_file"]
+
+        if uploaded_file.size > 1024 * 1024:
+            raise forms.ValidationError(
+                "Файл слишком большой. Максимальный размер — 1 МБ."
+            )
+
+        try:
+            text = uploaded_file.read().decode("utf-8-sig")
+            data = json.loads(text)
+        except (UnicodeDecodeError, json.JSONDecodeError, RecursionError):
+            raise forms.ValidationError(
+                "Не удалось прочитать JSON. Проверь формат файла."
+            )
+
+        if not isinstance(data, dict):
+            raise forms.ValidationError(
+                "Файл должен содержать одно заклинание."
+            )
+
+        if data.get("type") != "spell":
+            raise forms.ValidationError(
+                "Этот файл не является заклинанием."
+            )
+
+        name = data.get("name")
+
+        if not isinstance(name, str) or not name.strip():
+            raise forms.ValidationError(
+                "В файле отсутствует название заклинания."
+            )
+
+        if not isinstance(data.get("system"), dict):
+            raise forms.ValidationError(
+                "В файле отсутствует раздел с данными заклинания."
+            )
+
+        self.import_data = data
+        uploaded_file.seek(0)
+
+        return uploaded_file

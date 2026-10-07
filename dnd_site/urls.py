@@ -14,6 +14,7 @@ from spells.views.pages import (
     spell_detail_page,
     spell_create_page,
     my_spell_list_page,
+    spell_import_page,
 )
 
 urlpatterns = [
@@ -33,6 +34,11 @@ urlpatterns = [
         "spells/<int:pk>/",
         spell_detail_page,
         name="spell_detail_page",
+    ),
+        path(
+        "spells/import/",
+        spell_import_page,
+        name="spell_import_page",
     ),
     path("admin/", admin.site.urls),
     path("api-auth/", include("rest_framework.urls")),

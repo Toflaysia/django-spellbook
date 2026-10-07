@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Каталог заклинаний — Spellbook</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #11121a;
+            color: #ececf3;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: auto;
+            padding: 28px 24px;
+        }
+
+        a {
+            color: #c4b5fd;
+        }
+
+        .brand {
+            margin-top: 28px;
+            color: #c4b5fd;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        h1 {
+            margin: 12px 0;
+            font-size: 30px;
+        }
+
+        .muted {
+            color: #b6b7cb;
+            line-height: 1.6;
+        }
+
+        .page-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .search {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 28px 0;
+        }
+
+        .search input {
+            flex: 1 1 220px;
+            min-width: 0;
+        }
+
+        input,
+        select {
+            padding: 12px 16px;
+            border: 1px solid #45465f;
+            border-radius: 10px;
+            background: #1d1e2b;
+            color: #fff;
+            font: inherit;
+        }
+
+        select {
+            max-width: 100%;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: 0;
+            border-radius: 10px;
+            background: #c4b5fd;
+            color: #21163c;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #ddd6fe;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            min-width: 0;
+            padding: 24px;
+            border: 1px solid #36374d;
+            border-radius: 16px;
+            background: #1c1d2a;
+            overflow-wrap: anywhere;
+        }
+
+        .card h2 {
+            margin: 14px 0 12px;
+            font-size: 22px;
+        }
+
+        .card h2 a {
+            text-decoration: none;
+        }
+
+        .card h2 a:hover {
+            text-decoration: underline;
+        }
+
+        .level {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: #302943;
+            color: #c4b5fd;
+            font-size: 14px;
+        }
+
+        .description {
+            line-height: 1.6;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            padding: 4px 8px;
+            border: 1px solid #45465f;
+            border-radius: 6px;
+            color: #c4b5fd;
+            font-size: 12px;
+        }
+
+        .empty {
+            grid-column: 1 / -1;
+            padding: 28px 0;
+            color: #b6b7cb;
+            line-height: 1.6;
+        }
+
+        :focus-visible {
+            outline: 3px solid #e9d5ff;
+            outline-offset: 4px;
+        }
+
+        @media (max-width: 480px) {
+            main {
+                padding: 24px 16px;
+            }
+
+            .search {
+                flex-direction: column;
+            }
+
+            .search input {
+                flex: none;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        {% if request.user.is_authenticated %}
+            <a href="{% url 'character_list_page' %}">← Мои персонажи</a>
+        {% else %}
+            <a href="{% url 'login' %}">Войти</a>
+        {% endif %}
+
+        <div class="brand">Spellbook</div>
+        <h1>Каталог заклинаний</h1>
+
+        <p class="muted">
+            Официальные заклинания: поиск по имени, уровню и школе магии.
+        </p>
+
+        {% if request.user.is_authenticated %}
+            <div class="page-actions">
+                <a href="{% url 'my_spell_list_page' %}">
+                    Мои заклинания
+                </a>
+
+                <a href="{% url 'spell_create_page' %}">
+                    + Создать заклинание
+                </a>
+            </div>
+        {% endif %}
+
+        <form class="search" method="get">
+            <input
+                type="search"
+                name="search"
+                value="{{ search }}"
+                placeholder="Название заклинания"
+                aria-label="Поиск заклинания по имени"
+            >
+
+            <select name="level" aria-label="Уровень заклинания">
+                <option value="">Все уровни</option>
+
+                {% for value in levels %}
+                    <option
+                        value="{{ value }}"
+                        {% if level == value|stringformat:"s" %}selected{% endif %}
+                    >
+                        {% if value == 0 %}
+                            Заговор
+                        {% else %}
+                            Уровень {{ value }}
+                        {% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select name="school" aria-label="Школа магии">
+                <option value="">Все школы</option>
+
+                {% for magic_school in schools %}
+                    <option
+                        value="{{ magic_school.pk }}"
+                        {% if school == magic_school.pk|stringformat:"s" %}selected{% endif %}
+                    >
+                        {{ magic_school.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Найти</button>
+        </form>
+
+        {% if search or level or school %}
+            <p class="muted">
+                Фильтры применены.
+                <a href="{% url 'spell_list_page' %}">Сбросить</a>
+            </p>
+        {% endif %}
+
+        <div class="cards">
+            {% for spell in spells %}
+                <article class="card">
+                    <span class="level">
+                        {% if spell.level == 0 %}
+                            Заговор
+                        {% else %}
+                            Уровень {{ spell.level }}
+                        {% endif %}
+                    </span>
+
+                    <h2>
+                        <a href="{% url 'spell_detail_page' spell.pk %}">
+                            {{ spell.name }}
+                        </a>
+                    </h2>
+
+                    <p class="muted">
+                        {{ spell.school.name|default:"Школа не указана" }}
+                    </p>
+
+                    <p class="description">
+                        {{ spell.description|truncatechars:180 }}
+                    </p>
+
+                    <p class="muted">
+                        Время: {{ spell.time.time|default:"Не указано" }}<br>
+                        Дистанция: {{ spell.range|default:"Не указана" }}<br>
+                        Длительность: {{ spell.duration }}
+                    </p>
+
+                    {% if spell.concentration or spell.ritual %}
+                        <div class="tags">
+                            {% if spell.concentration %}
+                                <span class="tag">Концентрация</span>
+                            {% endif %}
+
+                            {% if spell.ritual %}
+                                <span class="tag">Ритуал</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </article>
+            {% empty %}
+                <p class="empty">
+                    {% if search or level or school %}
+                        По выбранным фильтрам заклинания не найдены.
+                    {% else %}
+                        В каталоге пока нет официальных заклинаний.
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+    </main>
+</body>
+</html>

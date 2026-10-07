@@ -1,0 +1,25 @@
+<input
+    type="{{ widget.type }}"
+    name="{{ widget.name }}"
+    {% include "django/forms/widgets/attrs.html" %}
+>
+
+{% if widget.is_initial and not widget.required %}
+    <div id="portrait-clear-control">
+        <input
+            type="checkbox"
+            name="{{ widget.checkbox_name }}"
+            id="{{ widget.checkbox_id }}"
+            hidden
+            {% if widget.checked %}checked{% endif %}
+        >
+
+        <button type="button" id="clear-portrait-button">
+            Очистить портрет
+        </button>
+
+        <p class="help" id="portrait-clear-message" hidden>
+            Портрет будет убран после сохранения персонажа.
+        </p>
+    </div>
+{% endif %}

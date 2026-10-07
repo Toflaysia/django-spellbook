@@ -76,6 +76,28 @@ class Person(models.Model):
 
     id = models.AutoField(primary_key=True, verbose_name="id")
     name = models.CharField(max_length=100, verbose_name="Название")
+    portrait = models.ImageField(
+        upload_to="character_portraits/",
+        blank=True,
+        verbose_name="Портрет персонажа",
+    )
+    portrait_position_x = models.IntegerField(
+        default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name="Положение портрета по горизонтали",
+    )
+
+    portrait_position_y = models.IntegerField(
+        default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name="Положение портрета по вертикали",
+    )
+
+    portrait_zoom = models.FloatField(
+        default=1,
+        validators=[MinValueValidator(1), MaxValueValidator(3)],
+        verbose_name="Масштаб портрета",
+    )
     player = models.ForeignKey(
         Player,
         on_delete=models.SET_NULL,

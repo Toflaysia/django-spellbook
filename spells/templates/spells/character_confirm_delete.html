@@ -43,28 +43,68 @@
 
         button {
             padding: 12px 18px;
-            border: none;
+            border: 1px solid #754052;
             border-radius: 8px;
-            background: #b91c1c;
-            color: white;
+            background: #39232c;
+            color: #fda4af;
             font: inherit;
+            font-weight: 600;
             cursor: pointer;
         }
 
         button:hover {
-            background: #991b1b;
+            background: #4b2b37;
         }
 
         a {
             color: #c4b5fd;
         }
+        * {
+    box-sizing: border-box;
+}
+
+    .brand {
+        color: #c4b5fd;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .page-title {
+        margin: 12px 0 20px;
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .cancel-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 18px;
+        border: 1px solid #45465f;
+        border-radius: 8px;
+        background: #292a3c;
+        color: #ececf3;
+        font: inherit;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .cancel-button:hover {
+        background: #35364b;
+    }
+
+    :focus-visible {
+        outline: 3px solid #e9d5ff;
+        outline-offset: 4px;
+    }
     </style>
 </head>
 <body>
     <main>
         <div class="panel">
-            <h1>Удалить персонажа?</h1>
-
+            <div class="brand">Spellbook</div>
+            <h1 class="page-title">Удалить персонажа?</h1>
             <p>
                 Ты собираешься удалить персонажа
                 <strong>«{{ character.name }}»</strong>.
@@ -80,7 +120,7 @@
 
                 <div class="actions">
                     <button type="submit">Удалить персонажа</button>
-                    <a href="{% url 'character_list_page' %}">
+                    <a class="cancel-button" href="{% url 'character_list_page' %}">
                         Отмена
                     </a>
                 </div>

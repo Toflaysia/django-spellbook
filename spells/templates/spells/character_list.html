@@ -1,3 +1,4 @@
+{% load l10n %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -95,15 +96,46 @@
 
         .cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 20px;
         }
 
         .card {
-            padding: 24px;
+            min-width: 0;
+            overflow: hidden;
             border: 1px solid #36374d;
             border-radius: 16px;
             background: #1c1d2a;
+        }
+
+        .card-portrait {
+            aspect-ratio: 7 / 8;
+            overflow: hidden;
+            background: #11121a;
+            border-bottom: 1px solid #36374d;
+        }
+
+        .card-portrait img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .portrait-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #29233d, #171923);
+            color: #c4b5fd;
+            font-size: 80px;
+            font-weight: 600;
+        }
+
+        .card-content {
+            padding: 24px;
         }
 
         .card h2 {
@@ -157,12 +189,65 @@
                 grid-template-columns: 1fr;
             }
         }
+            .card-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin: 16px 0 20px;
+            }
+
+            .card-action {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 9px 14px;
+                border: 1px solid transparent;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+            .edit-action {
+                background: #c4b5fd;
+                color: #21163c;
+            }
+
+            .edit-action:hover {
+                background: #ddd6fe;
+            }
+
+            .delete-action {
+                background: transparent;
+                color: #fda4af;
+                border-color: #754052;
+            }
+
+            .delete-action:hover {
+                background: #39232c;
+            }
+            .create-character-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 12px 20px;
+                background: #c4b5fd;
+                color: #21163c;
+                border-radius: 10px;
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+            .create-character-button:hover {
+                background: #ddd6fe;
+            }
     </style>
 </head>
 <body>
     <header>
         <div class="header-content">
             <div class="brand">Spellbook</div>
+            <a href="{% url 'spell_list_page' %}">Заклинания</a>
             <div class="user">Игрок: {{ request.user.username }}</div>
             <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}
@@ -174,7 +259,7 @@
     <main>
         <h1>Мои персонажи</h1>
         <p>
-            <a href="{% url 'character_create_page' %}">
+            <a class="create-character-button" href="{% url 'character_create_page' %}">
                 + Создать персонажа
             </a>
         </p>
@@ -202,16 +287,42 @@
 
         <div class="cards">
             {% for character in characters %}
-                <article class="card">
+            <article class="card">
+                <div class="card-portrait">
+                    {% if character.portrait %}
+                        <img
+                            class="character-portrait-image"
+                            src="{{ character.portrait.url }}"
+                            alt="Портрет персонажа {{ character.name }}"
+                            loading="lazy"
+                            data-position-x="{{ character.portrait_position_x|unlocalize }}"
+                            data-position-y="{{ character.portrait_position_y|unlocalize }}"
+                            data-zoom="{{ character.portrait_zoom|unlocalize }}"
+                        >
+                    {% else %}
+                        <div class="portrait-placeholder" aria-hidden="true">
+                            {{ character.name|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-content">
                     <h2>{{ character.name }}</h2>
-                    <p>
-                        <a href="{% url 'character_edit_page' character.pk %}">
+                    <div class="card-actions">
+                        <a
+                            class="card-action edit-action"
+                            href="{% url 'character_edit_page' character.pk %}"
+                        >
                             Редактировать
                         </a>
-                        <a href="{% url 'character_delete_page' character.pk %}">
+
+                        <a
+                            class="card-action delete-action"
+                            href="{% url 'character_delete_page' character.pk %}"
+                        >
                             Удалить
                         </a>
-                    </p>
+                    </div>
 
                     <div class="muted">
                         {{ character.race|default:"Раса не указана" }}
@@ -243,6 +354,7 @@
                     {% if character.is_favorite %}
                         <p class="muted">Избранный персонаж</p>
                     {% endif %}
+                    </div>
                 </article>
             {% empty %}
                 <p class="empty">
@@ -255,5 +367,18 @@
             {% endfor %}
         </div>
     </main>
+    <script>
+    document.querySelectorAll('.character-portrait-image').forEach(
+        function (image) {
+            const x = Number(image.dataset.positionX);
+            const y = Number(image.dataset.positionY);
+            const zoom = Number(image.dataset.zoom);
+
+            image.style.objectPosition = `${x}% ${y}%`;
+            image.style.transformOrigin = `${x}% ${y}%`;
+            image.style.transform = `scale(${zoom})`;
+        }
+    );
+</script>
 </body>
 </html>

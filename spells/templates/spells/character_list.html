@@ -164,6 +164,10 @@
         <div class="header-content">
             <div class="brand">Spellbook</div>
             <div class="user">Игрок: {{ request.user.username }}</div>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit">Выйти</button>
+            </form>
         </div>
     </header>
 

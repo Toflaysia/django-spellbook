@@ -1,12 +1,18 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth import login
+from django.db import transaction
 
-from spells.forms import CharacterCreateForm, CharacterEditForm
+from spells.forms import (
+    CharacterCreateForm,
+    CharacterEditForm,
+    RegistrationForm,
+)
 from spells.models import Person, Player
 
 
-@login_required(login_url="/api-auth/login/")
+@login_required
 def character_list_page(request):
     search = request.GET.get("search", "").strip()
 
@@ -25,7 +31,7 @@ def character_list_page(request):
             "search": search,
         },
     )
-@login_required(login_url="/api-auth/login/")
+@login_required
 def character_create_page(request):
     form = CharacterCreateForm(
         request.POST if request.method == "POST" else None
@@ -46,7 +52,7 @@ def character_create_page(request):
         "spells/character_form.html",
         {"form": form},
     )
-@login_required(login_url="/api-auth/login/")
+@login_required
 def character_edit_page(request, pk):
     character = get_object_or_404(
         Person,
@@ -71,7 +77,7 @@ def character_edit_page(request, pk):
             "editing": True,
         },
     )
-@login_required(login_url="/api-auth/login/")
+@login_required
 @require_http_methods(["GET", "POST"])
 def character_delete_page(request, pk):
     character = get_object_or_404(
@@ -88,4 +94,26 @@ def character_delete_page(request, pk):
         request,
         "spells/character_confirm_delete.html",
         {"character": character},
+    )
+@require_http_methods(["GET", "POST"])
+def register_page(request):
+    if request.user.is_authenticated:
+        return redirect("character_list_page")
+
+    form = RegistrationForm(
+        request.POST if request.method == "POST" else None
+    )
+
+    if request.method == "POST" and form.is_valid():
+        with transaction.atomic():
+            user = form.save()
+            Player.objects.create(user=user)
+
+        login(request, user)
+        return redirect("character_list_page")
+
+    return render(
+        request,
+        "spells/register.html",
+        {"form": form},
     )

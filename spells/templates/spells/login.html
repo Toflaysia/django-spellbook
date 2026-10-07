@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вход — Spellbook</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #11121a;
+            color: #f3f4f6;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        main {
+            max-width: 460px;
+            margin: 60px auto;
+            padding: 24px;
+        }
+
+        .panel {
+            padding: 28px;
+            background: #1c1d2a;
+            border: 1px solid #343548;
+            border-radius: 16px;
+        }
+
+        .brand {
+            color: #c4b5fd;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .intro {
+            color: #b8b9cc;
+            line-height: 1.6;
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #484960;
+            border-radius: 8px;
+            background: #11121a;
+            color: #f3f4f6;
+            font: inherit;
+        }
+
+        input:focus {
+            outline: 2px solid #c4b5fd;
+            outline-offset: 2px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #c4b5fd;
+            color: #11121a;
+            font: inherit;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #ddd6fe;
+        }
+
+        .errors {
+            margin-bottom: 20px;
+            color: #fca5a5;
+            line-height: 1.5;
+        }
+
+        .errorlist {
+            padding-left: 20px;
+            color: #fca5a5;
+        }
+        a {
+            color: #c4b5fd;
+        }
+        
+
+        .registration {
+            margin-top: 28px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            color: #b8b9cc;
+            font-size: 13px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #343548;
+        }
+
+        .register-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 13px 18px;
+            border: 1px solid #8975c8;
+            border-radius: 10px;
+            background: #29233e;
+            color: #e9dfff;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .register-button:hover {
+            background: #382c53;
+            border-color: #c4b5fd;
+        }
+
+        .register-button:focus-visible {
+            outline: 2px solid #c4b5fd;
+            outline-offset: 4px;
+        }
+
+        .registration-note {
+            margin: 12px 0 0;
+            color: #b8b9cc;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="panel">
+            <div class="brand">Spellbook</div>
+            <h1>Вход</h1>
+
+            <p class="intro">
+                Войди, чтобы открыть своих персонажей и книги заклинаний.
+            </p>
+
+            {% if form.non_field_errors %}
+                <div class="errors" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <input type="hidden" name="next" value="{{ next }}">
+
+                <div class="field">
+                    <label for="{{ form.username.id_for_label }}">
+                        Имя пользователя
+                    </label>
+                    {{ form.username }}
+                    {{ form.username.errors }}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.password.id_for_label }}">
+                        Пароль
+                    </label>
+                    {{ form.password }}
+                    {{ form.password.errors }}
+                </div>
+
+                <button type="submit">Войти</button>
+            </form>
+            <div class="registration">
+                <div class="divider">
+                    <span>Впервые в Spellbook?</span>
+                </div>
+
+                <a class="register-button" href="{% url 'register' %}">
+                    Создать аккаунт
+                    <span aria-hidden="true">→</span>
+                </a>
+
+                <p class="registration-note">
+                    Твои персонажи и заклинания — в одном месте
+                </p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

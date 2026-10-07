@@ -1,5 +1,6 @@
 from django import forms
-
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 from spells.models import Person
 
 
@@ -109,3 +110,11 @@ class CharacterEditForm(CharacterCreateForm):
                 )
 
         return cleaned_data
+class RegistrationForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ["username"]
+        labels = {
+            "username": "Имя пользователя",
+        }
+    

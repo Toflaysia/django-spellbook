@@ -1,0 +1,18 @@
+.description-editor { min-width: 0; border: 1px solid #484960; border-radius: 10px; background: #11121a; }
+.description-toolbar { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid #343548; }
+.description-dropdown { position: relative; }
+body .description-editor .description-toggle { width: 36px; min-height: 36px; padding: 0; border: 1px solid #484960; background: #252637; color: #ddd6fe; font-size: 22px; }
+body .description-editor .description-small-button { min-height: 36px; padding: 7px 10px; border: 1px solid #484960; background: #252637; color: #ececf3; font-size: 13px; }
+body .description-editor button:hover { background: #343047; color: #fff; }
+.description-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; min-width: 140px; padding: 6px; border: 1px solid #484960; border-radius: 8px; background: #252637; box-shadow: 0 8px 24px rgb(0 0 0 / 30%); }
+.description-editor [hidden] { display: none !important; }
+.description-surface { min-height: 180px; max-height: 650px; overflow: auto; padding: 14px; color: #ececf3; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+.description-surface p { margin: 0 0 12px; }
+.description-surface p:last-child { margin-bottom: 0; }
+.description-surface:focus-visible { outline: 2px solid #c4b5fd; outline-offset: -2px; }
+.description-edit-table, .description-display-table { width: 100%; border-collapse: collapse; margin: 16px 0; white-space: normal; }
+.description-edit-table td, .description-display-table td { min-width: 90px; padding: 10px; border: 1px solid #484960; background: #191a25; vertical-align: top; white-space: pre-wrap; overflow-wrap: anywhere; }
+.description-display-table-wrapper { overflow-x: auto; margin: 16px 0; }
+.description-display-table-wrapper .description-display-table { margin: 0; }
+.description-editor-error { padding: 10px 14px; color: #fca5a5; }
+.class-section-admin-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; margin-bottom: 24px; }

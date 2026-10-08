@@ -5,6 +5,7 @@ from django.utils.timezone import now
 
 from spells.models.enums import Alignment, Characters, Dice, MagicType
 from spells.models.users import Player
+from spells.progression import TABLE_TYPES, validate_class_columns, validate_subclass_columns
 
 
 class CharacterClass(models.Model):
@@ -13,6 +14,13 @@ class CharacterClass(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="id")
     name = models.CharField(max_length=50, unique=True, verbose_name="Название")
     description = models.TextField(verbose_name="Описание")
+    progression_table_type = models.CharField(
+        max_length=20, choices=TABLE_TYPES, default="basic", verbose_name="Вид таблицы развития",
+    )
+    progression_columns = models.JSONField(
+        default=list, blank=True, validators=[validate_class_columns],
+        verbose_name="Столбцы таблицы развития",
+    )
     magic_type = models.CharField(
         max_length=2,
         choices=MagicType.choices,
@@ -53,6 +61,10 @@ class Subclass(models.Model):
         related_name="subclasses",
         verbose_name="Класс",
     )
+    progression_columns = models.JSONField(
+        default=list, blank=True, validators=[validate_subclass_columns],
+        verbose_name="Дополнительные столбцы подкласса",
+    )
     features_description = models.TextField(
         blank=True, verbose_name="Описание характеристик"
     )
@@ -62,6 +74,15 @@ class Subclass(models.Model):
         help_text="На каком уровне класса получается этот подкласс",
         verbose_name="Уровень получения",
     )
+
+    def clean(self):
+        super().clean()
+        if self.pk and self.character_class_id and self.features.exclude(
+            character_class_id=self.character_class_id,
+        ).exists():
+            raise ValidationError({
+                "character_class": "У подкласса есть умения другого класса. Нельзя перенести его в этот класс.",
+            })
 
     def __str__(self):
         return f"{self.name} ({self.character_class.name})"

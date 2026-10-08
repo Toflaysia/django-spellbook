@@ -1,0 +1,91 @@
+{% extends "spells/form_base.html" %}
+{% load static %}
+{% block title %}Настройка таблицы — {{ character_class.name }} — Spellbook{% endblock %}
+{% block styles %}
+<style>
+    .progression-main { max-width: 1200px; margin: auto; padding: 32px 24px; }
+    .progression-main h1 { font-size: 28px; }
+    .progression-panel { padding: 24px; border: 1px solid #343548; border-radius: 16px; background: #1c1d2a; }
+    .progression-muted { color: #b8b9cc; }
+    .progression-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 20px 0; }
+    .progression-scroll { overflow-x: auto; margin: 20px 0; }
+    .progression-grid { width: 100%; border-collapse: collapse; }
+    .progression-grid th, .progression-grid td { padding: 8px; border: 1px solid #484960; vertical-align: top; }
+    .progression-grid td:first-child { min-width: 55px; }
+    .progression-grid th { min-width: 170px; }
+    .progression-panel input:not([type="hidden"]), .progression-panel select {
+        box-sizing: border-box; width: 100%; padding: 10px; border: 1px solid #484960;
+        border-radius: 6px; background: #11121a; color: #ececf3; font: inherit;
+    }
+    .progression-grid .progression-column-actions { display: flex; gap: 4px; margin-top: 8px; }
+    body .progression-grid button { padding: 6px 8px; min-height: 32px; font-size: 13px; }
+    .progression-panel .errorlist { color: #fca5a5; }
+    @media (max-width: 600px) { .progression-main { padding: 24px 16px; } .progression-panel { padding: 16px; } }
+.progression-main {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    padding: 32px clamp(16px, 3vw, 48px);
+}
+
+.progression-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.progression-grid th {
+    min-width: 130px;
+}
+
+.progression-panel {
+    padding: 20px;
+}
+.class-main,
+.progression-main {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+@media (max-width: 600px) {
+    .class-main,
+    .progression-main {
+        padding: 24px 16px;
+    }
+}
+</style>
+{% endblock %}
+{% block content %}
+<main class="progression-main">
+    <h1>{% if subclass %}Дополнительные столбцы подкласса{% else %}Таблица развития класса{% endif %}</h1>
+    <p class="progression-muted">Класс: <strong>{{ character_class.name }}</strong>{% if subclass %} · Подкласс: <strong>{{ subclass.name }}</strong>{% endif %}</p>
+    <form method="post" class="progression-panel" id="progression-form" data-subclass="{% if subclass %}true{% else %}false{% endif %}">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {{ form.columns }}
+        {{ form.columns.errors }}
+        {% if subclass %}
+            <p>Эти столбцы добавятся к таблице {{ character_class.name }} при выборе {{ subclass.name }}. Значения до уровня получения подкласса отображаются как «—».</p>
+        {% else %}
+            {{ form.table_type.label_tag }}
+            {{ form.table_type }}
+            {{ form.table_type.errors }}
+            <div class="progression-actions">
+                <button type="button" id="apply-progression-preset" class="btn btn-secondary">Применить шаблон столбцов</button>
+            </div>
+            <p class="progression-muted">Шаблон задаёт названия и порядок столбцов. Значения вводятся отдельно. При применении шаблона значения совпадающих столбцов сохраняются; столбцы, которых нет в новом шаблоне, будут убраны.</p>
+        {% endif %}
+        <p class="progression-muted">Уровень, бонус мастерства и умения заполняются автоматически. Остальные ячейки можно заполнить для каждого из 20 уровней. Пустая ячейка отображается как «—».</p>
+        <div class="progression-actions"><button type="button" id="add-progression-column" class="btn btn-secondary">+ Добавить столбец</button></div>
+        <div class="progression-scroll" id="progression-grid"></div>
+        <noscript><p>Для настройки таблицы включи JavaScript в браузере.</p></noscript>
+        <div class="progression-actions">
+            <button type="submit">Сохранить таблицу</button>
+            <a class="btn btn-secondary" href="{{ return_url }}">Отмена</a>
+        </div>
+    </form>
+    {{ table_presets|json_script:"progression-presets" }}
+</main>
+{% endblock %}
+{% block scripts %}<script src="{% static 'spells/progression_editor.js' %}"></script>{% endblock %}

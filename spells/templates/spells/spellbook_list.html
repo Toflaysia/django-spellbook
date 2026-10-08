@@ -1,4 +1,5 @@
 {% extends "spells/base.html" %}
+{% load description_tags %}
 
 {% block title %}Мои спеллбуки — Spellbook{% endblock %}
 
@@ -168,7 +169,7 @@
                 </p>
 
                 {% if book.description %}
-                    <p>{{ book.description|truncatechars:180 }}</p>
+                    <p>{{ book.description|description_text|truncatechars:180 }}</p>
                 {% endif %}
 
                 <span class="book-count">

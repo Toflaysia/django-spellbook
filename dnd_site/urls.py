@@ -1,3 +1,4 @@
+from spells.views.progression_pages import class_table_edit_page
 from django.contrib import admin
 from django.urls import include, path
 from django.contrib.auth.views import LoginView, LogoutView
@@ -7,6 +8,7 @@ from spells.views.class_pages import (
     class_detail_page,
     subclass_create_page,
     subclass_edit_page,
+    subclass_delete_page,
     class_feature_create_page,
     class_feature_edit_page,
     class_feature_delete_page,
@@ -45,9 +47,18 @@ from spells.views.catalog import (
     catalog_detail_page,
     catalog_create_page,
     catalog_edit_page,
+    catalog_delete_page,
 )
 
 urlpatterns = [
+    path("catalog/<slug:slug>/<int:pk>/delete/", catalog_delete_page, name="catalog_delete_page"),
+    path("classes/<int:pk>/table/edit/", class_table_edit_page, name="class_table_edit_page"),
+    path("classes/<int:pk>/subclasses/<int:entry_pk>/table/edit/", class_table_edit_page, name="subclass_table_edit_page"),
+    path(
+        "classes/<int:pk>/subclasses/<int:entry_pk>/delete/",
+        subclass_delete_page,
+        name="subclass_delete_page",
+    ),
     path("", home_page, name="home_page"),
     path("characters/", character_list_page, name="character_list_page"),
     path("spells/", spell_list_page, name="spell_list_page"),

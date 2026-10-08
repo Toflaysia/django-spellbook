@@ -1,0 +1,106 @@
+{% extends "spells/form_base.html" %}
+
+{% block title %}Удаление подкласса — Spellbook{% endblock %}
+
+{% block styles %}
+<style>
+    .section-delete-main {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 0 24px;
+    }
+
+    .section-delete-panel {
+        padding: 28px;
+        border: 1px solid #343548;
+        border-radius: 16px;
+        background: #1c1d2a;
+        overflow-wrap: anywhere;
+    }
+
+    .section-delete-panel h1 {
+        margin: 0 0 20px;
+        font-size: 28px;
+    }
+
+    .section-delete-muted {
+        color: #b8b9cc;
+    }
+
+    .section-delete-warning {
+        margin: 24px 0;
+        padding: 16px;
+        border: 1px solid #754052;
+        border-radius: 10px;
+        background: #30202a;
+        color: #fda4af;
+    }
+
+    .section-delete-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+        .section-delete-main {
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        .section-delete-panel {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="section-delete-main">
+    <section class="section-delete-panel">
+        <h1>Удалить подкласс?</h1>
+
+        <p>
+            Подкласс: <strong>«{{ subclass.name }}»</strong>.
+        </p>
+
+        <p class="section-delete-muted">
+            Класс: {{ character_class.name }}.
+        </p>
+
+        <p class="section-delete-warning">
+            Подкласс и его собственные умения будут удалены.
+            Общие умения и разделы класса сохранятся.
+            У персонажей, выбравших этот подкласс, выбор подкласса сбросится.
+            Заклинания сохранятся, но их связь с этим подклассом будет убрана.
+            Отменить удаление нельзя.
+        </p>
+
+        {% if features %}
+            <h2>Умения, которые будут удалены: {{ features|length }}</h2>
+            <ul>
+                {% for feature in features %}
+                    <li>{{ feature.name }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="section-delete-muted">У этого подкласса нет собственных умений.</p>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="section-delete-actions">
+                <a class="btn btn-secondary" href="{{ return_url }}">
+                    Отмена
+                </a>
+
+                <button class="btn btn-danger" type="submit">
+                    Удалить подкласс
+                </button>
+            </div>
+        </form>
+    </section>
+</main>
+{% endblock %}

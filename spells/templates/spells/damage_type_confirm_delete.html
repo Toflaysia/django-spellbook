@@ -1,0 +1,93 @@
+{% extends "spells/form_base.html" %}
+
+{% block title %}Удаление типа урона — Spellbook{% endblock %}
+
+{% block styles %}
+<style>
+    .section-delete-main {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 0 24px;
+    }
+
+    .section-delete-panel {
+        padding: 28px;
+        border: 1px solid #343548;
+        border-radius: 16px;
+        background: #1c1d2a;
+        overflow-wrap: anywhere;
+    }
+
+    .section-delete-panel h1 {
+        margin: 0 0 20px;
+        font-size: 28px;
+    }
+
+    .section-delete-muted {
+        color: #b8b9cc;
+    }
+
+    .section-delete-warning {
+        margin: 24px 0;
+        padding: 16px;
+        border: 1px solid #754052;
+        border-radius: 10px;
+        background: #30202a;
+        color: #fda4af;
+    }
+
+    .section-delete-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+        .section-delete-main {
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        .section-delete-panel {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="section-delete-main">
+    <section class="section-delete-panel">
+        <h1>Удалить тип урона?</h1>
+
+        <p>
+            Тип урона: <strong>«{{ item.name }}»</strong>.
+        </p>
+
+        <p class="section-delete-muted">
+            Связанных эффектов: {{ effects_count }}.
+        </p>
+
+        <p class="section-delete-warning">
+            Тип урона и его описание будут удалены.
+            Эффекты и заклинания сохранятся, но у связанных эффектов тип урона станет не указан.
+            Отменить удаление нельзя.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="section-delete-actions">
+                <a class="btn btn-secondary" href="{% url 'catalog_list_page' 'damage-types' %}">
+                    Отмена
+                </a>
+
+                <button class="btn btn-danger" type="submit">
+                    Удалить тип урона
+                </button>
+            </div>
+        </form>
+    </section>
+</main>
+{% endblock %}

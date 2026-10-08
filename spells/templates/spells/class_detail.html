@@ -251,6 +251,50 @@
     white-space: normal;
     overflow-wrap: anywhere;
 }
+.class-main {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    padding: 32px clamp(16px, 3vw, 48px);
+}
+
+.class-table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.class-table {
+    width: 100%;
+    table-layout: auto;
+}
+
+.class-table thead th {
+    min-width: 80px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.class-table td:has(.class-feature-links) {
+    min-width: 280px;
+}
+
+.class-table tbody td {
+    font-size: 15px;
+}
+.class-main,
+.progression-main {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+@media (max-width: 600px) {
+    .class-main,
+    .progression-main {
+        padding: 24px 16px;
+    }
+}
 </style>
 {% endblock %}
 
@@ -312,6 +356,12 @@
                     >
                         Редактировать подкласс
                     </a>
+                    <a
+                        class="btn btn-danger"
+                        href="{% url 'subclass_delete_page' character_class.pk selected_subclass.pk %}"
+                    >
+                        Удалить подкласс
+                    </a>
                 {% endif %}
             </p>
         {% endif %}
@@ -357,6 +407,15 @@
 
     <section class="class-panel">
         <h2>Развитие по уровням</h2>
+        <p class="class-muted">Таблица класса: {{ character_class.name }} · Вид: {{ character_class.get_progression_table_type_display }}</p>
+        {% if request.user.is_staff %}
+            <div class="class-block-actions">
+                <a class="btn btn-secondary" href="{% url 'class_table_edit_page' character_class.pk %}">Настроить таблицу класса</a>
+                {% if selected_subclass %}
+                    <a class="btn btn-secondary" href="{% url 'subclass_table_edit_page' character_class.pk selected_subclass.pk %}">Столбцы подкласса</a>
+                {% endif %}
+            </div>
+        {% endif %}
             {% if sections %}
                 <nav class="class-section-buttons" aria-label="Разделы класса">
                     {% for section in sections %}
@@ -400,31 +459,30 @@
             <table class="class-table">
                 <thead>
                     <tr>
-                        <th scope="col">Уровень</th>
-                        <th scope="col">Бонус мастерства</th>
-                        <th scope="col">Умения</th>
+                        {% for column in table_columns %}
+                            <th scope="col">{{ column.title }}{% if column.source == 'subclass' %}<br><small>{{ selected_subclass.name }}</small>{% endif %}</th>
+                        {% endfor %}
                     </tr>
                 </thead>
 
                 <tbody>
                     {% for row in levels %}
                         <tr>
-                            <th scope="row">{{ row.level }}</th>
-                            <td>+{{ row.proficiency }}</td>
-                            <td>
-                                <div class="class-feature-links">
-                                    {% for feature in row.features %}
-                                        <a
-                                            class="class-feature-link {% if feature.subclass_id %}class-feature-link-subclass{% endif %}"
-                                            href="#feature-{{ feature.pk }}"
-                                        >
-                                            {{ feature.name }}
-                                        </a>
-                                    {% empty %}
-                                        <span class="class-muted">—</span>
-                                    {% endfor %}
-                                </div>
-                            </td>
+                            {% for cell in row.cells %}
+                                {% if cell.kind == 'level' %}
+                                    <th scope="row">{{ cell.value }}</th>
+                                {% elif cell.kind == 'features' %}
+                                    <td>
+                                        <div class="class-feature-links">
+                                            {% for feature in cell.features %}
+                                                <a class="class-feature-link {% if feature.subclass_id %}class-feature-link-subclass{% endif %}" href="#feature-{{ feature.pk }}">{{ feature.name }}</a>
+                                            {% empty %}<span class="class-muted">—</span>{% endfor %}
+                                        </div>
+                                    </td>
+                                {% else %}
+                                    <td>{{ cell.value }}</td>
+                                {% endif %}
+                            {% endfor %}
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -442,10 +500,13 @@
             </summary>
 
             <div class="class-collapsible-content">
-                {{ section.description|render_description }}    
+                {{ section.description|render_description }}
+            </div>
+        </details>
+    
 
                 {% if request.user.is_staff %}
-                    <div class="class-block-actions">
+                    <div class="class-section-admin-actions">
                         <a
                             class="btn btn-secondary"
                             href="{% url 'class_section_edit_page' character_class.pk section.pk %}"
@@ -461,8 +522,6 @@
                         </a>
                     </div>
                 {% endif %}
-            </div>
-        </details>
     {% endfor %}
         {% for feature in features %}
             <details

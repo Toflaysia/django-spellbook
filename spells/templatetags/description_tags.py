@@ -50,3 +50,18 @@ def render_description(value):
         parts.append("</tbody></table></div>")
 
     return mark_safe("".join(parts))
+
+@register.filter
+def description_text(value):
+    value = str(value or "")
+    if not value.startswith(DESCRIPTION_PREFIX):
+        return value
+    try:
+        blocks = parse_description(value)
+    except (ValueError, TypeError, RecursionError):
+        return value
+    return "\n".join(
+        block["text"] if block["type"] == "text" else
+        "\n".join(" | ".join(row) for row in block["rows"])
+        for block in blocks
+    )

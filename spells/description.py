@@ -64,6 +64,7 @@ class DescriptionFormMixin:
     description_field_names = (
         "description",
         "features_description",
+        "higher_level",
     )
 
     def __init__(self, *args, **kwargs):
@@ -126,3 +127,8 @@ class DescriptionFormMixin:
             )
 
         return cleaned_data
+
+class DescriptionModelForm(DescriptionFormMixin, forms.ModelForm):
+    class Media:
+        css = {"all": ("spells/description_editor.css",)}
+        js = ("spells/description_editor.js",)

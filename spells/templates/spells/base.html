@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -21,6 +22,12 @@
 
         a {
             color: #c4b5fd;
+        }
+
+        .catalog-back-nav {
+            max-width: 1100px;
+            margin: auto;
+            padding: 24px 24px 0;
         }
 
         .site-header {
@@ -278,6 +285,7 @@
             }
         }
     </style>
+<link rel="stylesheet" href="{% static 'spells/description_editor.css' %}">
 </head>
 <body>
     {% block header %}
@@ -317,8 +325,11 @@
     </header>
     {% endblock header %}
 
+    {% include "spells/includes/catalog_back.html" %}
     {% block content %}{% endblock %}
 
     {% block scripts %}{% endblock %}
+    {% include "spells/includes/description_editor.html" %}
+    <script src="{% static 'spells/unsaved_changes.js' %}"></script>
 </body>
 </html>

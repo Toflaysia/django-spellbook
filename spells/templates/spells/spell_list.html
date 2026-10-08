@@ -1,4 +1,5 @@
 {% extends "spells/base.html" %}
+{% load description_tags %}
 
 {% block title %}Официальные заклинания — Spellbook{% endblock %}
 
@@ -174,7 +175,7 @@
     <h1>Официальные заклинания</h1>
     {% if request.user.is_staff %}
         <p>
-            <a href="{% url 'official_spell_import_page' %}">
+            <a class="btn btn-secondary" href="{% url 'official_spell_import_page' %}">
                 + Загрузить официальное заклинание из JSON
             </a>
         </p>
@@ -260,7 +261,7 @@
                 </p>
 
                 <p class="catalog-description">
-                    {{ spell.description|truncatechars:180 }}
+                    {{ spell.description|description_text|truncatechars:180 }}
                 </p>
 
                 <p class="catalog-details">

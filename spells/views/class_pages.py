@@ -12,6 +12,7 @@ from django.views.decorators.http import require_http_methods
 from spells.models import Subclass
 from spells.models import ClassSection
 from spells.description import DescriptionFormMixin
+from spells.progression import progression_headers, progression_cells
 
 @require_GET
 def class_detail_page(request, pk):
@@ -50,11 +51,15 @@ def class_detail_page(request, pk):
         for level in feature.acquisition_levels:
             features_by_level.setdefault(level, []).append(feature)
 
+    table_columns = progression_headers(character_class, selected_subclass)
     levels = [
         {
             "level": level,
             "proficiency": 2 + (level - 1) // 4,
             "features": features_by_level.get(level, []),
+            "cells": progression_cells(
+                table_columns, level, features_by_level.get(level, []), selected_subclass,
+            ),
         }
         for level in range(1, 21)
     ]
@@ -67,6 +72,7 @@ def class_detail_page(request, pk):
             "subclasses": subclasses,
             "selected_subclass": selected_subclass,
             "levels": levels,
+            "table_columns": table_columns,
             "features": features,
             "sections": list(character_class.sections.all()),
         },
@@ -386,5 +392,37 @@ def class_section_delete_page(request, pk, entry_pk):
             "character_class": character_class,
             "section": section,
             "return_url": return_url,
+        },
+    )
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def subclass_delete_page(request, pk, entry_pk):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    character_class = get_object_or_404(CharacterClass, pk=pk)
+    subclass = get_object_or_404(
+        Subclass,
+        pk=entry_pk,
+        character_class=character_class,
+    )
+    class_url = reverse(
+        "class_detail_page",
+        kwargs={"pk": character_class.pk},
+    )
+
+    if request.method == "POST":
+        subclass.delete()
+        return redirect(class_url)
+
+    return render(
+        request,
+        "spells/subclass_confirm_delete.html",
+        {
+            "character_class": character_class,
+            "subclass": subclass,
+            "features": list(subclass.features.order_by("level", "name", "pk")),
+            "return_url": f"{class_url}?subclass={subclass.pk}",
         },
     )

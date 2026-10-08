@@ -1,4 +1,5 @@
 {% extends "spells/base.html" %}
+{% load description_tags %}
 
 {% block title %}
     {% if detail %}{{ entry_name }}{% else %}{{ catalog_title }}{% endif %}
@@ -30,6 +31,15 @@
         margin: 24px 0;
     }
 
+    .catalog-search-actions {
+        flex-basis: 100%;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
     .catalog-search input {
         flex: 1;
         min-width: 180px;
@@ -41,10 +51,44 @@
         font: inherit;
     }
 
+    .catalog-class-filters {
+        flex-basis: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        padding: 20px;
+        border: 1px solid #343548;
+        border-radius: 12px;
+        background: #1c1d2a;
+    }
+    .catalog-damage-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .catalog-class-filters label { display: block; margin-bottom: 6px; color: #b8b9cc; }
+    .catalog-class-filters select,
+    .catalog-class-filters input[type="text"] {
+        box-sizing: border-box; width: 100%; padding: 10px;
+        border: 1px solid #484960; border-radius: 8px;
+        background: #11121a; color: #ececf3; font: inherit;
+    }
+    .catalog-class-filters .catalog-filter-checkbox {
+        grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin: 0;
+    }
+    .catalog-search .catalog-filter-checkbox input {
+        flex: none; min-width: 0; width: 18px; height: 18px; padding: 0; margin: 0;
+        accent-color: #c4b5fd;
+    }
+    .catalog-class-filters .errorlist { color: #fca5a5; }
+    .catalog-class-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+    .catalog-class-tag { padding: 3px 8px; border-radius: 6px; background: #302943; color: #ddd6fe; font-size: 13px; }
+    .catalog-results-count { margin: 0 0 16px; }
+
     .catalog-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 20px;
+    }
+
+    .catalog-grid-damage {
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
     }
 
     .catalog-card,
@@ -56,14 +100,43 @@
         overflow-wrap: anywhere;
     }
 
+    .catalog-panel {
+        margin-top: 24px;
+    }
+
     .catalog-card h2 {
         margin: 0 0 12px;
         font-size: 22px;
     }
 
     .catalog-card h2 a {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
         text-decoration: none;
     }
+
+    .catalog-entry-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .catalog-main .catalog-entry-heading h1 { margin: 0; min-width: 0; }
+    .catalog-entry-image {
+        width: 128px;
+        height: 128px;
+        flex: 0 0 128px;
+        object-fit: cover;
+        border: 1px solid #484960;
+        border-radius: 10px;
+        background: #11121a;
+    }
+    .catalog-entry-image-detail { width: 160px; height: 160px; flex-basis: 160px; }
+    .catalog-entry-name { min-width: 0; }
 
     .catalog-card h2 a:hover {
         text-decoration: underline;
@@ -84,6 +157,13 @@
         margin: 4px 0 0;
     }
 
+    .catalog-entry-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
     .catalog-pagination {
         display: flex;
         align-items: center;
@@ -98,7 +178,9 @@
         }
 
         .catalog-grid,
-        .catalog-attributes {
+        .catalog-attributes,
+        .catalog-class-filters,
+        .catalog-damage-filters {
             grid-template-columns: 1fr;
         }
     }
@@ -109,14 +191,19 @@
 <main class="catalog-main">
     {% if detail %}
         <p class="catalog-muted">{{ catalog_title }}</p>
-        <h1>{{ entry_name }}</h1>
+        <div class="catalog-entry-heading">
+            {% if entry_image_url %}
+                <img class="catalog-entry-image catalog-entry-image-detail" src="{{ entry_image_url }}" alt="" width="160" height="160">
+            {% endif %}
+            <h1>{{ entry_name }}</h1>
+        </div>
         {% if request.user.is_staff %}
-            <a
-                class="btn btn-secondary"
-                href="{% url 'catalog_edit_page' slug entry_pk %}"
-            >
-                Редактировать
-            </a>
+            <div class="catalog-entry-actions">
+                <a class="btn btn-secondary" href="{% url 'catalog_edit_page' slug entry_pk %}">Редактировать</a>
+                {% if slug == 'damage-types' %}
+                    <a class="btn btn-danger" href="{% url 'catalog_delete_page' slug entry_pk %}">Удалить</a>
+                {% endif %}
+            </div>
         {% endif %}
 
         <section class="catalog-panel">
@@ -132,7 +219,7 @@
             {% endif %}
 
             {% if description %}
-                {{ description|linebreaks }}
+                {{ description|render_description }}
             {% else %}
                 <p class="catalog-muted">Описание пока не добавлено.</p>
             {% endif %}
@@ -156,37 +243,96 @@
                 aria-label="Поиск в справочнике"
             >
 
-            <button type="submit">Найти</button>
-
-            {% if search %}
-                <a
-                    class="btn btn-secondary"
-                    href="{% url 'catalog_list_page' slug %}"
-                >
-                    Сбросить
-                </a>
+            {% if class_filters %}
+                <div class="catalog-class-filters">
+                    <div>{{ class_filters.magic_type.label_tag }}{{ class_filters.magic_type }}{{ class_filters.magic_type.errors }}</div>
+                    <div>{{ class_filters.hit_die.label_tag }}{{ class_filters.hit_die }}{{ class_filters.hit_die.errors }}</div>
+                    <div>{{ class_filters.spellcasting_ability.label_tag }}{{ class_filters.spellcasting_ability }}{{ class_filters.spellcasting_ability.errors }}</div>
+                    <label class="catalog-filter-checkbox" for="{{ class_filters.has_subclasses.id_for_label }}">
+                        {{ class_filters.has_subclasses }} {{ class_filters.has_subclasses.label }}
+                    </label>
+                </div>
+            {% endif %}
+            {% if damage_filters %}
+                <div class="catalog-class-filters catalog-damage-filters">
+                    <div>{{ damage_filters.is_magic.label_tag }}{{ damage_filters.is_magic }}{{ damage_filters.is_magic.errors }}</div>
+                    <div>{{ damage_filters.is_regular.label_tag }}{{ damage_filters.is_regular }}{{ damage_filters.is_regular.errors }}</div>
+                </div>
+            {% endif %}
+            {% if effect_filters %}
+                <div class="catalog-class-filters">
+                    <div>{{ effect_filters.category.label_tag }}{{ effect_filters.category }}{{ effect_filters.category.errors }}</div>
+                    <div>{{ effect_filters.damage_type.label_tag }}{{ effect_filters.damage_type }}{{ effect_filters.damage_type.errors }}</div>
+                    <div>{{ effect_filters.duration.label_tag }}{{ effect_filters.duration }}{{ effect_filters.duration.errors }}</div>
+                </div>
+            {% endif %}
+            {% if class_filters or damage_filters or effect_filters %}
+                <div class="catalog-search-actions">
+                    {% if has_active_filters %}
+                        <a class="btn btn-secondary" href="{% url 'catalog_list_page' slug %}">Сбросить</a>
+                    {% endif %}
+                    <button type="submit">Применить</button>
+                </div>
+            {% else %}
+                <button type="submit">Найти</button>
+                {% if has_active_filters %}
+                    <a class="btn btn-secondary" href="{% url 'catalog_list_page' slug %}">Сбросить</a>
+                {% endif %}
             {% endif %}
         </form>
 
-        <div class="catalog-grid">
+        {% if class_filters %}
+            <p class="catalog-muted catalog-results-count">Найдено классов: {{ page.paginator.count }}</p>
+        {% endif %}
+        <div class="catalog-grid {% if slug == 'damage-types' or slug == 'effects' %}catalog-grid-damage{% endif %}">
             {% for entry in entries %}
                 <article class="catalog-card">
                     <h2>
                         <a href="{% url 'catalog_detail_page' slug entry.pk %}">
-                            {{ entry.name }}
+                            {% if entry.image_url %}
+                                <img class="catalog-entry-image" src="{{ entry.image_url }}" alt="" width="128" height="128" loading="lazy">
+                            {% endif %}
+                            <span class="catalog-entry-name">{{ entry.name }}</span>
                         </a>
                     </h2>
 
+                    {% if slug == 'classes' %}
+                        <div class="catalog-class-tags">
+                            <span class="catalog-class-tag">{{ entry.magic_type }}</span>
+                            <span class="catalog-class-tag">Кость хитов: {{ entry.hit_die }}</span>
+                            {% if entry.spellcasting_ability %}<span class="catalog-class-tag">{{ entry.spellcasting_ability }}</span>{% endif %}
+                            <span class="catalog-class-tag">Подклассов: {{ entry.subclass_count }}</span>
+                        </div>
+                    {% endif %}
+                    {% if slug == 'damage-types' %}
+                        <div class="catalog-class-tags">
+                            {% if entry.is_magic %}<span class="catalog-class-tag">Магический урон</span>{% endif %}
+                            {% if entry.is_regular %}<span class="catalog-class-tag">Обычный урон</span>{% endif %}
+                        </div>
+                    {% endif %}
+                    {% if slug == 'effects' %}
+                        <div class="catalog-class-tags">
+                            {% if entry.category %}<span class="catalog-class-tag">{{ entry.category }}</span>{% endif %}
+                            {% if entry.damage_type %}<span class="catalog-class-tag">{{ entry.damage_type }}</span>{% endif %}
+                            {% if entry.duration %}<span class="catalog-class-tag">{{ entry.duration }}</span>{% endif %}
+                        </div>
+                    {% endif %}
                     {% if entry.description %}
                         <p class="catalog-muted">
-                            {{ entry.description|truncatechars:180 }}
+                            {{ entry.description|description_text|truncatechars:180 }}
                         </p>
+                    {% endif %}
+                    {% if slug == 'damage-types' and request.user.is_staff %}
+                        <div class="catalog-entry-actions">
+                            <a class="btn btn-secondary" href="{% url 'catalog_edit_page' slug entry.pk %}">Редактировать</a>
+                            <a class="btn btn-danger" href="{% url 'catalog_delete_page' slug entry.pk %}">Удалить</a>
+                        </div>
                     {% endif %}
                 </article>
             {% empty %}
                 <p class="catalog-muted">
-                    {% if search %}
-                        По твоему запросу ничего не найдено.
+                    {% if has_active_filters %}
+                        По выбранным условиям ничего не найдено. Измени фильтры или сбрось их.
                     {% else %}
                         В справочнике пока нет записей.
                     {% endif %}
@@ -199,7 +345,7 @@
                 {% if page.has_previous %}
                     <a
                         class="btn btn-secondary"
-                        href="?search={{ search|urlencode }}&page={{ page.previous_page_number }}"
+                        href="?{% if page_query %}{{ page_query }}&amp;{% endif %}page={{ page.previous_page_number }}"
                     >
                         Назад
                     </a>
@@ -212,7 +358,7 @@
                 {% if page.has_next %}
                     <a
                         class="btn btn-secondary"
-                        href="?search={{ search|urlencode }}&page={{ page.next_page_number }}"
+                        href="?{% if page_query %}{{ page_query }}&amp;{% endif %}page={{ page.next_page_number }}"
                     >
                         Далее
                     </a>

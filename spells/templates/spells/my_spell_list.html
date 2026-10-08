@@ -1,4 +1,5 @@
 {% extends "spells/base.html" %}
+{% load description_tags %}
 
 {% block title %}Мои заклинания — Spellbook{% endblock %}
 
@@ -207,7 +208,7 @@
         </a>
 
         <a
-            class="collection-button collection-button-secondary"
+            class="btn btn-secondary collection-button collection-button-secondary"
             href="{% url 'spell_import_page' %}"
         >
             Загрузить из JSON
@@ -275,7 +276,7 @@
                 </p>
 
                 <p class="collection-description">
-                    {{ spell.description|truncatechars:180 }}
+                    {{ spell.description|description_text|truncatechars:180 }}
                 </p>
 
                 <div class="collection-card-actions">

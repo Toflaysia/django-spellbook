@@ -1,4 +1,5 @@
 {% extends "spells/form_base.html" %}
+{% load static %}
 
 {% block title %}
     {% if editing %}Редактирование записи{% else %}Новая запись{% endif %}
@@ -72,6 +73,24 @@
         color: #fca5a5;
     }
 
+    body .catalog-form-field .catalog-image-picker {
+        display: flex;
+        width: 160px;
+        height: 160px;
+        margin: 0 0 12px;
+        padding: 12px;
+        border: 2px dashed #81719f;
+        border-radius: 12px;
+        background: #11121a;
+        color: #c4b5fd;
+        overflow: hidden;
+        font-size: 14px;
+    }
+    body .catalog-form-field .catalog-image-picker:hover { background: #252637; }
+    .catalog-image-picker img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+    .catalog-image-picker [hidden] { display: none; }
+    .catalog-image-picker.is-dragging { outline: 2px solid #c4b5fd; outline-offset: 3px; }
+
     .catalog-form-actions {
         display: flex;
         flex-wrap: wrap;
@@ -107,7 +126,7 @@
         Сохранённые данные будут доступны всем пользователям.
     </p>
 
-    <form class="catalog-form-panel" method="post">
+    <form class="catalog-form-panel" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -117,7 +136,19 @@
         {% for field in form %}
             <div class="catalog-form-field">
                 {{ field.label_tag }}
-                {{ field }}
+                {% if field.name == 'image' %}
+                    <div class="catalog-image-upload" {% if form.instance.image %}data-image-url="{{ form.instance.image.url }}"{% endif %}>
+                        <button type="button" class="catalog-image-picker" aria-label="Выбрать или вставить картинку">
+                            <img alt="Предпросмотр картинки" hidden>
+                            <span>Выбрать картинку</span>
+                        </button>
+                        {{ field }}
+                        <p class="catalog-form-help">Нажми на окошко, перетащи картинку или вставь её через Ctrl+V, когда окошко в фокусе.</p>
+                        <p class="catalog-form-help catalog-image-error" role="alert" hidden></p>
+                    </div>
+                {% else %}
+                    {{ field }}
+                {% endif %}
                 {{ field.errors }}
 
                 {% if field.help_text %}
@@ -155,4 +186,7 @@
         </div>
     </form>
 </main>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'spells/catalog_image_upload.js' %}"></script>
 {% endblock %}

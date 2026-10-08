@@ -1,0 +1,13 @@
+{% if slug and detail or slug and form %}
+    <nav class="catalog-back-nav" aria-label="Возврат в справочник" {% if form %}data-confirm-unsaved{% endif %}>
+        <a class="btn btn-secondary" href="{% url 'catalog_list_page' slug %}">← Назад к списку</a>
+    </nav>
+{% elif character_class %}
+    <nav class="catalog-back-nav" aria-label="Возврат в справочник" {% if form %}data-confirm-unsaved{% endif %}>
+        <a class="btn btn-secondary" href="{% url 'catalog_list_page' 'classes' %}">← Назад к списку классов</a>
+    </nav>
+{% elif official_import or spell.is_official %}
+    <nav class="catalog-back-nav" aria-label="Возврат в справочник" {% if form %}data-confirm-unsaved{% endif %}>
+        <a class="btn btn-secondary" href="{% url 'spell_list_page' %}">← Назад к списку заклинаний</a>
+    </nav>
+{% endif %}

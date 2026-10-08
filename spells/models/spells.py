@@ -27,6 +27,9 @@ class MaterialComponent(models.Model):
         if not description:
             description = self.description
 
+        from spells.templatetags.description_tags import description_text
+
+        description = description_text(description)
         if len(description) > max_length:
             return description[:max_length] + "..."
         return description
@@ -79,10 +82,19 @@ class DamageType(models.Model):
     name = models.CharField(max_length=30, verbose_name="Название")
     description = models.TextField(blank=True, verbose_name="Описание")
     is_magic = models.BooleanField(default=True, verbose_name="Магический урон")
+    is_regular = models.BooleanField(default=False, verbose_name="Обычный урон")
+    image = models.ImageField(
+        upload_to="damage_types/", blank=True, verbose_name="Картинка",
+    )
 
     def __str__(self):
-        magic_str = " (маг.)" if self.is_magic else " (не маг.)"
-        return f"{self.name} - {magic_str}"
+        variants = []
+        if self.is_magic:
+            variants.append("маг.")
+        if self.is_regular:
+            variants.append("обычный")
+        suffix = f" ({', '.join(variants)})" if variants else ""
+        return f"{self.name}{suffix}"
 
     class Meta:
         verbose_name = "Тип урона"
@@ -91,6 +103,10 @@ class DamageType(models.Model):
 
 class Effect(models.Model):
     """Эффекты от заклинания"""
+
+    image = models.ImageField(
+        upload_to="effects/", blank=True, verbose_name="Картинка",
+    )
 
     id = models.AutoField(primary_key=True, verbose_name="id")
     name = models.CharField(max_length=49, verbose_name="Название")

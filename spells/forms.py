@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 
 from spells.models import Person, Spell, Spellbook
+from spells.description import DescriptionFormMixin
 
 
 class RangeInput(forms.NumberInput):
@@ -16,7 +17,7 @@ class PortraitInput(forms.ClearableFileInput):
     template_name = "spells/widgets/portrait_input.html"
 
 
-class CharacterCreateForm(forms.ModelForm):
+class CharacterCreateForm(DescriptionFormMixin, forms.ModelForm):
     class Meta:
         model = Person
         fields = [
@@ -222,7 +223,7 @@ class RegistrationForm(UserCreationForm):
         }
 
 
-class CustomSpellForm(forms.ModelForm):
+class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
     class Meta:
         model = Spell
         fields = [
@@ -421,7 +422,7 @@ class SpellImportForm(forms.Form):
         return uploaded_file
 
 
-class SpellbookForm(forms.ModelForm):
+class SpellbookForm(DescriptionFormMixin, forms.ModelForm):
     class Meta:
         model = Spellbook
         fields = [

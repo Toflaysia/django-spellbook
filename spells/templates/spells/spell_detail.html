@@ -161,6 +161,14 @@
         </div>
 
         <div class="spell-actions">
+            {% if spell.is_official and request.user.is_staff %}
+                <a
+                    class="spell-button"
+                    href="{% url 'spell_edit_page' spell.pk %}"
+                >
+                    Редактировать
+                </a>
+            {% endif %}
             {% if is_custom %}
                 <a
                     class="spell-button"

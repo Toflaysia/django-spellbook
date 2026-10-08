@@ -1,0 +1,93 @@
+{% extends "spells/form_base.html" %}
+
+{% block title %}Удаление раздела — Spellbook{% endblock %}
+
+{% block styles %}
+<style>
+    .section-delete-main {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 0 24px;
+    }
+
+    .section-delete-panel {
+        padding: 28px;
+        border: 1px solid #343548;
+        border-radius: 16px;
+        background: #1c1d2a;
+        overflow-wrap: anywhere;
+    }
+
+    .section-delete-panel h1 {
+        margin: 0 0 20px;
+        font-size: 28px;
+    }
+
+    .section-delete-muted {
+        color: #b8b9cc;
+    }
+
+    .section-delete-warning {
+        margin: 24px 0;
+        padding: 16px;
+        border: 1px solid #754052;
+        border-radius: 10px;
+        background: #30202a;
+        color: #fda4af;
+    }
+
+    .section-delete-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+        .section-delete-main {
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        .section-delete-panel {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="section-delete-main">
+    <section class="section-delete-panel">
+        <h1>Удалить раздел?</h1>
+
+        <p>
+            Раздел: <strong>«{{ section.title }}»</strong>.
+        </p>
+
+        <p class="section-delete-muted">
+            Класс: {{ character_class.name }}.
+        </p>
+
+        <p class="section-delete-warning">
+            Раздел и его описание будут удалены.
+            Отдельные умения класса сохранятся.
+            Отменить удаление нельзя.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="section-delete-actions">
+                <a class="btn btn-secondary" href="{{ return_url }}">
+                    Отмена
+                </a>
+
+                <button class="btn btn-danger" type="submit">
+                    Удалить раздел
+                </button>
+            </div>
+        </form>
+    </section>
+</main>
+{% endblock %}

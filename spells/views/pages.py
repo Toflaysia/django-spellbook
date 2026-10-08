@@ -287,11 +287,17 @@ def spell_import_page(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def spell_edit_page(request, pk):
-    spell = get_object_or_404(
-        Spell,
-        pk=pk,
+    available_spells = Q(
         created_by__user=request.user,
         is_official=False,
+    )
+
+    if request.user.is_staff:
+        available_spells |= Q(is_official=True)
+
+    spell = get_object_or_404(
+        Spell.objects.filter(available_spells),
+        pk=pk,
     )
 
     form = CustomSpellForm(

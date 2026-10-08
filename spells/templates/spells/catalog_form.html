@@ -1,0 +1,158 @@
+{% extends "spells/form_base.html" %}
+
+{% block title %}
+    {% if editing %}Редактирование записи{% else %}Новая запись{% endif %}
+    — Spellbook
+{% endblock %}
+
+{% block styles %}
+<style>
+    .catalog-form-main {
+        max-width: 900px;
+        margin: auto;
+        padding: 32px 24px;
+    }
+
+    .catalog-form-main h1 {
+        margin: 0 0 12px;
+        font-size: 30px;
+    }
+
+    .catalog-form-muted {
+        color: #b8b9cc;
+    }
+
+    .catalog-form-panel {
+        margin-top: 24px;
+        padding: 28px;
+        border: 1px solid #343548;
+        border-radius: 16px;
+        background: #1c1d2a;
+    }
+
+    .catalog-form-field + .catalog-form-field {
+        margin-top: 20px;
+    }
+
+    .catalog-form-field label {
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .catalog-form-field input,
+    .catalog-form-field select,
+    .catalog-form-field textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #484960;
+        border-radius: 8px;
+        background: #11121a;
+        color: #ececf3;
+        font: inherit;
+    }
+
+    .catalog-form-field textarea {
+        resize: vertical;
+    }
+
+    .catalog-form-field input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        accent-color: #c4b5fd;
+    }
+
+    .catalog-form-help {
+        margin: 8px 0 0;
+        color: #b8b9cc;
+        font-size: 13px;
+    }
+
+    .catalog-form-panel .errorlist {
+        color: #fca5a5;
+    }
+
+    .catalog-form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        margin-top: 28px;
+    }
+
+    @media (max-width: 600px) {
+        .catalog-form-main {
+            padding: 24px 16px;
+        }
+
+        .catalog-form-panel {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="catalog-form-main">
+    <h1>
+        {% if editing %}
+            Редактирование записи
+        {% else %}
+            Новая запись
+        {% endif %}
+    </h1>
+
+    <p class="catalog-form-muted">
+        Справочник: {{ catalog_title }}.
+        Сохранённые данные будут доступны всем пользователям.
+    </p>
+
+    <form class="catalog-form-panel" method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="catalog-form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors }}
+
+                {% if field.help_text %}
+                    <p class="catalog-form-help">
+                        {{ field.help_text }}
+                    </p>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="catalog-form-actions">
+            <button type="submit">
+                {% if editing %}
+                    Сохранить изменения
+                {% else %}
+                    Создать запись
+                {% endif %}
+            </button>
+
+            {% if editing %}
+                <a
+                    class="btn btn-secondary"
+                    href="{% url 'catalog_detail_page' slug entry_pk %}"
+                >
+                    Отмена
+                </a>
+            {% else %}
+                <a
+                    class="btn btn-secondary"
+                    href="{% url 'catalog_list_page' slug %}"
+                >
+                    Отмена
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</main>
+{% endblock %}

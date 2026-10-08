@@ -286,32 +286,11 @@
             {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}
                 <div class="site-brand">Spellbook</div>
             {% else %}
-                <a class="site-brand" href="{% url 'home_page' %}">
-                    Spellbook
-                </a>
+                {% include "spells/site_menu.html" %}
             {% endif %}
 
             {% block navigation %}
-            <nav class="site-nav" aria-label="Основное меню">
-                <a href="{% url 'spell_list_page' %}">
-                    Официальные заклинания
-                </a>
-
-                {% if request.user.is_authenticated %}
-                    <a href="{% url 'character_list_page' %}">
-                        Мои персонажи
-                    </a>
-
-                    <a href="{% url 'my_spell_list_page' %}">
-                        Мои заклинания
-                    </a>
-
-                    <a href="{% url 'spellbook_list_page' %}">
-                        Мои спеллбуки
-                    </a>
-                {% endif %}
-            </nav>
-
+            
             <div class="site-account">
                 {% if request.user.is_authenticated %}
                     <span class="site-username">

@@ -3,6 +3,17 @@ from django.urls import include, path
 from django.contrib.auth.views import LoginView, LogoutView
 from django.conf import settings
 from django.conf.urls.static import static
+from spells.views.class_pages import (
+    class_detail_page,
+    subclass_create_page,
+    subclass_edit_page,
+    class_feature_create_page,
+    class_feature_edit_page,
+    class_feature_delete_page,
+    class_section_create_page,
+    class_section_edit_page,
+    class_section_delete_page,
+)
 
 from spells.views.pages import (
     character_list_page,
@@ -28,6 +39,12 @@ from spells.views.pages import (
     spellbook_slot_change_page,
     spellbook_edit_page,
     spellbook_delete_page,
+)
+from spells.views.catalog import (
+    catalog_list_page,
+    catalog_detail_page,
+    catalog_create_page,
+    catalog_edit_page,
 )
 
 urlpatterns = [
@@ -149,6 +166,71 @@ urlpatterns = [
         "spellbooks/<int:pk>/delete/",
         spellbook_delete_page,
         name="spellbook_delete_page",
+    ),
+        path(
+        "catalog/<slug:slug>/",
+        catalog_list_page,
+        name="catalog_list_page",
+    ),
+    path(
+        "catalog/<slug:slug>/<int:pk>/",
+        catalog_detail_page,
+        name="catalog_detail_page",
+    ),
+        path(
+        "catalog/<slug:slug>/new/",
+        catalog_create_page,
+        name="catalog_create_page",
+    ),
+    path(
+        "catalog/<slug:slug>/<int:pk>/edit/",
+        catalog_edit_page,
+        name="catalog_edit_page",
+    ),
+        path(
+        "classes/<int:pk>/",
+        class_detail_page,
+        name="class_detail_page",
+    ),
+        path(
+        "classes/<int:pk>/subclasses/new/",
+        subclass_create_page,
+        name="subclass_create_page",
+    ),
+    path(
+        "classes/<int:pk>/subclasses/<int:entry_pk>/edit/",
+        subclass_edit_page,
+        name="subclass_edit_page",
+    ),
+    path(
+        "classes/<int:pk>/features/new/",
+        class_feature_create_page,
+        name="class_feature_create_page",
+    ),
+    path(
+        "classes/<int:pk>/features/<int:entry_pk>/edit/",
+        class_feature_edit_page,
+        name="class_feature_edit_page",
+    ),
+    path(
+        "classes/<int:pk>/features/<int:entry_pk>/delete/",
+        class_feature_delete_page,
+        name="class_feature_delete_page",
+    ),
+    path(
+        "classes/<int:pk>/sections/new/",
+        class_section_create_page,
+        name="class_section_create_page",
+    ),
+    path(
+        "classes/<int:pk>/sections/<int:entry_pk>/edit/",
+        class_section_edit_page,
+        name="class_section_edit_page",
+    ),
+    path(
+        "classes/<int:pk>/sections/<int:entry_pk>/delete/",
+        class_section_delete_page,
+        name="class_section_delete_page",
     ),
 ]
 if settings.DEBUG:

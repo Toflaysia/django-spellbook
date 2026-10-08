@@ -1,0 +1,633 @@
+{% extends "spells/base.html" %}
+{% load description_tags %}
+
+{% block title %}
+    {{ character_class.name }}
+    {% if selected_subclass %}— {{ selected_subclass.name }}{% endif %}
+    — Spellbook
+{% endblock %}
+
+{% block styles %}
+<style>
+    .class-main {
+        max-width: 1100px;
+        margin: auto;
+        padding: 32px 24px;
+        overflow-wrap: anywhere;
+    }
+
+    .class-main h1 {
+        margin: 0 0 16px;
+        font-size: 32px;
+        line-height: 1.3;
+    }
+
+    .class-muted {
+        color: #b8b9cc;
+    }
+
+    .class-panel {
+        margin-top: 24px;
+        padding: 24px;
+        border: 1px solid #343548;
+        border-radius: 16px;
+        background: #1c1d2a;
+    }
+
+    .class-panel h2 {
+        margin: 0 0 16px;
+        font-size: 23px;
+    }
+
+    .class-parameters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 20px 0;
+    }
+
+    .class-tag {
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: #302943;
+        color: #ddd6fe;
+    }
+
+    .class-selection label {
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .class-selection-controls {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .class-selection select {
+        flex: 1;
+        min-width: 180px;
+        padding: 12px;
+        border: 1px solid #484960;
+        border-radius: 10px;
+        background: #11121a;
+        color: #ececf3;
+        font: inherit;
+    }
+
+    .class-table-container {
+        overflow-x: auto;
+    }
+
+    .class-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .class-table th,
+    .class-table td {
+        padding: 12px;
+        border-bottom: 1px solid #343548;
+        vertical-align: top;
+    }
+
+    .class-table th {
+        color: #b8b9cc;
+        font-weight: 600;
+    }
+
+    .class-table tbody tr:hover {
+        background: #252637;
+    }
+
+    .class-feature-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .class-feature-link {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: #302943;
+        color: #ddd6fe;
+        text-decoration: none;
+    }
+
+    .class-feature-link:hover {
+        text-decoration: underline;
+    }
+
+    .class-feature-link-subclass {
+        background: #193b38;
+        color: #99f6e4;
+    }
+
+    .class-feature {
+        scroll-margin-top: 24px;
+    }
+
+    .class-feature-subclass {
+        border-left: 4px solid #5eead4;
+    }
+
+    @media (max-width: 600px) {
+        .class-main {
+            padding: 24px 16px;
+        }
+
+        .class-panel {
+            padding: 20px;
+        }
+
+        .class-table th,
+        .class-table td {
+            padding: 10px 8px;
+        }
+    }
+    .subclass-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .subclass-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 10px 16px;
+        border: 1px solid #484960;
+        border-radius: 10px;
+        background: #252637;
+        color: #ececf3;
+        font-weight: 600;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .subclass-button:hover {
+        border-color: #a78bfa;
+        background: #343047;
+    }
+
+    .subclass-button.is-selected {
+        border-color: #c4b5fd;
+        background: #c4b5fd;
+        color: #21163c;
+    }
+    .class-section-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 24px;
+    }
+
+    .class-description-section {
+        scroll-margin-top: 24px;
+    }
+    .class-collapsible > summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .class-collapsible > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .class-collapsible > summary::after {
+        content: "▸";
+        flex-shrink: 0;
+        color: #c4b5fd;
+        font-size: 22px;
+    }
+
+    .class-collapsible[open] > summary::after {
+        content: "▾";
+    }
+
+    .class-collapsible > summary h2 {
+        margin: 0;
+    }
+
+    .class-collapsible > summary:hover h2 {
+        color: #c4b5fd;
+    }
+
+    .class-collapsible-content {
+        margin-top: 20px;
+    }
+
+    .class-block-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 20px;
+    }
+.description-display-table-wrapper {
+    margin: 16px 0;
+    overflow-x: auto;
+}
+
+.description-display-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.description-display-table td {
+    min-width: 100px;
+    padding: 12px;
+    border: 1px solid #484960;
+    background: #191a25;
+    vertical-align: top;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="class-main">
+    <h1>
+        {{ character_class.name }}
+        {% if selected_subclass %}
+            — {{ selected_subclass.name }}
+        {% endif %}
+    </h1>
+
+    {% if request.user.is_staff %}
+        <a
+            class="btn btn-secondary"
+            href="{% url 'catalog_edit_page' 'classes' character_class.pk %}"
+        >
+            Редактировать класс
+        </a>
+    {% endif %}
+
+    <div class="class-parameters">
+        <span class="class-tag">
+            Кость хитов: {{ character_class.get_hit_die_display }}
+        </span>
+
+        <span class="class-tag">
+            {{ character_class.get_magic_type_display }}
+        </span>
+
+        {% if character_class.magic_type != 'NC' %}
+            <span class="class-tag">
+                Заклинательная характеристика:
+                {{ character_class.get_spellcasting_ability_display }}
+            </span>
+        {% endif %}
+    </div>
+
+    <section class="class-panel">
+        <h2>Описание класса</h2>
+        {{ character_class.description|render_description }}
+    </section>
+
+    <section class="class-panel">
+        <h2>Подкласс</h2>
+        {% if request.user.is_staff %}
+            <p>
+                <a
+                    class="btn"
+                    href="{% url 'subclass_create_page' character_class.pk %}"
+                >
+                    + Добавить подкласс
+                </a>
+
+                {% if selected_subclass %}
+                    <a
+                        class="btn btn-secondary"
+                        href="{% url 'subclass_edit_page' character_class.pk selected_subclass.pk %}"
+                    >
+                        Редактировать подкласс
+                    </a>
+                {% endif %}
+            </p>
+        {% endif %}
+
+                <nav class="subclass-buttons" aria-label="Выбор подкласса">
+            <a
+                class="subclass-button {% if not selected_subclass %}is-selected{% endif %}"
+                href="{% url 'class_detail_page' character_class.pk %}"
+                {% if not selected_subclass %}aria-current="true"{% endif %}
+            >
+                Только класс
+            </a>
+
+            {% for subclass in subclasses %}
+                <a
+                    class="subclass-button {% if selected_subclass.pk == subclass.pk %}is-selected{% endif %}"
+                    href="{% url 'class_detail_page' character_class.pk %}?subclass={{ subclass.pk }}"
+                    {% if selected_subclass.pk == subclass.pk %}aria-current="true"{% endif %}
+                >
+                    {{ subclass.name }}
+                </a>
+            {% endfor %}
+        </nav>
+
+        {% if selected_subclass %}
+            <h3>{{ selected_subclass.name }}</h3>
+
+            <p class="class-muted">
+                Уровень получения: {{ selected_subclass.level_gained }}
+            </p>
+
+            {{ selected_subclass.description|render_description }}
+
+            {% if selected_subclass.features_description %}
+                {{ selected_subclass.features_description|render_description }}
+            {% endif %}
+        {% elif not subclasses %}
+            <p class="class-muted">
+                Подклассы этого класса пока не добавлены.
+            </p>
+        {% endif %}
+    </section>
+
+    <section class="class-panel">
+        <h2>Развитие по уровням</h2>
+            {% if sections %}
+                <nav class="class-section-buttons" aria-label="Разделы класса">
+                    {% for section in sections %}
+                        <a
+                            class="subclass-button"
+                            href="#class-section-{{ section.pk }}"
+                        >
+                            {{ section.title }}
+                        </a>
+                    {% endfor %}
+                </nav>
+            {% endif %}
+
+    {% if request.user.is_staff %}
+        <p>
+            <a
+                class="btn"
+                href="{% url 'class_section_create_page' character_class.pk %}"
+            >
+                + Добавить раздел
+            </a>
+        </p>
+    {% endif %}
+        {% if request.user.is_staff %}
+            <p>
+                <a
+                    class="btn"
+                    href="{% url 'class_feature_create_page' character_class.pk %}"
+                >
+                    + Добавить умение
+                </a>
+            </p>
+        {% endif %}
+
+        <p class="class-muted">
+            Сиреневым выделены общие умения класса,
+            бирюзовым — умения выбранного подкласса.
+        </p>
+
+        <div class="class-table-container">
+            <table class="class-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Уровень</th>
+                        <th scope="col">Бонус мастерства</th>
+                        <th scope="col">Умения</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for row in levels %}
+                        <tr>
+                            <th scope="row">{{ row.level }}</th>
+                            <td>+{{ row.proficiency }}</td>
+                            <td>
+                                <div class="class-feature-links">
+                                    {% for feature in row.features %}
+                                        <a
+                                            class="class-feature-link {% if feature.subclass_id %}class-feature-link-subclass{% endif %}"
+                                            href="#feature-{{ feature.pk }}"
+                                        >
+                                            {{ feature.name }}
+                                        </a>
+                                    {% empty %}
+                                        <span class="class-muted">—</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% for section in sections %}
+        <details
+            class="class-panel class-description-section class-collapsible"
+            id="class-section-{{ section.pk }}"
+            open
+        >
+            <summary>
+                <h2>{{ section.title }}</h2>
+            </summary>
+
+            <div class="class-collapsible-content">
+                {{ section.description|render_description }}    
+
+                {% if request.user.is_staff %}
+                    <div class="class-block-actions">
+                        <a
+                            class="btn btn-secondary"
+                            href="{% url 'class_section_edit_page' character_class.pk section.pk %}"
+                        >
+                            Редактировать раздел
+                        </a>
+
+                        <a
+                            class="btn btn-danger"
+                            href="{% url 'class_section_delete_page' character_class.pk section.pk %}"
+                        >
+                            Удалить раздел
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </details>
+    {% endfor %}
+        {% for feature in features %}
+            <details
+                class="class-panel class-feature class-collapsible {% if feature.subclass_id %}class-feature-subclass{% endif %}"
+                id="feature-{{ feature.pk }}"
+                open
+            >
+                <summary>
+                    <h2>{{ feature.name }}</h2>
+                </summary>
+
+                <div class="class-collapsible-content">
+                    <p class="class-muted">
+                        Уровни получения:
+                        {{ feature.acquisition_levels|join:", " }}
+                        ·
+                        {% if feature.subclass_id %}
+                            {{ feature.subclass.name }}
+                        {% else %}
+                            {{ character_class.name }}
+                        {% endif %}
+                    </p>
+
+                    {{ feature.description|render_description }}
+
+                    {% if request.user.is_staff %}
+                        <div class="class-block-actions">
+                            <a
+                                class="btn btn-secondary"
+                                href="{% url 'class_feature_edit_page' character_class.pk feature.pk %}"
+                            >
+                                Редактировать умение
+                            </a>
+
+                            <a
+                                class="btn btn-danger"
+                                href="{% url 'class_feature_delete_page' character_class.pk feature.pk %}"
+                            >
+                                Удалить умение
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </details>
+        {% endfor %}
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (() => {
+        const storageKey = `class-scroll-{{ character_class.pk }}`;
+        const buttons = document.querySelector('.subclass-buttons');
+
+        const savedPosition = sessionStorage.getItem(storageKey);
+
+        if (savedPosition !== null) {
+            sessionStorage.removeItem(storageKey);
+
+            const y = Number(savedPosition);
+
+            if (Number.isFinite(y)) {
+                const restorePosition = () => {
+                    requestAnimationFrame(() => {
+                        window.scrollTo({
+                            top: y,
+                            left: 0,
+                            behavior: 'instant',
+                        });
+                    });
+                };
+
+                if (document.readyState === 'complete') {
+                    restorePosition();
+                } else {
+                    window.addEventListener('load', restorePosition, {
+                        once: true,
+                    });
+                }
+            }
+        }
+
+        if (!buttons) {
+            return;
+        }
+
+        buttons.addEventListener('click', (event) => {
+            const link = event.target.closest('a.subclass-button');
+
+            if (
+                !link
+                || event.button !== 0
+                || event.ctrlKey
+                || event.metaKey
+                || event.shiftKey
+                || event.altKey
+            ) {
+                return;
+            }
+
+            sessionStorage.setItem(storageKey, String(window.scrollY));
+        });
+    })();
+</script>
+<script>
+    (() => {
+        function getTarget(hash) {
+            if (!hash) {
+                return null;
+            }
+
+            try {
+                return document.getElementById(
+                    decodeURIComponent(hash.slice(1))
+                );
+            } catch {
+                return null;
+            }
+        }
+
+        function revealTarget(target) {
+            if (!target || !target.matches('details.class-collapsible')) {
+                return;
+            }
+
+            target.open = true;
+
+            requestAnimationFrame(() => {
+                target.scrollIntoView({
+                    block: 'start',
+                    behavior: 'instant',
+                });
+            });
+        }
+
+        document.addEventListener('click', (event) => {
+            if (
+                event.defaultPrevented
+                || event.button !== 0
+                || event.ctrlKey
+                || event.metaKey
+                || event.shiftKey
+                || event.altKey
+            ) {
+                return;
+            }
+
+            const link = event.target.closest('a[href^="#"]');
+
+            if (link) {
+                revealTarget(getTarget(link.getAttribute('href')));
+            }
+        });
+
+        window.addEventListener('hashchange', () => {
+            revealTarget(getTarget(window.location.hash));
+        });
+
+        if (document.readyState === 'complete') {
+            revealTarget(getTarget(window.location.hash));
+        } else {
+            window.addEventListener('load', () => {
+                revealTarget(getTarget(window.location.hash));
+            }, { once: true });
+        }
+    })();
+</script>
+{% endblock %}

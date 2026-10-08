@@ -1,0 +1,137 @@
+{% extends "spells/form_base.html" %}
+
+{% block title %}
+    {% if editing %}Редактирование{% else %}Создание{% endif %}
+    {{ entry_type }} — Spellbook
+{% endblock %}
+
+{% block styles %}
+<style>
+    .entry-main {
+        max-width: 900px;
+        margin: auto;
+        padding: 32px 24px;
+    }
+
+    .entry-main h1 {
+        margin: 0 0 12px;
+        font-size: 30px;
+    }
+
+    .entry-muted {
+        color: #b8b9cc;
+    }
+
+    .entry-panel {
+        margin-top: 24px;
+        padding: 28px;
+        border: 1px solid #343548;
+        border-radius: 16px;
+        background: #1c1d2a;
+    }
+
+    .entry-field + .entry-field {
+        margin-top: 20px;
+    }
+
+    .entry-field label {
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .entry-field input,
+    .entry-field select,
+    .entry-field textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #484960;
+        border-radius: 8px;
+        background: #11121a;
+        color: #ececf3;
+        font: inherit;
+    }
+
+    .entry-field textarea {
+        resize: vertical;
+    }
+
+    .entry-help {
+        margin: 8px 0 0;
+        color: #b8b9cc;
+        font-size: 13px;
+    }
+
+    .entry-panel .errorlist {
+        color: #fca5a5;
+    }
+
+    .entry-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 28px;
+    }
+
+    @media (max-width: 600px) {
+        .entry-main {
+            padding: 24px 16px;
+        }
+
+        .entry-panel {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="entry-main">
+    <h1>
+        {% if editing %}Редактирование{% else %}Создание{% endif %}
+        {{ entry_type }}
+    </h1>
+
+    <p class="entry-muted">
+        Класс: {{ character_class.name }}.
+        Сохранённая запись будет доступна всем пользователям.
+    </p>
+
+    <form class="entry-panel" method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="entry-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors }}
+
+                {% if field.help_text %}
+                    <p class="entry-help">{{ field.help_text }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="entry-actions">
+            <button type="submit">
+                {% if editing %}
+                    Сохранить изменения
+                {% else %}
+                    Создать
+                {% endif %}
+            </button>
+
+            <a class="btn btn-secondary" href="{{ cancel_url }}">
+                Отмена
+            </a>
+        </div>
+    </form>
+</main>
+{% endblock %}
+{% block scripts %}
+    {% include "spells/includes/description_editor.html" %}
+{% endblock %}

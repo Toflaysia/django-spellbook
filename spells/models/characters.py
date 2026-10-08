@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.timezone import now
@@ -395,3 +396,137 @@ class Person(models.Model):
         verbose_name = "Персонаж"
         verbose_name_plural = "Персонажи"
         ordering = ["-is_favorite", "-updated_at"]
+class ClassFeature(models.Model):
+    """Умение класса или подкласса, получаемое на заданном уровне."""
+
+    character_class = models.ForeignKey(
+        CharacterClass,
+        on_delete=models.CASCADE,
+        related_name="features",
+        verbose_name="Класс",
+    )
+
+    subclass = models.ForeignKey(
+        Subclass,
+        on_delete=models.CASCADE,
+        related_name="features",
+        null=True,
+        blank=True,
+        verbose_name="Подкласс",
+        help_text=(
+            "Оставь пустым для общего умения класса. "
+            "Укажи подкласс для его специального умения."
+        ),
+    )
+
+    name = models.CharField(
+        max_length=150,
+        verbose_name="Название умения",
+    )
+
+    description = models.TextField(
+        verbose_name="Описание",
+    )
+
+    level = models.IntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(20),
+        ],
+        verbose_name="Уровень получения",
+        help_text="Уровень в этом классе, от 1 до 20.",
+    )
+    levels = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="Уровни получения",
+    )
+
+    @property
+    def acquisition_levels(self):
+        if self.levels:
+            return sorted(set(self.levels))
+
+        return [self.level] if self.level is not None else []
+
+    class Meta:
+        verbose_name = "Умение класса или подкласса"
+        verbose_name_plural = "Умения классов и подклассов"
+        ordering = ["level", "name", "pk"]
+
+    def __str__(self):
+        return f"{self.name} — {self.level}-й уровень"
+
+    def clean(self):
+        super().clean()
+
+        if self.levels:
+            if (
+                not isinstance(self.levels, list)
+                or any(
+                    type(level) is not int or not 1 <= level <= 20
+                    for level in self.levels
+                )
+            ):
+                raise ValidationError({
+                    "levels": "Укажи уровни от 1 до 20.",
+                })
+
+            self.levels = sorted(set(self.levels))
+            self.level = self.levels[0]
+
+        if not self.subclass_id:
+            return
+
+        subclass = self.subclass
+
+        if (
+            self.character_class_id
+            and subclass.character_class_id != self.character_class_id
+        ):
+            raise ValidationError({
+                "subclass": "Выбранный подкласс не относится к этому классу.",
+            })
+
+        if any(
+            level < subclass.level_gained
+            for level in self.acquisition_levels
+        ):
+            raise ValidationError({
+                "levels": (
+                    "Умения этого подкласса нельзя получить раньше "
+                    f"{subclass.level_gained}-го уровня."
+                ),
+            })
+class ClassSection(models.Model):
+    """Текстовый раздел страницы класса."""
+
+    character_class = models.ForeignKey(
+        CharacterClass,
+        on_delete=models.CASCADE,
+        related_name="sections",
+        verbose_name="Класс",
+    )
+
+    title = models.CharField(
+        max_length=150,
+        verbose_name="Название раздела",
+    )
+
+    description = models.TextField(
+        verbose_name="Описание",
+    )
+
+    position = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Порядок",
+        help_text="Разделы с меньшим числом показываются раньше.",
+    )
+
+    class Meta:
+        verbose_name = "Раздел класса"
+        verbose_name_plural = "Разделы классов"
+        ordering = ["position", "pk"]
+
+    def __str__(self):
+        return self.title

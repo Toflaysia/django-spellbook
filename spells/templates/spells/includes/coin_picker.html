@@ -1,0 +1,9 @@
+{% load static %}
+<div class="coin-picker" data-coin-picker>
+    <input type="hidden" name="{{ input_name }}" value="{{ selected }}">
+    <details><summary aria-label="{{ picker_label }}"><img src="{% static 'spells/icons/' %}{{ selected }}.svg" alt="" data-selected-coin><span class="sr-only" data-selected-coin-label>{{ picker_label }}</span><span aria-hidden="true">▾</span></summary>
+        <div class="coin-picker-options" aria-label="{{ picker_label }}">
+            {% for name,label,symbol,rate in coin_types %}<button type="button" data-coin-choice="{{ name }}" data-rate="{{ rate }}" title="{{ label }}" aria-label="{{ label }}" aria-pressed="{% if name == selected %}true{% else %}false{% endif %}"><img src="{% static 'spells/icons/' %}{{ name }}.svg" alt=""></button>{% endfor %}
+        </div>
+    </details>
+</div>

@@ -15,7 +15,7 @@ admin.site.register(DamageType, DescriptionAdmin)
 admin.site.register(Effect, DescriptionAdmin)
 admin.site.register(MagicSchool, DescriptionAdmin)
 admin.site.register(MaterialComponent, DescriptionAdmin)
-admin.site.register(Person)
+admin.site.register(Person, DescriptionAdmin)
 admin.site.register(Player)
 admin.site.register(Spell, DescriptionAdmin)
 admin.site.register(Spellbook, DescriptionAdmin)
@@ -29,3 +29,6 @@ admin.site.register(Subclass, DescriptionAdmin)
 
 admin.site.register(ClassFeature, DescriptionAdmin)
 admin.site.register(ClassSection, DescriptionAdmin)
+
+from spells.models import Trait
+admin.site.register(Trait, DescriptionAdmin)

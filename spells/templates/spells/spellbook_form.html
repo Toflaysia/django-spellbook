@@ -215,7 +215,7 @@
     {% if editing %}
         <p class="book-form-muted">
             Персонаж:
-            <a href="{% url 'character_edit_page' spellbook.owner.pk %}">
+            <a href="{% url 'character_detail_page' spellbook.owner.pk %}">
                 {{ spellbook.owner.name }}
             </a>
         </p>
@@ -325,11 +325,13 @@
             </button>
 
             {% if editing %}
-                <a href="{% url 'spellbook_detail_page' spellbook.pk %}">
+                <a class="btn btn-secondary" href="{% url 'spellbook_detail_page' spellbook.pk %}">
                     Отмена
                 </a>
+            {% elif return_character %}
+                <a class="btn btn-secondary" href="{% url 'character_detail_page' return_character.pk %}#character-spellbooks">Отмена</a>
             {% else %}
-                <a href="{% url 'spellbook_list_page' %}">
+                <a class="btn btn-secondary" href="{% url 'spellbook_list_page' %}">
                     Отмена
                 </a>
             {% endif %}

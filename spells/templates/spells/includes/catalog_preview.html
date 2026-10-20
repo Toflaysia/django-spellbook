@@ -1,0 +1,12 @@
+{% load description_tags %}
+<article class="catalog-preview">
+    <p class="play-muted">{{ catalog_title }}</p>
+    <h2>{{ item.name }}</h2>
+    {% if item.image %}<img class="catalog-preview-image" src="{{ item.image.url }}" alt="{{ item.name }}">{% endif %}
+    {% if catalog_kind == 'damage-types' %}<p>Магический урон: {{ item.is_magic|yesno:'да,нет' }} · Обычный урон: {{ item.is_regular|yesno:'да,нет' }}</p>{% endif %}
+    {% if catalog_kind == 'effects' or catalog_kind == 'conditions' %}
+        {% if item.duration %}<p>Продолжительность: {{ item.duration }}</p>{% endif %}
+        {% if item.damage_type_id %}<p>Тип урона: <a href="{% url 'catalog_detail_page' 'damage-types' item.damage_type_id %}" data-catalog-kind="damage-types" data-catalog-id="{{ item.damage_type_id }}">{{ item.damage_type.name }}</a></p>{% endif %}
+    {% endif %}
+    {{ item.description|render_description }}
+</article>

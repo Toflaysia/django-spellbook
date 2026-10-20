@@ -81,7 +81,7 @@
             <h2>Умения, которые будут удалены: {{ features|length }}</h2>
             <ul>
                 {% for feature in features %}
-                    <li>{{ feature.name }}</li>
+                    <li>{{ feature.name|upper }}</li>
                 {% endfor %}
             </ul>
         {% else %}

@@ -285,14 +285,15 @@
             }
         }
     </style>
-<link rel="stylesheet" href="{% static 'spells/description_editor.css' %}">
+<link rel="stylesheet" href="{% static 'spells/description_editor.css' %}?v=20261020-json-import">
+    <link rel="stylesheet" href="{% static 'spells/play_tools.css' %}?v=20261020-json-import">
 </head>
 <body>
     {% block header %}
     <header class="site-header">
         <div class="site-header-inner">
             {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}
-                <div class="site-brand">Spellbook</div>
+                <div class="site-brand"><img class="site-brand-icon" src="{% static 'spells/icons/spellbook.svg' %}" alt="">Spellbook</div>
             {% else %}
                 {% include "spells/site_menu.html" %}
             {% endif %}
@@ -328,8 +329,12 @@
     {% include "spells/includes/catalog_back.html" %}
     {% block content %}{% endblock %}
 
+    {% include "spells/includes/play_tools.html" %}
+    {% block dice_widget %}{% include "spells/includes/dice.html" %}{% endblock %}
+    <script src="{% static 'spells/play_tools.js' %}?v=20261020-json-import"></script>
     {% block scripts %}{% endblock %}
     {% include "spells/includes/description_editor.html" %}
+    <script src="{% static 'spells/hp_colors.js' %}?v=20261009-1041"></script>
     <script src="{% static 'spells/unsaved_changes.js' %}"></script>
 </body>
 </html>

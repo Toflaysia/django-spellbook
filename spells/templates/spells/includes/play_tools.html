@@ -1,0 +1,13 @@
+<div data-play-tools data-catalog-search-url="{% url 'catalog_link_search' 'schools' %}" data-catalog-preview-url="{% url 'catalog_preview' 'schools' 0 %}" data-preview-url="{% url 'spell_preview' 0 %}" data-search-url="{% url 'spell_link_search' %}"></div>
+<dialog id="spell-preview-dialog" class="play-dialog" aria-label="Просмотр записи">
+    <button type="button" class="dialog-close" data-close-dialog aria-label="Закрыть окно">×</button>
+    <button type="button" class="preview-back" data-preview-back hidden>← Назад</button>
+    <div data-preview-body aria-live="polite"></div>
+</dialog>
+<dialog id="spell-picker-dialog" class="play-dialog" aria-labelledby="spell-picker-title">
+    <button type="button" class="dialog-close" data-close-dialog aria-label="Закрыть выбор заклинания">×</button>
+    <h2 id="spell-picker-title">Ссылка на заклинание</h2>
+    <label for="spell-picker-search">Название заклинания</label><input id="spell-picker-search" type="search" autocomplete="off" placeholder="Начни вводить название">
+    <p class="play-muted">Официальные, публичные авторские и твои приватные заклинания. Показаны первые 30 совпадений.</p>
+    <div data-spell-results role="status"></div>
+</dialog>

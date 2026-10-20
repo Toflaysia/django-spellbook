@@ -39,7 +39,7 @@
         margin-bottom: 8px;
     }
 
-    .entry-field input,
+    .entry-field input:not([type="checkbox"]),
     .entry-field select,
     .entry-field textarea {
         width: 100%;
@@ -49,6 +49,10 @@
         background: #11121a;
         color: #ececf3;
         font: inherit;
+    }
+
+    .entry-field input[type="checkbox"] {
+        width: 20px; height: 20px; padding: 0; accent-color: #edd49b;
     }
 
     .entry-field textarea {
@@ -94,7 +98,7 @@
 
     <p class="entry-muted">
         Класс: {{ character_class.name }}.
-        Сохранённая запись будет доступна всем пользователям.
+        {% if character_class.created_by_id and not character_class.is_public %}Запись будет доступна только автору класса и администратору.{% else %}Сохранённая запись будет доступна всем пользователям.{% endif %}
     </p>
 
     <form class="entry-panel" method="post">

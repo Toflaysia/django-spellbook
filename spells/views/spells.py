@@ -1,3 +1,4 @@
+from spells.spell_access import visible_spells
 from rest_framework import generics, serializers
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny
@@ -24,8 +25,8 @@ class SpellCatalogMixin:
 
     def get_queryset(self):
         return (
-            Spell.objects.filter(is_official=True)
-            .select_related("school", "time")
+            visible_spells(self.request.user)
+            .select_related("school", "time", "created_by__user")
             .prefetch_related(
                 "material_components",
                 "effects",
@@ -48,6 +49,13 @@ class SpellListView(SpellCatalogMixin, generics.ListAPIView):
         filters.is_valid(raise_exception=True)
 
         queryset = super().get_queryset()
+        group = self.request.query_params.get('group', 'official')
+        if group == 'official':
+            queryset = queryset.filter(is_official=True)
+        elif group == 'unofficial':
+            queryset = queryset.filter(is_official=False, is_public=True)
+        else:
+            raise serializers.ValidationError({'group': 'Выберите official или unofficial.'})
 
         if "level" in filters.validated_data:
             queryset = queryset.filter(

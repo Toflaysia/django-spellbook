@@ -1,0 +1,21 @@
+<form class="shared-filters" method="get">
+    {% if spell_group %}<input type="hidden" name="group" value="{{ spell_group }}">{% endif %}
+    <div class="shared-filter-grid shared-filter-basic">
+        {% for field in spell_filters.basic_fields %}
+            <div>{{ field.label_tag }}{{ field }}{{ field.errors }}</div>
+        {% endfor %}
+    </div>
+    <details class="shared-filter-more" {% if spell_filters.advanced_open %}open{% endif %}>
+        <summary>Дополнительные фильтры{% if spell_filters.advanced_count %}<span class="shared-filter-count">{{ spell_filters.advanced_count }}</span>{% endif %}</summary>
+        <div class="shared-filter-grid">
+            {% for field in spell_filters.advanced_fields %}
+                <div>{{ field.label_tag }}{{ field }}{{ field.errors }}</div>
+            {% endfor %}
+        </div>
+    </details>
+    <div class="shared-filter-actions">
+        {% if has_active_filters %}<a class="btn btn-secondary" href="{{ request.path }}{% if spell_group == 'unofficial' %}?group=unofficial{% endif %}">Сбросить</a>{% endif %}
+        <button type="submit">Применить</button>
+    </div>
+</form>
+<p class="catalog-muted">Найдено заклинаний: {{ spells|length }}</p>

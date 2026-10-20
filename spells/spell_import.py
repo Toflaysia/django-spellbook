@@ -39,7 +39,7 @@ def plain_text(value):
     return "\n\n".join(lines)
 
 
-def build_spell_initial(data):
+def _foundry_initial(data):
     system = data["system"]
 
     def section(name):
@@ -170,3 +170,72 @@ def build_spell_initial(data):
             else ""
         ),
     }
+
+
+def validate_spell_payload(data):
+    if not isinstance(data, dict):
+        raise ValueError('Запись должна быть объектом JSON.')
+    if data.get('type', 'spell') != 'spell':
+        raise ValueError('Эта запись не является заклинанием.')
+    if not isinstance(data.get('name'), str) or not data['name'].strip():
+        raise ValueError('В записи отсутствует название заклинания.')
+    if 'system' in data and not isinstance(data['system'], dict):
+        raise ValueError('Раздел system должен быть объектом JSON.')
+
+
+def _native_initial(data, user):
+    from spells.models import DamageType, Effect, MaterialComponent, Subclass
+    from spells.class_access import visible_classes
+    fields=('name','level','range','duration','concentration','ritual','verbal_component',
+            'somatic_component','description','higher_level','attack_type',
+            'saving_throw_ability','source_book','page_number')
+    initial={name:data[name] for name in fields if name in data}
+    for name in ('concentration','ritual','verbal_component','somatic_component'):
+        if name in initial and not isinstance(initial[name], bool):
+            raise ValueError('Поле '+name+' должно содержать true или false.')
+    initial['name']=data['name'].strip()
+    def resolve(value,objects,field,label):
+        if value in (None,''):return None
+        if isinstance(value,bool) or not isinstance(value,(str,int)):
+            raise ValueError(label+': укажи ID или название.')
+        if isinstance(value,int):matches=list(objects.filter(pk=value).values_list('pk',flat=True)[:2])
+        else:
+            from spells.import_links import key
+            matches=[pk for pk,name in objects.values_list('pk',field) if key(name)==key(value)]
+        if len(matches)!=1:raise ValueError(label+': «'+str(value)+'» не найдено или неоднозначно.')
+        return matches[0]
+    for name,model,field,label in [('school',MagicSchool,'name','Школа магии'),('time',SpellTime,'time','Время накладывания')]:
+        initial[name]=resolve(data.get(name),model.objects.all(),field,label)
+    classes=visible_classes(user)
+    for name,objects,label in [('material_components',MaterialComponent.objects.all(),'Материальные компоненты'),
+                               ('effects',Effect.objects.all(),'Эффекты'),('aviable_classes',classes,'Классы'),
+                               ('aviable_subclasses',Subclass.objects.filter(character_class__in=classes),'Подклассы')]:
+        if name in data:
+            if not isinstance(data[name],list):raise ValueError(label+': нужен список ID или названий.')
+            initial[name]=[resolve(value,objects,'name',label) for value in data[name]]
+    return initial
+
+
+def build_spell_initial(data, user=None, *, linker=None, auto_links=True):
+    validate_spell_payload(data)
+    initial=_foundry_initial(data) if 'system' in data else _native_initial(data,user)
+    initial.setdefault('level', 0)
+    initial.setdefault('attack_type', 'NONE')
+    if 'system' in data:
+        system=data['system']
+        extra=system.get('higher_level',system.get('higherLevel',''))
+        if isinstance(extra,str):initial['higher_level']=plain_text(extra)
+    for name in ('description','higher_level'):
+        value=initial.get(name,'')
+        if not isinstance(value,str):raise ValueError('Поле '+name+' должно содержать текст.')
+        from spells.description import DESCRIPTION_PREFIX,parse_description
+        if len(value)>100000:raise ValueError('Описание длиннее 100 000 символов.')
+        if value.startswith(DESCRIPTION_PREFIX):parse_description(value)
+        elif 'system' not in data:value=plain_text(value)
+        initial[name]=value
+    if auto_links:
+        from spells.import_links import ImportLinker
+        linker=linker or ImportLinker(user)
+        for name in ('description','higher_level'):initial[name]=linker.description(initial[name])
+        initial['_import_warnings']=sorted(linker.warnings)
+    return initial

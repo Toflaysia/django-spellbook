@@ -5,6 +5,7 @@
 
 {% block styles %}
 <style>
+    .spell-catalog-groups {display:flex;flex-wrap:wrap;gap:10px;margin:24px 0}
     .catalog-main {
         max-width: 1100px;
         margin: auto;
@@ -172,8 +173,10 @@
 
 {% block content %}
 <main class="catalog-main">
-    <h1>Официальные заклинания</h1>
-    {% if request.user.is_staff %}
+    <h1>{% if spell_group == 'unofficial' %}Неофициальные заклинания{% else %}Официальные заклинания{% endif %}</h1>
+    {% include "spells/includes/spell_catalog_nav.html" %}
+    {% if request.user.is_staff and spell_group == 'official' %}
+        <p><a class="btn btn-secondary" href="{% url 'bulk_spell_import_page' %}">+ Массовая загрузка JSON</a></p>
         <p>
             <a class="btn btn-secondary" href="{% url 'official_spell_import_page' %}">
                 + Загрузить официальное заклинание из JSON
@@ -182,62 +185,11 @@
     {% endif %}
 
     <p class="catalog-muted">
-        Общий каталог, который наполняет администратор.
+        {% if spell_group == 'unofficial' %}Авторские заклинания, которые пользователи опубликовали для всех.{% else %}Общий каталог, который наполняет администратор.{% endif %}
         Найди заклинание по названию, уровню или школе магии.
     </p>
 
-    <form
-        class="catalog-search"
-        method="get"
-        action="{% url 'spell_list_page' %}"
-    >
-        <input
-            type="search"
-            name="search"
-            value="{{ search }}"
-            placeholder="Название заклинания"
-            aria-label="Название заклинания"
-        >
-
-        <select name="level" aria-label="Уровень заклинания">
-            <option value="">Все уровни</option>
-
-            {% for value in levels %}
-                <option
-                    value="{{ value }}"
-                    {% if level == value|stringformat:"s" %}selected{% endif %}
-                >
-                    {% if value == 0 %}
-                        Заговор
-                    {% else %}
-                        Уровень {{ value }}
-                    {% endif %}
-                </option>
-            {% endfor %}
-        </select>
-
-        <select name="school" aria-label="Школа магии">
-            <option value="">Все школы</option>
-
-            {% for magic_school in schools %}
-                <option
-                    value="{{ magic_school.pk }}"
-                    {% if school == magic_school.pk|stringformat:"s" %}selected{% endif %}
-                >
-                    {{ magic_school.name }}
-                </option>
-            {% endfor %}
-        </select>
-
-        <button type="submit">Найти</button>
-    </form>
-
-    {% if search or level or school %}
-        <p class="catalog-muted">
-            Фильтры применены.
-            <a href="{% url 'spell_list_page' %}">Сбросить</a>
-        </p>
-    {% endif %}
+    {% include "spells/includes/spell_filters.html" %}
 
     <div class="catalog-grid">
         {% for spell in spells %}
@@ -256,6 +208,7 @@
                     </a>
                 </h2>
 
+                {% if not spell.is_official %}<p class="catalog-muted">Автор: {{ spell.created_by.user.username|default:"Не указан" }}</p>{% endif %}
                 <p class="catalog-school">
                     {{ spell.school.name|default:"Школа не указана" }}
                 </p>
@@ -291,14 +244,14 @@
             </article>
         {% empty %}
             <div class="catalog-empty">
-                {% if search or level or school %}
+                {% if has_active_filters %}
                     <p>По выбранным фильтрам заклинания не найдены.</p>
-                    <a href="{% url 'spell_list_page' %}">
+                    <a href="{% url 'spell_list_page' %}{% if spell_group == 'unofficial' %}?group=unofficial{% endif %}">
                         Сбросить фильтры
                     </a>
                 {% else %}
                     <p>
-                        Администратор пока не добавил официальные заклинания.
+                        {% if spell_group == 'unofficial' %}Пока нет опубликованных авторских заклинаний.{% else %}Администратор пока не добавил официальные заклинания.{% endif %}
                     </p>
                 {% endif %}
             </div>

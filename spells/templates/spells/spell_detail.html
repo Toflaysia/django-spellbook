@@ -142,7 +142,7 @@
             {% else %}
                 Уровень {{ spell.level }}
             {% endif %}
-            · {{ spell.school.name|default:"Школа не указана" }}
+            · {% if spell.school_id %}<a href="{% url 'catalog_detail_page' 'schools' spell.school_id %}" data-catalog-kind="schools" data-catalog-id="{{ spell.school_id }}">{{ spell.school.name }}</a>{% else %}Школа не указана{% endif %}
         </p>
 
         <div class="spell-tags">
@@ -161,55 +161,22 @@
             {% endif %}
         </div>
 
+        {% if is_custom %}<p class="spell-muted">Автор: {{ spell.created_by.user.username|default:"Не указан" }} · {% if spell.is_public %}Публичное заклинание{% else %}Приватное заклинание{% endif %}</p>{% endif %}
         <div class="spell-actions">
-            {% if spell.is_official and request.user.is_staff %}
-                <a
-                    class="spell-button"
-                    href="{% url 'spell_edit_page' spell.pk %}"
-                >
-                    Редактировать
-                </a>
-            {% endif %}
-            {% if is_custom %}
-                <a
-                    class="spell-button"
-                    href="{% url 'spell_edit_page' spell.pk %}"
-                >
-                    Редактировать
-                </a>
-                <a
-                    class="spell-button spell-button-danger"
-                    href="{% url 'spell_delete_page' spell.pk %}"
-                >
-                    Удалить
-                </a>
+            {% if can_edit_spell %}<a class="spell-button" href="{% url 'spell_edit_page' spell.pk %}">Редактировать</a>{% endif %}
+            {% if is_spell_author %}
+                <a class="spell-button spell-button-danger" href="{% url 'spell_delete_page' spell.pk %}">Удалить</a>
             {% elif request.user.is_authenticated %}
                 {% if is_saved %}
-                    <span class="spell-tag">
-                        ✓ Уже добавлено
-                    </span>
-
-                    <a href="{% url 'my_spell_list_page' %}">
-                        Открыть мои заклинания →
-                    </a>
+                    <span class="spell-tag">✓ Уже добавлено</span>
+                    <a href="{% url 'my_spell_list_page' %}">Открыть мои заклинания →</a>
                 {% else %}
-                    <form
-                        method="post"
-                        action="{% url 'spell_save_page' spell.pk %}"
-                    >
-                        {% csrf_token %}
-                        <button class="spell-button" type="submit">
-                            Добавить в мои заклинания
-                        </button>
+                    <form method="post" action="{% url 'spell_save_page' spell.pk %}">
+                        {% csrf_token %}<button class="spell-button" type="submit">Добавить в мои заклинания</button>
                     </form>
                 {% endif %}
             {% else %}
-                <a
-                    class="spell-button"
-                    href="{% url 'login' %}?next={% url 'spell_detail_page' spell.pk %}"
-                >
-                    Войти, чтобы добавить
-                </a>
+                <a class="spell-button" href="{% url 'login' %}?next={% url 'spell_detail_page' spell.pk %}">Войти, чтобы добавить</a>
             {% endif %}
         </div>
     </div>

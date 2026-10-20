@@ -1,0 +1,13 @@
+<div class="dice-notifications" aria-label="Уведомления о бросках" aria-live="polite" aria-relevant="additions"></div>
+<aside class="dice-widget" aria-label="Броски кубиков">
+    <div id="dice-panel" class="dice-panel" hidden>
+        <div class="dice-heading"><strong>Кубики</strong><button type="button" data-dice-close aria-label="Закрыть кубики">×</button></div>
+        <div class="dice-grid">
+            <button type="button" data-die="4" aria-label="Бросить d4">△<br>d4</button><button type="button" data-die="6" aria-label="Бросить d6">▣<br>d6</button><button type="button" data-die="8" aria-label="Бросить d8">◇<br>d8</button><button type="button" data-die="10" aria-label="Бросить d10">♢<br>d10</button>
+            <button type="button" data-die="12" aria-label="Бросить d12">⬡<br>d12</button><button type="button" data-die="20" aria-label="Бросить d20">⬢<br>d20</button><button type="button" data-die="100" aria-label="Бросить d100">◎<br>d100</button><button type="button" data-die="2" aria-label="Бросить d2">◉<br>d2</button>
+        </div>
+        <form class="dice-form"><label class="sr-only" for="dice-expression">Формула броска</label><input id="dice-expression" name="expression" placeholder="2d20kh1+3" autocomplete="off" maxlength="120"><button type="submit" aria-label="Бросить кубики">↗</button></form>
+        <p class="dice-result" role="status" aria-live="polite"></p>
+    </div>
+    <button type="button" class="dice-toggle" aria-controls="dice-panel" aria-expanded="false" aria-label="Открыть кубики"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2 29 10v14L16 31 3 24V10L16 2Zm0 0-8 10 8 15 8-15L16 2ZM3 10l5 2h16l5-2M3 24l13 3 13-3M8 12 3 24m21-12 5 12M16 27v4" stroke="currentColor" stroke-width="1.5"/></svg></button>
+</aside>

@@ -1,3 +1,8 @@
+from django.contrib.auth.models import AnonymousUser
+from spells.spell_access import visible_spells, collected_spells, can_edit_spell
+from django.http import Http404
+from spells.class_access import scope_spell_classes
+from spells.filters import SpellFilterForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -46,6 +51,7 @@ def character_create_page(request):
     form = CharacterCreateForm(
         request.POST if request.method == "POST" else None,
         request.FILES if request.method == "POST" else None,
+        user=request.user,
     )
 
     if request.method == "POST" and form.is_valid():
@@ -75,6 +81,7 @@ def character_edit_page(request, pk):
         request.POST if request.method == "POST" else None,
         request.FILES if request.method == "POST" else None,
         instance=character,
+        user=request.user,
     )
 
     if request.method == "POST" and form.is_valid():
@@ -130,57 +137,24 @@ def register_page(request):
         {"form": form},
     )
 def spell_list_page(request):
-    search = request.GET.get("search", "").strip()
-    level = request.GET.get("level", "")
-    school = request.GET.get("school", "")
+    group = request.GET.get('group', 'official')
+    if group not in ('official', 'unofficial'):
+        raise Http404('Раздел заклинаний не найден.')
+    filters = SpellFilterForm(request.GET or None, user=request.user)
+    objects = visible_spells(request.user).filter(is_official=group == 'official')
+    if group == 'unofficial':
+        objects = objects.filter(is_public=True)
+    spells = filters.apply(objects).select_related("school", "time", "created_by__user").order_by("name", "pk")
+    return render(request, "spells/spell_list.html", {
+        "spells": spells, "spell_filters": filters, "spell_group": group,
+        "search": request.GET.get("search", ""),
+        "has_active_filters": any(request.GET.get(name) for name in filters.fields),
+    })
 
-    schools = MagicSchool.objects.order_by("name")
-
-    if level not in [str(value) for value in range(10)]:
-        level = ""
-
-    school_ids = {str(pk) for pk in schools.values_list("pk", flat=True)}
-
-    if school not in school_ids:
-        school = ""
-
-    spells = Spell.objects.filter(
-        is_official=True,
-    ).select_related("school", "time")
-
-    if search:
-        spells = spells.filter(name__icontains=search)
-
-    if level:
-        spells = spells.filter(level=int(level))
-
-    if school:
-        spells = spells.filter(school_id=int(school))
-
-    return render(
-        request,
-        "spells/spell_list.html",
-        {
-            "spells": spells,
-            "search": search,
-            "level": level,
-            "levels": range(10),
-            "school": school,
-            "schools": schools,
-        },
-    )
 def spell_detail_page(request, pk):
-    available_spells = Q(is_official=True)
-
-    if request.user.is_authenticated:
-        available_spells |= Q(
-            created_by__user=request.user,
-            is_official=False,
-        )
-
     spell = get_object_or_404(
-        Spell.objects.filter(available_spells)
-        .select_related("school", "time")
+        visible_spells(request.user)
+        .select_related("school", "time", "created_by__user")
         .prefetch_related(
             "material_components",
             "aviable_classes",
@@ -188,9 +162,10 @@ def spell_detail_page(request, pk):
         pk=pk,
     )
 
+    scope_spell_classes(spell, request.user)
     is_saved = False
 
-    if request.user.is_authenticated and spell.is_official:
+    if request.user.is_authenticated:
         is_saved = spell.saved_by_players.filter(
             user=request.user,
         ).exists()
@@ -201,6 +176,8 @@ def spell_detail_page(request, pk):
         {
             "spell": spell,
             "is_custom": not spell.is_official,
+            "can_edit_spell": can_edit_spell(request.user, spell),
+            "is_spell_author": bool(request.user.is_authenticated and spell.created_by_id and spell.created_by.user_id == request.user.pk and not spell.is_official),
             "is_saved": is_saved,
         },
     )
@@ -208,7 +185,8 @@ def spell_detail_page(request, pk):
 @require_http_methods(["GET", "POST"])
 def spell_create_page(request):
     form = CustomSpellForm(
-        request.POST if request.method == "POST" else None
+        request.POST if request.method == "POST" else None,
+        user=request.user,
     )
 
     if request.method == "POST" and form.is_valid():
@@ -233,34 +211,13 @@ def spell_create_page(request):
     )
 @login_required
 def my_spell_list_page(request):
-    search = request.GET.get("search", "").strip()
-
-    spells = (
-        Spell.objects.filter(
-            Q(
-                created_by__user=request.user,
-                is_official=False,
-            )
-            | Q(
-                saved_by_players__user=request.user,
-                is_official=True,
-            )
-        )
-        .select_related("school", "time")
-        .distinct()
-    )
-
-    if search:
-        spells = spells.filter(name__icontains=search)
-
-    return render(
-        request,
-        "spells/my_spell_list.html",
-        {
-            "spells": spells,
-            "search": search,
-        },
-    )
+    filters = SpellFilterForm(request.GET or None, mine=True, user=request.user)
+    spells = filters.apply(collected_spells(request.user)).select_related("school", "time", "created_by__user").order_by("name", "pk")
+    return render(request, "spells/my_spell_list.html", {
+        "spells": spells, "spell_filters": filters,
+        "search": request.GET.get("search", ""),
+        "has_active_filters": any(request.GET.get(name) for name in filters.fields),
+    })
 @login_required
 @require_http_methods(["GET", "POST"])
 def spell_import_page(request):
@@ -270,13 +227,17 @@ def spell_import_page(request):
     )
 
     if request.method == "POST" and form.is_valid():
-        initial = build_spell_initial(form.import_data)
-        spell_form = CustomSpellForm(initial=initial)
+        try:
+            initial = build_spell_initial(form.import_data, user=request.user)
+        except (ValueError, TypeError, KeyError, RecursionError) as error:
+            form.add_error('json_file', str(error))
+            return render(request, 'spells/spell_import.html', {'form': form, 'official_import': False})
+        spell_form = CustomSpellForm(initial=initial, user=request.user)
 
         return render(
             request,
             "spells/spell_form.html",
-            {"form": spell_form},
+            {"form": spell_form, "import_warnings": initial.get("_import_warnings", [])},
         )
 
     return render(
@@ -303,6 +264,7 @@ def spell_edit_page(request, pk):
     form = CustomSpellForm(
         request.POST if request.method == "POST" else None,
         instance=spell,
+        user=request.user,
     )
 
     if request.method == "POST" and form.is_valid():
@@ -321,14 +283,13 @@ def spell_edit_page(request, pk):
         },
     )
 def home_page(request):
-    return render(request, "spells/home.html")
+    from spells.views.plans import home_context
+    return render(request, "spells/home.html", home_context(request))
 @login_required
 @require_http_methods(["POST"])
 def spell_save_page(request, pk):
     spell = get_object_or_404(
-        Spell,
-        pk=pk,
-        is_official=True,
+        visible_spells(request.user), pk=pk,
     )
 
     player, _ = Player.objects.get_or_create(user=request.user)
@@ -343,7 +304,6 @@ def spell_unsave_page(request, pk):
     spell = get_object_or_404(
         player.saved_spells,
         pk=pk,
-        is_official=True,
     )
 
     player.saved_spells.remove(spell)
@@ -361,14 +321,20 @@ def official_spell_import_page(request):
     )
 
     if request.method == "POST" and form.is_valid():
-        initial = build_spell_initial(form.import_data)
-        spell_form = CustomSpellForm(initial=initial)
+        try:
+            initial = build_spell_initial(form.import_data, user=AnonymousUser())
+        except (ValueError, TypeError, KeyError, RecursionError) as error:
+            form.add_error('json_file', str(error))
+            return render(request, 'spells/spell_import.html', {'form': form, 'official_import': True})
+        spell_form = CustomSpellForm(initial=initial, user=request.user)
+        spell_form.fields.pop("is_public", None)
 
         return render(
             request,
             "spells/spell_form.html",
             {
                 "form": spell_form,
+                "import_warnings": initial.get("_import_warnings", []),
                 "official_import": True,
             },
         )
@@ -389,7 +355,8 @@ def official_spell_create_page(request):
     if not request.user.is_staff:
         raise PermissionDenied
 
-    form = CustomSpellForm(request.POST)
+    form = CustomSpellForm(request.POST, user=request.user)
+    form.fields.pop("is_public", None)
 
     if form.is_valid():
         with transaction.atomic():
@@ -466,9 +433,15 @@ def spellbook_list_page(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def spellbook_create_page(request):
+    initial = {}
+    owner = None
+    if request.GET.get("owner"):
+        owner = get_object_or_404(Person, pk=request.GET["owner"] if request.GET["owner"].isdigit() and len(request.GET["owner"]) <= 10 else 0, player__user=request.user)
+        initial["owner"] = owner.pk
     form = SpellbookForm(
         request.POST if request.method == "POST" else None,
         user=request.user,
+        initial=initial,
     )
 
     if request.method == "POST" and form.is_valid():
@@ -491,7 +464,7 @@ def spellbook_create_page(request):
     return render(
         request,
         "spells/spellbook_form.html",
-        {"form": form},
+        {"form": form, "return_character": owner},
     )
 @login_required
 def spellbook_detail_page(request, pk):
@@ -516,7 +489,7 @@ def spellbook_detail_page(request, pk):
         "spells/spellbook_detail.html",
         {
             "spellbook": spellbook,
-            "spells": spellbook.spells.order_by("level", "name"),
+            "spells": spellbook.spells.filter(pk__in=visible_spells(request.user)).order_by("level", "name"),
             "slots": slots,
         },
     )

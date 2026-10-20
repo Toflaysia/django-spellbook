@@ -3,3 +3,5 @@ from .enums import *
 from .spellbooks import *
 from .spells import *
 from .users import *
+
+from .plans import HomePlan

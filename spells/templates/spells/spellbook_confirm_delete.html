@@ -88,7 +88,7 @@
             {% csrf_token %}
 
             <div class="delete-actions">
-                <a href="{% url 'spellbook_detail_page' spellbook.pk %}">
+                <a class="btn btn-secondary" href="{% url 'spellbook_detail_page' spellbook.pk %}">
                     Отмена
                 </a>
 

@@ -64,7 +64,8 @@
     .catalog-damage-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .catalog-class-filters label { display: block; margin-bottom: 6px; color: #b8b9cc; }
     .catalog-class-filters select,
-    .catalog-class-filters input[type="text"] {
+    .catalog-class-filters input[type="text"],
+    .catalog-class-filters input[type="number"] {
         box-sizing: border-box; width: 100%; padding: 10px;
         border: 1px solid #484960; border-radius: 8px;
         background: #11121a; color: #ececf3; font: inherit;
@@ -111,16 +112,16 @@
 
     .catalog-card h2 a {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
+        flex-direction: column;
+        align-items: flex-start;
         gap: 12px;
         text-decoration: none;
     }
 
     .catalog-entry-heading {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
+        flex-direction: column;
+        align-items: flex-start;
         gap: 16px;
         margin-bottom: 20px;
     }
@@ -184,6 +185,7 @@
             grid-template-columns: 1fr;
         }
     }
+.class-catalog-groups{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0}
 </style>
 {% endblock %}
 
@@ -200,13 +202,13 @@
         {% if request.user.is_staff %}
             <div class="catalog-entry-actions">
                 <a class="btn btn-secondary" href="{% url 'catalog_edit_page' slug entry_pk %}">Редактировать</a>
-                {% if slug == 'damage-types' %}
+                {% if slug == 'damage-types' or slug == 'traits' %}
                     <a class="btn btn-danger" href="{% url 'catalog_delete_page' slug entry_pk %}">Удалить</a>
                 {% endif %}
             </div>
         {% endif %}
 
-        <section class="catalog-panel">
+        <section class="catalog-panel {% if school_color %}school-themed{% endif %}" {% if school_color %}style="--school-color:{{ school_color }}"{% endif %}>
             {% if attributes %}
                 <dl class="catalog-attributes">
                     {% for attribute in attributes %}
@@ -226,15 +228,25 @@
         </section>
     {% else %}
         <h1>{{ catalog_title }}</h1>
-        {% if request.user.is_staff %}
+        {% if slug == 'classes' and class_group == 'mine' and request.user.is_authenticated %}
+            <a class="btn" href="{% url 'user_class_create_page' %}">+ Создать мой класс</a>
+        {% elif request.user.is_staff and class_group != 'mine' %}
             <a
                 class="btn"
-                href="{% url 'catalog_create_page' slug %}"
+                href="{% url 'catalog_create_page' slug %}{% if class_group %}?group={{ class_group }}{% endif %}"
             >
                 + Добавить запись
             </a>
         {% endif %}
+        {% if slug == 'classes' %}
+            <nav class="class-catalog-groups" aria-label="Разделы классов">
+                <a class="btn {% if class_group != 'official' %}btn-secondary{% endif %}" href="?group=official" {% if class_group == 'official' %}aria-current="page"{% endif %}>Официальные классы</a>
+                <a class="btn {% if class_group != 'unofficial' %}btn-secondary{% endif %}" href="?group=unofficial" {% if class_group == 'unofficial' %}aria-current="page"{% endif %}>Неофициальные классы</a>
+                {% if request.user.is_authenticated %}<a class="btn {% if class_group != 'mine' %}btn-secondary{% endif %}" href="?group=mine" {% if class_group == 'mine' %}aria-current="page"{% endif %}>Мои классы</a>{% endif %}
+            </nav>
+        {% endif %}
         <form class="catalog-search" method="get">
+            {% if slug == 'classes' %}<input type="hidden" name="group" value="{{ class_group }}">{% endif %}
             <input
                 type="search"
                 name="search"
@@ -260,23 +272,41 @@
                 </div>
             {% endif %}
             {% if effect_filters %}
-                <div class="catalog-class-filters">
-                    <div>{{ effect_filters.category.label_tag }}{{ effect_filters.category }}{{ effect_filters.category.errors }}</div>
+                <div class="catalog-class-filters {% if slug == 'conditions' %}catalog-damage-filters{% endif %}">
+                    {% if effect_filters.category %}<div>{{ effect_filters.category.label_tag }}{{ effect_filters.category }}{{ effect_filters.category.errors }}</div>{% endif %}
                     <div>{{ effect_filters.damage_type.label_tag }}{{ effect_filters.damage_type }}{{ effect_filters.damage_type.errors }}</div>
                     <div>{{ effect_filters.duration.label_tag }}{{ effect_filters.duration }}{{ effect_filters.duration.errors }}</div>
                 </div>
             {% endif %}
-            {% if class_filters or damage_filters or effect_filters %}
+            {% if extra_filters %}
+                <div class="catalog-class-filters {% if slug == 'components' %}catalog-component-filters{% endif %}">
+                    {% if slug == 'components' %}
+                        <div>{{ extra_filters.is_consumable.label_tag }}{{ extra_filters.is_consumable }}{{ extra_filters.is_consumable.errors }}</div>
+                        <div>{{ extra_filters.is_focus.label_tag }}{{ extra_filters.is_focus }}{{ extra_filters.is_focus.errors }}</div>
+                        <fieldset class="catalog-cost-range">
+                            <legend>Стоимость, зм</legend>
+                            <div class="catalog-cost-inputs">
+                                <div>{{ extra_filters.min_cost.label_tag }}{{ extra_filters.min_cost }}{{ extra_filters.min_cost.errors }}</div>
+                                <span class="catalog-cost-dash" aria-hidden="true">—</span>
+                                <div>{{ extra_filters.max_cost.label_tag }}{{ extra_filters.max_cost }}{{ extra_filters.max_cost.errors }}</div>
+                            </div>
+                        </fieldset>
+                    {% else %}
+                        {% for field in extra_filters %}<div>{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
+                    {% endif %}
+                </div>
+            {% endif %}
+            {% if class_filters or damage_filters or effect_filters or extra_filters %}
                 <div class="catalog-search-actions">
                     {% if has_active_filters %}
-                        <a class="btn btn-secondary" href="{% url 'catalog_list_page' slug %}">Сбросить</a>
+                        <a class="btn btn-secondary" href="{% url 'catalog_list_page' slug %}{% if class_group %}?group={{ class_group }}{% endif %}">Сбросить</a>
                     {% endif %}
                     <button type="submit">Применить</button>
                 </div>
             {% else %}
                 <button type="submit">Найти</button>
                 {% if has_active_filters %}
-                    <a class="btn btn-secondary" href="{% url 'catalog_list_page' slug %}">Сбросить</a>
+                    <a class="btn btn-secondary" href="{% url 'catalog_list_page' slug %}{% if class_group %}?group={{ class_group }}{% endif %}">Сбросить</a>
                 {% endif %}
             {% endif %}
         </form>
@@ -284,9 +314,9 @@
         {% if class_filters %}
             <p class="catalog-muted catalog-results-count">Найдено классов: {{ page.paginator.count }}</p>
         {% endif %}
-        <div class="catalog-grid {% if slug == 'damage-types' or slug == 'effects' %}catalog-grid-damage{% endif %}">
+        <div class="catalog-grid {% if slug == 'damage-types' or slug == 'effects' or slug == 'conditions' or slug == 'schools' %}catalog-grid-damage{% endif %}">
             {% for entry in entries %}
-                <article class="catalog-card">
+                <article class="catalog-card {% if entry.color %}school-themed{% endif %}" {% if entry.color %}style="--school-color:{{ entry.color }}"{% endif %}>
                     <h2>
                         <a href="{% url 'catalog_detail_page' slug entry.pk %}">
                             {% if entry.image_url %}
@@ -297,6 +327,8 @@
                     </h2>
 
                     {% if slug == 'classes' %}
+                        {% if entry.author %}<p class="catalog-muted">Автор: {{ entry.author }} · {% if entry.is_public %}Публичный{% else %}Приватный{% endif %}</p>{% endif %}
+                        {% if entry.can_edit %}<a class="btn btn-secondary" href="{% url 'catalog_edit_page' 'classes' entry.pk %}">Редактировать</a>{% endif %}
                         <div class="catalog-class-tags">
                             <span class="catalog-class-tag">{{ entry.magic_type }}</span>
                             <span class="catalog-class-tag">Кость хитов: {{ entry.hit_die }}</span>
@@ -310,7 +342,7 @@
                             {% if entry.is_regular %}<span class="catalog-class-tag">Обычный урон</span>{% endif %}
                         </div>
                     {% endif %}
-                    {% if slug == 'effects' %}
+                    {% if slug == 'effects' or slug == 'conditions' %}
                         <div class="catalog-class-tags">
                             {% if entry.category %}<span class="catalog-class-tag">{{ entry.category }}</span>{% endif %}
                             {% if entry.damage_type %}<span class="catalog-class-tag">{{ entry.damage_type }}</span>{% endif %}

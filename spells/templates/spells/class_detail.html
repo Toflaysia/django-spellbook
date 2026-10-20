@@ -295,19 +295,28 @@
         padding: 24px 16px;
     }
 }
+/* Optional features retain a distinct colour for class and subclass alike. */
+.class-feature-links .class-feature-link-optional {background:#403726;color:#edd49b;border-color:#9b8050}
+.class-feature-links .class-feature-link-optional:hover {background:#57472e;color:#fff0c9}
+.class-panel.class-feature-optional {border-color:#9b8050;background:#2c281f}
+.optional-feature-label {display:block;margin-top:8px;color:#edd49b;font-size:13px;font-weight:400}
+.class-identity {display:flex;flex-direction:column;gap:24px;align-items:flex-start;margin:24px 0}.class-portrait{width:144px;height:144px;object-fit:cover;border-radius:16px;flex:none}
+@media(max-width:600px){.class-identity{align-items:flex-start;flex-direction:column}.class-portrait{width:110px;height:110px}}
 </style>
 {% endblock %}
 
 {% block content %}
 <main class="class-main">
+    <div class="class-identity"><img class="class-portrait" src="{{ character_class.display_image_url }}" alt="Картинка класса {{ character_class.name }}"><div>
     <h1>
         {{ character_class.name }}
         {% if selected_subclass %}
             — {{ selected_subclass.name }}
         {% endif %}
     </h1>
+    <p class="class-muted">{% if character_class.created_by_id %}Автор: {{ character_class.created_by }} · {% if character_class.is_public %}Публичный класс{% else %}Приватный класс{% endif %}{% elif character_class.is_official %}Официальный класс{% else %}Неофициальный класс{% endif %}</p></div></div>
 
-    {% if request.user.is_staff %}
+    {% if can_edit_class %}
         <a
             class="btn btn-secondary"
             href="{% url 'catalog_edit_page' 'classes' character_class.pk %}"
@@ -340,7 +349,7 @@
 
     <section class="class-panel">
         <h2>Подкласс</h2>
-        {% if request.user.is_staff %}
+        {% if can_edit_class %}
             <p>
                 <a
                     class="btn"
@@ -408,7 +417,7 @@
     <section class="class-panel">
         <h2>Развитие по уровням</h2>
         <p class="class-muted">Таблица класса: {{ character_class.name }} · Вид: {{ character_class.get_progression_table_type_display }}</p>
-        {% if request.user.is_staff %}
+        {% if can_edit_class %}
             <div class="class-block-actions">
                 <a class="btn btn-secondary" href="{% url 'class_table_edit_page' character_class.pk %}">Настроить таблицу класса</a>
                 {% if selected_subclass %}
@@ -429,7 +438,7 @@
                 </nav>
             {% endif %}
 
-    {% if request.user.is_staff %}
+    {% if can_edit_class %}
         <p>
             <a
                 class="btn"
@@ -439,7 +448,7 @@
             </a>
         </p>
     {% endif %}
-        {% if request.user.is_staff %}
+        {% if can_edit_class %}
             <p>
                 <a
                     class="btn"
@@ -475,7 +484,7 @@
                                     <td>
                                         <div class="class-feature-links">
                                             {% for feature in cell.features %}
-                                                <a class="class-feature-link {% if feature.subclass_id %}class-feature-link-subclass{% endif %}" href="#feature-{{ feature.pk }}">{{ feature.name }}</a>
+                                                <a class="class-feature-link {% if feature.is_optional %}class-feature-link-optional{% endif %} {% if feature.subclass_id %}class-feature-link-subclass{% endif %}" href="#feature-{{ feature.pk }}">{{ feature.name|upper }}</a>
                                             {% empty %}<span class="class-muted">—</span>{% endfor %}
                                         </div>
                                     </td>
@@ -505,7 +514,7 @@
         </details>
     
 
-                {% if request.user.is_staff %}
+                {% if can_edit_class %}
                     <div class="class-section-admin-actions">
                         <a
                             class="btn btn-secondary"
@@ -525,12 +534,12 @@
     {% endfor %}
         {% for feature in features %}
             <details
-                class="class-panel class-feature class-collapsible {% if feature.subclass_id %}class-feature-subclass{% endif %}"
+                class="class-panel class-feature class-collapsible {% if feature.is_optional %}class-feature-optional{% endif %} {% if feature.subclass_id %}class-feature-subclass{% endif %}"
                 id="feature-{{ feature.pk }}"
                 open
             >
                 <summary>
-                    <h2>{{ feature.name }}</h2>
+                    <h2>{{ feature.name|upper }}{% if feature.is_optional %}<span class="optional-feature-label">Опциональное умение</span>{% endif %}</h2>
                 </summary>
 
                 <div class="class-collapsible-content">
@@ -547,7 +556,7 @@
 
                     {{ feature.description|render_description }}
 
-                    {% if request.user.is_staff %}
+                    {% if can_edit_class %}
                         <div class="class-block-actions">
                             <a
                                 class="btn btn-secondary"

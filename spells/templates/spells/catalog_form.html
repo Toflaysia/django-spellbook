@@ -108,6 +108,9 @@
             padding: 20px;
         }
     }
+    .school-color-controls {display:flex;align-items:center;gap:12px}
+    .catalog-form-field .school-color-controls input[type="color"] {width:64px;height:48px;padding:4px;flex:none;cursor:pointer}
+    .school-color-controls input[name="color"] {max-width:220px;font-family:monospace}
 </style>
 {% endblock %}
 
@@ -126,7 +129,7 @@
         Сохранённые данные будут доступны всем пользователям.
     </p>
 
-    <form class="catalog-form-panel" method="post" enctype="multipart/form-data">
+    <form class="catalog-form-panel {% if school_color %}school-themed{% endif %}" {% if school_color %}style="--school-color:{{ school_color }}" data-school-color{% endif %} method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -146,6 +149,12 @@
                         <p class="catalog-form-help">Нажми на окошко, перетащи картинку или вставь её через Ctrl+V, когда окошко в фокусе.</p>
                         <p class="catalog-form-help catalog-image-error" role="alert" hidden></p>
                     </div>
+                {% elif field.name == 'color' and school_color %}
+                    <div class="school-color-controls">
+                        <input type="color" data-school-color-picker value="{{ school_color }}" aria-label="Выбрать цвет школы в палитре">
+                        {{ field }}
+                    </div>
+                    <p class="catalog-form-help">Выбери цвет в палитре или введи код #RRGGBB.</p>
                 {% else %}
                     {{ field }}
                 {% endif %}
@@ -178,7 +187,7 @@
             {% else %}
                 <a
                     class="btn btn-secondary"
-                    href="{% url 'catalog_list_page' slug %}"
+                    href="{% if cancel_url %}{{ cancel_url }}{% else %}{% url 'catalog_list_page' slug %}{% endif %}"
                 >
                     Отмена
                 </a>
@@ -188,5 +197,6 @@
 </main>
 {% endblock %}
 {% block scripts %}
+<script src="{% static 'spells/school_color.js' %}?v=20261009-1117"></script>
 <script src="{% static 'spells/catalog_image_upload.js' %}"></script>
 {% endblock %}

@@ -16,7 +16,7 @@ class CustomSpellQuerysetMixin:
                 created_by__user=self.request.user,
                 is_official=False,
             )
-            .select_related("school", "time")
+            .select_related("school", "time", "created_by__user")
             .prefetch_related(
                 "material_components",
                 "effects",

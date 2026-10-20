@@ -16,3 +16,9 @@ body .description-editor button:hover { background: #343047; color: #fff; }
 .description-display-table-wrapper .description-display-table { margin: 0; }
 .description-editor-error { padding: 10px 14px; color: #fca5a5; }
 .class-section-admin-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; margin-bottom: 24px; }
+.description-menu {min-width:210px;display:flex;flex-direction:column;gap:6px}
+.description-menu .description-small-button {width:100%;justify-content:flex-start;text-align:left}
+.description-surface h3 {margin:12px 0;color:#ddd6fe;font-size:21px}
+.description-surface blockquote,body main blockquote,.play-dialog blockquote {font-style:italic;border-left:3px solid #c4b5fd;padding:10px 16px;margin:16px 0;background:#252637;color:#ddd6fe}
+.description-surface hr,.description-rule {border:0;border-top:1px solid #81719f;margin:20px 0}
+.description-surface ul {padding-left:24px;white-space:normal}

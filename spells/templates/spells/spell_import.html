@@ -116,16 +116,17 @@
 {% block content %}
 <main class="import-main">
     {% if official_import %}
-        <a href="{% url 'spell_list_page' %}">
+        <a class="btn btn-secondary" href="{% url 'spell_list_page' %}">
             ← Официальные заклинания
         </a>
     {% else %}
-        <a href="{% url 'my_spell_list_page' %}">
+        <a class="btn btn-secondary" href="{% url 'my_spell_list_page' %}">
             ← Мои заклинания
         </a>
     {% endif %}
 
     <h1>Загрузить заклинание</h1>
+    {% if official_import %}<p><a class="btn btn-secondary" href="{% url 'bulk_spell_import_page' %}">Выбрать несколько JSON-файлов</a></p>{% endif %}
 
     <p class="import-intro">
         Выбери JSON-файл одного заклинания.
@@ -179,7 +180,7 @@
                 Загрузить и проверить
             </button>
 
-            <a href="{% if official_import %}{% url 'spell_list_page' %}{% else %}{% url 'my_spell_list_page' %}{% endif %}">
+            <a class="btn btn-secondary" href="{% if official_import %}{% url 'spell_list_page' %}{% else %}{% url 'my_spell_list_page' %}{% endif %}">
                 Отмена
             </a>
         </div>

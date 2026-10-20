@@ -29,7 +29,7 @@ class SubclassDeleteTests(TestCase):
     def test_confirmation_does_not_delete(self):
         self.client.force_login(self.staff)
         response = self.client.get(self.url)
-        self.assertContains(response, "Особое умение")
+        self.assertContains(response, "ОСОБОЕ УМЕНИЕ")
         self.assertContains(response, "csrfmiddlewaretoken")
         self.assertTrue(Subclass.objects.filter(pk=self.subclass.pk).exists())
         self.assertContains(

@@ -1,7 +1,12 @@
+from spells.class_access import visible_classes, require_class_editor, can_edit_class
+from spells.models import Trait
+import re
+from spells.filters import ComponentFilterForm, SchoolFilterForm
 from spells.description import DescriptionModelForm
 from django.core.paginator import Paginator
 from django.db.models import Count
 from django.utils.http import urlencode
+from django.urls import reverse
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django import forms
@@ -17,15 +22,24 @@ from spells.models import (
     MagicSchool,
     MaterialComponent,
     SpellTime,
+    Spell,
 )
 
 
+def school_color(value):
+    return value if isinstance(value,str) and re.fullmatch(r"#[0-9a-fA-F]{6}",value) else "#3498db"
+
 CATALOGS = {
+    "traits": {"title": "Черты", "model": Trait, "name_field": "name", "fields": ["prerequisites"]},
     "schools": {
         "title": "Школы магии",
         "model": MagicSchool,
         "name_field": "name",
         "fields": [],
+    },
+    "conditions": {
+        "title": "Состояния", "model": Effect, "name_field": "name",
+        "fields": ["duration", "damage_type"],
     },
     "effects": {
         "title": "Эффекты",
@@ -85,6 +99,15 @@ def get_catalog(slug):
 
 
 
+def catalog_objects(slug):
+    objects = get_catalog(slug)["model"].objects.all()
+    if slug == "conditions":
+        return objects.filter(category="COND")
+    if slug == "effects":
+        return objects.exclude(category="COND")
+    return objects
+
+
 class ClassFilterForm(forms.Form):
     magic_type = forms.ChoiceField(
         label="Магический тип", required=False,
@@ -129,10 +152,11 @@ class EffectFilterForm(forms.Form):
 def catalog_list_page(request, slug):
     catalog = get_catalog(slug)
     search = request.GET.get("search", "").strip()
-    objects = catalog["model"].objects.order_by(catalog["name_field"], "pk")
+    objects = catalog_objects(slug).order_by(catalog["name_field"], "pk")
     if search:
         objects = objects.filter(**{f"{catalog['name_field']}__icontains": search})
 
+    extra_filters = None
     class_filters = None
     damage_filters = None
     effect_filters = None
@@ -170,14 +194,18 @@ def catalog_list_page(request, slug):
             else:
                 objects = objects.none()
 
-    if slug == "effects":
+    if slug in ("effects", "conditions"):
         objects = objects.select_related("damage_type")
         effect_filters = EffectFilterForm(request.GET or None)
+        if slug == "conditions":
+            effect_filters.fields.pop("category")
+        else:
+            effect_filters.fields["category"].choices = [(value, label) for value, label in effect_filters.fields["category"].choices if value != "COND"]
         has_active_filters |= any(request.GET.get(name) for name in effect_filters.fields)
         if effect_filters.is_bound:
             if effect_filters.is_valid():
                 values = effect_filters.cleaned_data
-                if values["category"]:
+                if values.get("category"):
                     objects = objects.filter(category="" if values["category"] == "none" else values["category"])
                 if values["damage_type"]:
                     objects = objects.filter(damage_type__isnull=True) if values["damage_type"] == "none" else objects.filter(damage_type_id=int(values["damage_type"]))
@@ -187,6 +215,47 @@ def catalog_list_page(request, slug):
             else:
                 objects = objects.none()
 
+    if slug in ("components", "schools"):
+        extra_filters = (ComponentFilterForm if slug == "components" else SchoolFilterForm)(request.GET or None)
+        has_active_filters |= any(request.GET.get(name) for name in extra_filters.fields)
+        if extra_filters.is_bound:
+            if extra_filters.is_valid():
+                values = extra_filters.cleaned_data
+                if slug == "components":
+                    for name in ("is_consumable", "is_focus"):
+                        if values[name]:
+                            objects = objects.filter(**{name: values[name] == "yes"})
+                    for name, lookup in (("min_cost", "cost__gte"), ("max_cost", "cost__lte")):
+                        if values[name] is not None:
+                            objects = objects.filter(**{lookup: values[name]})
+                else:
+                    official = Spell.objects.filter(is_official=True, school__isnull=False)
+                    if values["has_spells"]:
+                        ids = official.values_list("school_id", flat=True)
+                        objects = objects.filter(pk__in=ids) if values["has_spells"] == "yes" else objects.exclude(pk__in=ids)
+                    if values["level"]:
+                        objects = objects.filter(pk__in=official.filter(level=values["level"]).values_list("school_id", flat=True))
+                query.update({name: value for name, value in values.items() if value not in ("", None)})
+            else:
+                objects = objects.none()
+
+    class_group = ''
+    if slug == 'classes':
+        objects = objects.filter(pk__in=visible_classes(request.user)).select_related('created_by__user')
+        class_group = request.GET.get('group', 'official')
+        if class_group not in ('official', 'unofficial', 'mine'):
+            raise Http404('Раздел классов не найден.')
+        if class_group == 'official':
+            objects = objects.filter(created_by__isnull=True, is_official=True)
+        elif class_group == 'mine':
+            objects = objects.filter(created_by__user=request.user) if request.user.is_authenticated else objects.none()
+        else:
+            objects = objects.filter(is_official=False)
+            if request.user.is_authenticated:
+                objects = objects.exclude(created_by__user=request.user)
+        if 'group' in request.GET or class_group != 'official':
+            query['group'] = class_group
+
     page = Paginator(objects, 24).get_page(request.GET.get("page"))
     entries = []
     for item in page.object_list:
@@ -194,19 +263,24 @@ def catalog_list_page(request, slug):
             "pk": item.pk, "name": getattr(item, catalog["name_field"]),
             "description": item.description or "",
         }
+        if slug == "schools":
+            entry["color"] = school_color(item.color)
+            entry["image_url"] = item.image.url if item.image else ""
         if slug == "classes":
             entry.update({
                 "magic_type": item.get_magic_type_display(),
                 "hit_die": item.get_hit_die_display(),
                 "spellcasting_ability": item.get_spellcasting_ability_display() if item.magic_type != "NC" else "",
                 "subclass_count": item.subclass_count,
+                "image_url": item.display_image_url, "author": str(item.created_by) if item.created_by_id else "",
+                "is_public": item.is_public, "can_edit": can_edit_class(request.user, item),
             })
         if slug == "damage-types":
             entry.update(
                 is_magic=item.is_magic, is_regular=item.is_regular,
                 image_url=item.image.url if item.image else "",
             )
-        if slug == "effects":
+        if slug in ("effects", "conditions"):
             entry.update(
                 image_url=item.image.url if item.image else "",
                 category=item.get_category_display(),
@@ -216,8 +290,8 @@ def catalog_list_page(request, slug):
         entries.append(entry)
     return render(request, "spells/catalog.html", {
         "catalog_title": catalog["title"], "slug": slug, "search": search,
-        "entries": entries, "page": page, "class_filters": class_filters,
-        "damage_filters": damage_filters, "effect_filters": effect_filters,
+        "class_group": class_group, "entries": entries, "page": page, "class_filters": class_filters,
+        "extra_filters": extra_filters, "damage_filters": damage_filters, "effect_filters": effect_filters,
         "has_active_filters": has_active_filters, "page_query": urlencode(query),
     })
 
@@ -226,9 +300,11 @@ def catalog_detail_page(request, slug, pk):
     if slug == "classes":
         return redirect("class_detail_page", pk=pk)
     catalog = get_catalog(slug)
-    objects = catalog["model"].objects.all()
+    if slug == "effects" and Effect.objects.filter(pk=pk, category="COND").exists():
+        return redirect("catalog_detail_page", slug="conditions", pk=pk)
+    objects = catalog_objects(slug)
 
-    if slug == "effects":
+    if slug in ("effects", "conditions"):
         objects = objects.select_related("damage_type")
 
     item = get_object_or_404(objects, pk=pk)
@@ -236,6 +312,8 @@ def catalog_detail_page(request, slug, pk):
     attributes = []
 
     for field_name in catalog["fields"]:
+        if field_name == "color":
+            continue
         field = item._meta.get_field(field_name)
         value = getattr(item, field_name)
 
@@ -265,25 +343,29 @@ def catalog_detail_page(request, slug, pk):
             "detail": True,
             "entry_pk": item.pk,
             "entry_name": getattr(item, catalog["name_field"]),
-            "entry_image_url": item.image.url if slug in ("damage-types", "effects") and item.image else "",
+            "school_color": school_color(item.color) if slug == "schools" else "",
+            "entry_image_url": item.image.url if slug in ("damage-types", "effects", "conditions", "schools") and item.image else "",
             "description": item.description or "",
             "attributes": attributes,
         },
     )
-def build_catalog_form(catalog):
+def build_catalog_form(catalog, *, user_class=False):
     fields = [
         catalog["name_field"],
         "description",
         *catalog["fields"],
     ]
 
-    if catalog["model"] in (DamageType, Effect):
+    if catalog["model"] is CharacterClass:
+        fields.extend(["is_public"] if user_class else ["is_official"])
+
+    if catalog["model"] in (DamageType, Effect, MagicSchool, CharacterClass):
         fields.insert(1, "image")
 
     if catalog["model"] is MagicSchool:
         fields.append("color")
 
-    return forms.modelform_factory(
+    form_class = forms.modelform_factory(
         catalog["model"],
         form=DescriptionModelForm,
         fields=fields,
@@ -292,6 +374,19 @@ def build_catalog_form(catalog):
             "image": forms.ClearableFileInput(attrs={"accept": "image/*"}),
         },
     )
+    if catalog["model"] is CharacterClass:
+        def clean_name(self):
+            name = self.cleaned_data['name'].strip()
+            existing = CharacterClass.objects.filter(name=name, created_by_id=self.instance.created_by_id).exclude(pk=self.instance.pk)
+            if existing.exists():
+                raise forms.ValidationError('Класс с таким названием уже существует у этого автора.')
+            return name
+        form_class.clean_name = clean_name
+    if catalog is CATALOGS["effects"]:
+        form_class.base_fields["category"].choices = [(value, label) for value, label in form_class.base_fields["category"].choices if value != "COND"]
+    if catalog["model"] is MagicSchool:
+        form_class.base_fields["color"] = forms.RegexField(regex=r"^#[0-9a-fA-F]{6}$", label="Цвет школы магии", initial="#3498db", widget=forms.TextInput(attrs={"placeholder":"#7C3AED", "maxlength":7, "pattern":"#[0-9a-fA-F]{6}", "autocomplete":"off"}), error_messages={"invalid":"Укажи цвет в формате #RRGGBB."})
+    return form_class
 
 
 @login_required
@@ -303,14 +398,26 @@ def catalog_create_page(request, slug):
     catalog = get_catalog(slug)
     form_class = build_catalog_form(catalog)
 
+    kwargs = {'instance': Effect(category='COND')} if slug == 'conditions' else {}
+    class_group = ''
+    if slug == 'classes':
+        class_group = request.GET.get('group', 'official')
+        if class_group == 'mine':
+            return redirect('user_class_create_page')
+        if class_group not in ('official', 'unofficial'):
+            raise Http404('Раздел классов не найден.')
+        kwargs['instance'] = CharacterClass(is_official=class_group == 'official')
     form = form_class(
         request.POST if request.method == "POST" else None,
         request.FILES if request.method == "POST" else None,
+        **kwargs,
     )
+    if class_group == 'unofficial':
+        form.fields.pop('is_official')
 
     if request.method == "POST" and form.is_valid():
         item = form.save()
-        if slug in ("damage-types", "effects"):
+        if slug in ("damage-types", "effects", "conditions"):
             return redirect("catalog_list_page", slug=slug)
 
         return redirect(
@@ -326,6 +433,8 @@ def catalog_create_page(request, slug):
             "form": form,
             "catalog_title": catalog["title"],
             "slug": slug,
+            "cancel_url": reverse('catalog_list_page', args=[slug]) + ('?group=' + class_group if class_group else ''),
+            "school_color": school_color(form["color"].value()) if slug == "schools" else "",
         },
     )
 
@@ -333,12 +442,15 @@ def catalog_create_page(request, slug):
 @login_required
 @require_http_methods(["GET", "POST"])
 def catalog_edit_page(request, slug, pk):
-    if not request.user.is_staff:
-        raise PermissionDenied
-
     catalog = get_catalog(slug)
-    item = get_object_or_404(catalog["model"], pk=pk)
-    form_class = build_catalog_form(catalog)
+    if slug == "effects" and Effect.objects.filter(pk=pk, category="COND").exists():
+        return redirect("catalog_edit_page", slug="conditions", pk=pk)
+    item = get_object_or_404(visible_classes(request.user) if slug == "classes" else catalog_objects(slug), pk=pk)
+    if slug == 'classes':
+        require_class_editor(request.user, item)
+    elif not request.user.is_staff:
+        raise PermissionDenied
+    form_class = build_catalog_form(catalog, user_class=slug == 'classes' and item.created_by_id is not None)
 
     form = form_class(
         request.POST if request.method == "POST" else None,
@@ -364,6 +476,7 @@ def catalog_edit_page(request, slug, pk):
             "slug": slug,
             "editing": True,
             "entry_pk": item.pk,
+            "school_color": school_color(form["color"].value()) if slug == "schools" else "",
         },
     )
 
@@ -372,12 +485,13 @@ def catalog_edit_page(request, slug, pk):
 def catalog_delete_page(request, slug, pk):
     if not request.user.is_staff:
         raise PermissionDenied
-    if slug != "damage-types":
+    if slug not in ("damage-types", "traits"):
         raise Http404("Удаление этого справочника недоступно.")
-    item = get_object_or_404(DamageType, pk=pk)
+    item = get_object_or_404(get_catalog(slug)["model"], pk=pk)
     if request.method == "POST":
         item.delete()
         return redirect("catalog_list_page", slug=slug)
-    return render(request, "spells/damage_type_confirm_delete.html", {
-        "item": item, "effects_count": item.effects.count(),
+    return render(request, "spells/catalog_confirm_delete.html" if slug == "traits" else "spells/damage_type_confirm_delete.html", {
+        "slug": slug,
+        "item": item, "effects_count": item.effects.count() if slug == "damage-types" else 0,
     })

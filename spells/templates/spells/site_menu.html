@@ -1,3 +1,4 @@
+{% load static %}
 <style>
     .site-menu {
         position: relative;
@@ -99,7 +100,7 @@
 
 <details class="site-menu" id="site-menu">
     <summary>
-        Spellbook
+        <img class="site-brand-icon" src="{% static 'spells/icons/spellbook.svg' %}" alt="">Spellbook
         <span class="site-menu-arrow" aria-hidden="true">▾</span>
     </summary>
 
@@ -112,11 +113,12 @@
             {% if request.user.is_authenticated %}
                 <section class="site-menu-group">
                     <h2>Моя коллекция</h2>
-                    <a href="{% url 'character_list_page' %}">
-                        Мои персонажи
-                    </a>
                     <a href="{% url 'my_spell_list_page' %}">
                         Мои заклинания
+                    </a>
+                    <a href="{% url 'catalog_list_page' 'classes' %}?group=mine">Мои классы</a>
+                    <a href="{% url 'character_list_page' %}">
+                        Мои персонажи
                     </a>
                     <a href="{% url 'spellbook_list_page' %}">
                         Мои спеллбуки
@@ -129,24 +131,26 @@
                 <a href="{% url 'spell_list_page' %}">
                     Официальные заклинания
                 </a>
+                <a href="{% url 'spell_list_page' %}?group=unofficial">Неофициальные заклинания</a>
+                <a href="{% url 'catalog_list_page' 'conditions' %}">Состояния</a>
+                <a href="{% url 'catalog_list_page' 'damage-types' %}">
+                    Типы урона
+                </a>
                 <a href="{% url 'catalog_list_page' 'schools' %}">
                     Школы магии
                 </a>
                 <a href="{% url 'catalog_list_page' 'effects' %}">
                     Эффекты
                 </a>
-                <a href="{% url 'catalog_list_page' 'damage-types' %}">
-                    Типы урона
-                </a>
             </section>
 
             <section class="site-menu-group">
                 <h2>Накладывание</h2>
-                <a href="{% url 'catalog_list_page' 'components' %}">
-                    Материальные компоненты
-                </a>
                 <a href="{% url 'catalog_list_page' 'casting-times' %}">
                     Время накладывания
+                </a>
+                <a href="{% url 'catalog_list_page' 'components' %}">
+                    Материальные компоненты
                 </a>
             </section>
 
@@ -155,18 +159,26 @@
                 <a href="{% url 'catalog_list_page' 'classes' %}">
                     Классы
                 </a>
+                <a href="{% url 'catalog_list_page' 'traits' %}">Черты</a>
             </section>
         </div>
-    </nav>
+</nav>
 </details>
 
 <script>
     (() => {
         const menu = document.getElementById('site-menu');
         const toggle = menu.querySelector('summary');
+        let openedByHover = false;
+        toggle.addEventListener('click', (event) => {
+            // The first mouse click keeps a menu already opened by hover visible.
+            if (event.detail > 0 && menu.open && openedByHover) event.preventDefault();
+            openedByHover = false;
+        });
 
         menu.addEventListener('pointerenter', (event) => {
-            if (event.pointerType === 'mouse') {
+            if (event.pointerType === 'mouse' && !menu.open) {
+                openedByHover = true;
                 menu.open = true;
             }
         });
@@ -177,6 +189,7 @@
                 && !menu.contains(document.activeElement)
             ) {
                 menu.open = false;
+                openedByHover = false;
             }
         });
 
@@ -187,6 +200,7 @@
                     && !menu.matches(':hover')
                 ) {
                     menu.open = false;
+                    openedByHover = false;
                 }
             });
         });
@@ -194,6 +208,7 @@
         document.addEventListener('click', (event) => {
             if (!menu.contains(event.target)) {
                 menu.open = false;
+                openedByHover = false;
             }
         });
 
@@ -201,6 +216,7 @@
             if (event.key === 'Escape') {
                 event.preventDefault();
                 menu.open = false;
+                openedByHover = false;
                 toggle.focus();
             }
         });

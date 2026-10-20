@@ -1,0 +1,25 @@
+{% load description_tags %}
+<section id="plans" class="home-plans" aria-labelledby="plans-title">
+    <div class="home-plans-heading"><h2 id="plans-title">Планы и напоминания</h2><span>Осталось: {{ unfinished_plans }}</span></div>
+    <p class="home-plans-muted">Твои личные записи. Напоминания по дате отображаются здесь.</p>
+    <div class="home-plan-create">
+        <button type="button" data-toggle-plan-form aria-expanded="true" aria-controls="home-plan-create-form">+ Добавить план или напоминание</button>
+        <form id="home-plan-create-form" data-has-errors="{{ plan_form.errors|yesno:'true,false' }}" method="post" action="{% url 'plan_create_page' %}" class="home-plan-form">{% csrf_token %}{{ plan_form.as_p }}<button type="submit">Добавить</button></form>
+    </div>
+    <div class="home-plan-list">
+        {% for plan in plans %}
+            <article class="home-plan {% if forloop.first and not plan.is_done %}home-plan-next{% endif %} {% if plan.is_done %}home-plan-done{% elif plan.reminder_status %}home-plan-due{% endif %}">
+                <div class="home-plan-content"><h3>{{ plan.title }}</h3>
+                    {% if plan.is_done %}<span class="home-plan-badge">Выполнено</span>{% elif plan.reminder_status %}<span class="home-plan-badge">{{ plan.reminder_status }}</span>{% endif %}
+                    {% if plan.reminder_date %}<p class="home-plans-muted">К {{ plan.reminder_date|date:'d.m.Y' }}</p>{% endif %}
+                    {% if plan.text %}<div>{{ plan.text|render_description }}</div>{% endif %}
+                </div>
+                <div class="home-plan-actions">
+                    <form method="post" action="{% url 'plan_toggle_page' plan.pk %}">{% csrf_token %}<button type="submit" class="btn-secondary">{% if plan.is_done %}Вернуть в планы{% else %}Готово{% endif %}</button></form>
+                    <a class="btn btn-secondary" href="{% url 'plan_edit_page' plan.pk %}">Редактировать</a>
+                    <form method="post" action="{% url 'plan_delete_page' plan.pk %}" data-confirm-plan-delete>{% csrf_token %}<button type="submit" class="btn-danger">Удалить</button></form>
+                </div>
+            </article>
+        {% empty %}<p class="home-plans-muted">Пока нет записей. Добавь планы на следующую игру или напоминание.</p>{% endfor %}
+    </div>
+</section>

@@ -1,3 +1,4 @@
+from spells.class_access import visible_classes, can_edit_class, require_class_editor
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
@@ -16,7 +17,7 @@ from spells.progression import progression_headers, progression_cells
 
 @require_GET
 def class_detail_page(request, pk):
-    character_class = get_object_or_404(CharacterClass, pk=pk)
+    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
     subclasses = character_class.subclasses.order_by("name", "pk")
 
     selected_subclass = None
@@ -68,6 +69,7 @@ def class_detail_page(request, pk):
         request,
         "spells/class_detail.html",
         {
+            "can_edit_class": can_edit_class(request.user, character_class),
             "character_class": character_class,
             "subclasses": subclasses,
             "selected_subclass": selected_subclass,
@@ -121,6 +123,7 @@ class ClassFeatureForm(DescriptionFormMixin, forms.ModelForm):
         fields = [
             "name",
             "levels",
+            "is_optional",
             "subclass",
             "description",
         ]
@@ -170,10 +173,9 @@ class ClassFeatureForm(DescriptionFormMixin, forms.ModelForm):
         return cleaned_data
 
 def save_class_entry(request, pk, kind, entry_pk=None):
-    if not request.user.is_staff:
-        raise PermissionDenied
+    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
 
-    character_class = get_object_or_404(CharacterClass, pk=pk)
+    require_class_editor(request.user, character_class)
 
     if kind == "subclass":
         model = Subclass
@@ -264,10 +266,9 @@ def class_feature_edit_page(request, pk, entry_pk):
 @login_required
 @require_http_methods(["GET", "POST"])
 def class_feature_delete_page(request, pk, entry_pk):
-    if not request.user.is_staff:
-        raise PermissionDenied
+    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
 
-    character_class = get_object_or_404(CharacterClass, pk=pk)
+    require_class_editor(request.user, character_class)
 
     feature = get_object_or_404(
         ClassFeature.objects.select_related("subclass"),
@@ -310,10 +311,9 @@ class ClassSectionForm(DescriptionFormMixin, forms.ModelForm):
 
 
 def save_class_section(request, pk, entry_pk=None):
-    if not request.user.is_staff:
-        raise PermissionDenied
+    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
 
-    character_class = get_object_or_404(CharacterClass, pk=pk)
+    require_class_editor(request.user, character_class)
 
     if entry_pk is not None:
         section = get_object_or_404(
@@ -365,10 +365,9 @@ def class_section_edit_page(request, pk, entry_pk):
 @login_required
 @require_http_methods(["GET", "POST"])
 def class_section_delete_page(request, pk, entry_pk):
-    if not request.user.is_staff:
-        raise PermissionDenied
+    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
 
-    character_class = get_object_or_404(CharacterClass, pk=pk)
+    require_class_editor(request.user, character_class)
 
     section = get_object_or_404(
         ClassSection,
@@ -398,10 +397,8 @@ def class_section_delete_page(request, pk, entry_pk):
 @login_required
 @require_http_methods(["GET", "POST"])
 def subclass_delete_page(request, pk, entry_pk):
-    if not request.user.is_staff:
-        raise PermissionDenied
-
-    character_class = get_object_or_404(CharacterClass, pk=pk)
+    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
+    require_class_editor(request.user, character_class)
     subclass = get_object_or_404(
         Subclass,
         pk=entry_pk,

@@ -1,9 +1,25 @@
+from spells.spell_access import visible_spells
+from spells.class_access import visible_classes
 from rest_framework import serializers
 
 from spells.models import CharacterClass, Person, Spell, Spellbook, Subclass
 
 
 class CharacterSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        classes = visible_classes(request.user if request else None)
+        if 'character_class' in self.fields:
+            self.fields['character_class'].queryset = classes
+        if 'subclass' in self.fields:
+            self.fields['subclass'].queryset = Subclass.objects.filter(character_class__in=classes)
+        if 'aviable_classes' in self.fields:
+            self.fields['aviable_classes'].child_relation.queryset = classes
+        if 'aviable_subclasses' in self.fields:
+            self.fields['aviable_subclasses'].child_relation.queryset = Subclass.objects.filter(character_class__in=classes)
+
+
     character_class_name = serializers.CharField(
         source="character_class.name",
         read_only=True,
@@ -58,6 +74,15 @@ class CharacterSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        if instance.character_class_id and not visible_classes(request.user if request else None).filter(pk=instance.character_class_id).exists():
+            data['character_class'] = None
+            data['character_class_name'] = None
+            data['subclass'] = None
+        return data
 
     def validate(self, attrs):
         def current_value(field_name):
@@ -116,9 +141,15 @@ class CharacterSerializer(serializers.ModelSerializer):
 
 
 class CharacterClassSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+
+    def get_author(self, instance):
+        return str(instance.created_by) if instance.created_by_id else None
+
     class Meta:
         model = CharacterClass
         fields = [
+            "author", "is_official", "is_public", "image",
             "id",
             "name",
             "description",
@@ -138,6 +169,21 @@ class SubclassSerializer(serializers.ModelSerializer):
             "level_gained",
         ]
 class SpellSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        classes = visible_classes(request.user if request else None)
+        if 'character_class' in self.fields:
+            self.fields['character_class'].queryset = classes
+        if 'subclass' in self.fields:
+            self.fields['subclass'].queryset = Subclass.objects.filter(character_class__in=classes)
+        if 'aviable_classes' in self.fields:
+            self.fields['aviable_classes'].child_relation.queryset = classes
+        if 'aviable_subclasses' in self.fields:
+            self.fields['aviable_subclasses'].child_relation.queryset = Subclass.objects.filter(character_class__in=classes)
+
+
+    author_name = serializers.CharField(source="created_by.user.username", read_only=True, default=None)
     school_name = serializers.CharField(
         source="school.name",
         read_only=True,
@@ -148,6 +194,19 @@ class SpellSerializer(serializers.ModelSerializer):
         read_only=True,
         default=None,
     )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        classes = visible_classes(request.user if request else None)
+        allowed = set(classes.values_list('pk', flat=True))
+        for field in ('aviable_classes', 'aviable_subclasses'):
+            if field in data:
+                if field == 'aviable_classes':
+                    data[field] = [pk for pk in data[field] if pk in allowed]
+                else:
+                    data[field] = list(Subclass.objects.filter(pk__in=data[field], character_class_id__in=allowed).values_list('pk',flat=True))
+        return data
 
     class Meta:
         model = Spell
@@ -176,6 +235,8 @@ class SpellSerializer(serializers.ModelSerializer):
             "source_book",
             "page_number",
             "is_official",
+            "is_public",
+            "author_name",
             "created_by",
             "created_at",
             "updated_at",
@@ -189,6 +250,7 @@ class CustomSpellSerializer(SpellSerializer):
             "school_name",
             "casting_time",
             "is_official",
+            "author_name",
             "created_by",
             "created_at",
             "updated_at",
@@ -279,8 +341,22 @@ class SpellbookSerializer(serializers.ModelSerializer):
 
         return owner
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        self.fields['spells'].child_relation.queryset = visible_spells(request.user if request else None)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        allowed = visible_spells(request.user if request else None)
+        data['spells'] = list(instance.spells.filter(pk__in=allowed).values_list('pk', flat=True))
+        data['total_spells'] = len(data['spells'])
+        return data
+
     def validate_spells(self, spells):
-        user = self.context["request"].user
+        return spells
+
     def validate(self, attrs):
         def current_value(field_name):
             if field_name in attrs:
@@ -318,17 +394,3 @@ class SpellbookSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return attrs
-    
-        for spell in spells:
-            if spell.is_official:
-                continue
-
-            if (
-                spell.created_by_id is None
-                or spell.created_by.user_id != user.pk
-            ):
-                raise serializers.ValidationError(
-                    "Можно добавлять официальные или свои заклинания."
-                )
-
-        return spells

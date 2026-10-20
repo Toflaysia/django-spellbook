@@ -1,0 +1,3 @@
+{% extends "spells/form_base.html" %}
+{% block title %}Удаление черты{% endblock %}
+{% block content %}<main class="catalog-back-nav"><h1>Удалить черту «{{ item.name }}»?</h1><form method="post">{% csrf_token %}<button type="submit">Удалить</button> <a class="btn btn-secondary" href="{% url 'catalog_detail_page' slug item.pk %}">Отмена</a></form></main>{% endblock %}

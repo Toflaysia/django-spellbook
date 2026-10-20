@@ -12,7 +12,24 @@ class CharacterClass(models.Model):
     """Класс персонажа"""
 
     id = models.AutoField(primary_key=True, verbose_name="id")
-    name = models.CharField(max_length=50, unique=True, verbose_name="Название")
+    name = models.CharField(max_length=50, verbose_name="Название")
+    created_by = models.ForeignKey(Player, null=True, blank=True, on_delete=models.CASCADE, related_name="created_classes", verbose_name="Автор")
+    is_official = models.BooleanField(default=True, verbose_name="Официальный класс")
+    is_public = models.BooleanField(default=False, verbose_name="Публичный класс", help_text="Другие пользователи смогут просматривать класс и выбирать его для персонажа.")
+    image = models.ImageField(upload_to="class_images/", blank=True, verbose_name="Картинка класса")
+
+    @property
+    def display_image_url(self):
+        if self.image:
+            return self.image.url
+        from django.templatetags.static import static
+        from spells.class_access import class_emblem
+        return static('spells/class_emblems/' + class_emblem(self.name) + '.svg')
+
+    def clean(self):
+        super().clean()
+        if self.created_by_id and self.is_official:
+            raise ValidationError({'is_official': 'Пользовательский класс не может быть официальным.'})
     description = models.TextField(verbose_name="Описание")
     progression_table_type = models.CharField(
         max_length=20, choices=TABLE_TYPES, default="basic", verbose_name="Вид таблицы развития",
@@ -47,6 +64,10 @@ class CharacterClass(models.Model):
     class Meta:
         verbose_name = "Класс"
         verbose_name_plural = "Классы"
+        constraints = [
+            models.UniqueConstraint(fields=['name'], condition=models.Q(created_by__isnull=True), name='unique_shared_class_name'),
+            models.UniqueConstraint(fields=['created_by', 'name'], condition=models.Q(created_by__isnull=False), name='unique_author_class_name'),
+        ]
 
 
 class Subclass(models.Model):
@@ -205,6 +226,13 @@ class Person(models.Model):
     temporary_hit_points = models.IntegerField(
         default=0, verbose_name="Временное кол-во хитов"
     )
+
+    gold_coins = models.PositiveIntegerField(default=0, verbose_name="Золотые монеты")
+    silver_coins = models.PositiveIntegerField(default=0, verbose_name="Серебряные монеты")
+    copper_coins = models.PositiveIntegerField(default=0, verbose_name="Медные монеты")
+    platinum_coins = models.PositiveIntegerField(default=0, verbose_name="Платиновые монеты")
+    electrum_coins = models.PositiveIntegerField(default=0, verbose_name="Электрумовые монеты")
+    equipment_description = models.TextField(blank=True, verbose_name="Снаряжение и заметки")
 
     armor_class = models.IntegerField(default=10, verbose_name="Класс доспеха (КД)")
     initiative_bonus = models.IntegerField(
@@ -462,6 +490,8 @@ class ClassFeature(models.Model):
         blank=True,
         verbose_name="Уровни получения",
     )
+
+    is_optional = models.BooleanField(default=False, verbose_name="Опциональное умение")
 
     @property
     def acquisition_levels(self):

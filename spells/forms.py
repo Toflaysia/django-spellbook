@@ -1,3 +1,6 @@
+from spells.spell_access import collected_spells
+from spells.class_access import visible_classes
+from spells.models import Subclass
 import json
 
 from django import forms
@@ -22,6 +25,7 @@ class CharacterCreateForm(DescriptionFormMixin, forms.ModelForm):
         model = Person
         fields = [
             "name",
+            "is_active",
             "portrait",
             "portrait_position_x",
             "portrait_position_y",
@@ -60,6 +64,21 @@ class CharacterCreateForm(DescriptionFormMixin, forms.ModelForm):
             ),
         }
 
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        classes = visible_classes(user)
+        if 'character_class' in self.fields:
+            if self.instance.pk and self.instance.character_class_id:
+                classes = classes | type(self.instance.character_class).objects.filter(pk=self.instance.character_class_id)
+            self.fields['character_class'].queryset = classes.order_by('name','pk')
+        if 'subclass' in self.fields:
+            self.fields['subclass'].queryset = Subclass.objects.filter(character_class__in=classes)
+        if 'aviable_classes' in self.fields:
+            self.fields['aviable_classes'].queryset = classes.order_by('name','pk')
+            self.fields['aviable_subclasses'].queryset = Subclass.objects.filter(character_class__in=classes).order_by('name','pk')
+        if "is_active" in self.fields:
+            self.fields["is_active"].help_text = "Отметь, если персонаж используется в игре. Активных персонажей может быть несколько."
+
     @property
     def field_groups(self):
         groups = [
@@ -72,6 +91,7 @@ class CharacterCreateForm(DescriptionFormMixin, forms.ModelForm):
                     "background",
                     "character_class",
                     "primary_class_level",
+                    "is_active",
                     "is_favorite",
                     "is_public",
                 ],
@@ -247,6 +267,7 @@ class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
             "aviable_subclasses",
             "source_book",
             "page_number",
+            "is_public",
         ]
         labels = {
             "name": "Название заклинания",
@@ -265,8 +286,20 @@ class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
             "aviable_subclasses": forms.CheckboxSelectMultiple(),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance.pk and self.instance.is_official:
+            self.fields.pop('is_public', None)
+        classes = visible_classes(user)
+        if 'character_class' in self.fields:
+            if self.instance.pk and self.instance.character_class_id:
+                classes = classes | type(self.instance.character_class).objects.filter(pk=self.instance.character_class_id)
+            self.fields['character_class'].queryset = classes.order_by('name','pk')
+        if 'subclass' in self.fields:
+            self.fields['subclass'].queryset = Subclass.objects.filter(character_class__in=classes)
+        if 'aviable_classes' in self.fields:
+            self.fields['aviable_classes'].queryset = classes.order_by('name','pk')
+            self.fields['aviable_subclasses'].queryset = Subclass.objects.filter(character_class__in=classes).order_by('name','pk')
 
         self.fields["level"].choices = [
             (0, "Заговор"),
@@ -297,6 +330,7 @@ class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
                     "duration",
                     "concentration",
                     "ritual",
+                    "is_public",
                 ],
             ),
             (
@@ -341,7 +375,7 @@ class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
             {
                 "id": group_id,
                 "title": title,
-                "fields": [self[name] for name in field_names],
+                "fields": [self[name] for name in field_names if name in self.fields],
             }
             for group_id, title, field_names in groups
         ]
@@ -394,27 +428,11 @@ class SpellImportForm(forms.Form):
                 "Не удалось прочитать JSON. Проверь формат файла."
             )
 
-        if not isinstance(data, dict):
-            raise forms.ValidationError(
-                "Файл должен содержать одно заклинание."
-            )
-
-        if data.get("type") != "spell":
-            raise forms.ValidationError(
-                "Этот файл не является заклинанием."
-            )
-
-        name = data.get("name")
-
-        if not isinstance(name, str) or not name.strip():
-            raise forms.ValidationError(
-                "В файле отсутствует название заклинания."
-            )
-
-        if not isinstance(data.get("system"), dict):
-            raise forms.ValidationError(
-                "В файле отсутствует раздел с данными заклинания."
-            )
+        from spells.spell_import import validate_spell_payload
+        try:
+            validate_spell_payload(data)
+        except ValueError as error:
+            raise forms.ValidationError(str(error))
 
         self.import_data = data
         uploaded_file.seek(0)
@@ -463,10 +481,7 @@ class SpellbookForm(DescriptionFormMixin, forms.ModelForm):
         ).order_by("name")
 
         self.fields["spells"].queryset = (
-            Spell.objects.filter(
-                Q(created_by__user=user, is_official=False)
-                | Q(saved_by_players__user=user, is_official=True)
-            )
+            collected_spells(user)
             .distinct()
             .order_by("level", "name")
         )

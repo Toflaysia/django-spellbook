@@ -10,4 +10,8 @@
     <nav class="catalog-back-nav" aria-label="Возврат в справочник" {% if form %}data-confirm-unsaved{% endif %}>
         <a class="btn btn-secondary" href="{% url 'spell_list_page' %}">← Назад к списку заклинаний</a>
     </nav>
+{% elif spell %}
+    <nav class="catalog-back-nav" aria-label="Возврат в справочник" {% if form %}data-confirm-unsaved{% endif %}>
+        {% if spell.created_by.user_id == request.user.id %}<a class="btn btn-secondary" href="{% url 'my_spell_list_page' %}">← Назад к моим заклинаниям</a>{% else %}<a class="btn btn-secondary" href="{% url 'spell_list_page' %}?group=unofficial">← Назад к списку заклинаний</a>{% endif %}
+    </nav>
 {% endif %}

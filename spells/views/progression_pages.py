@@ -1,3 +1,4 @@
+from spells.class_access import visible_classes, require_class_editor
 import json
 
 from django import forms
@@ -41,9 +42,8 @@ class ProgressionForm(forms.Form):
 @login_required
 @require_http_methods(["GET", "POST"])
 def class_table_edit_page(request, pk, entry_pk=None):
-    if not request.user.is_staff:
-        raise PermissionDenied
-    character_class = get_object_or_404(CharacterClass, pk=pk)
+    character_class = get_object_or_404(visible_classes(request.user), pk=pk)
+    require_class_editor(request.user, character_class)
     subclass = None
     if entry_pk is not None:
         subclass = get_object_or_404(Subclass, pk=entry_pk, character_class=character_class)

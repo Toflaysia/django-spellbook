@@ -1,0 +1,5 @@
+    <nav class="spell-catalog-groups" aria-label="Разделы заклинаний">
+        <a class="btn {% if spell_group != 'official' %}btn-secondary{% endif %}" href="{% url 'spell_list_page' %}" {% if spell_group == 'official' %}aria-current="page"{% endif %}>Официальные заклинания</a>
+        <a class="btn {% if spell_group != 'unofficial' %}btn-secondary{% endif %}" href="{% url 'spell_list_page' %}?group=unofficial" {% if spell_group == 'unofficial' %}aria-current="page"{% endif %}>Неофициальные заклинания</a>
+        {% if request.user.is_authenticated %}<a class="btn {% if spell_group != 'mine' %}btn-secondary{% endif %}" href="{% url 'my_spell_list_page' %}" {% if spell_group == 'mine' %}aria-current="page"{% endif %}>Мои заклинания</a>{% endif %}
+    </nav>

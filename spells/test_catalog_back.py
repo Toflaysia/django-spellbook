@@ -18,7 +18,7 @@ class CatalogBackTests(TestCase):
     def test_all_catalogs_have_back_link_in_detail_and_edit(self):
         self.client.force_login(self.staff)
         for slug, catalog in CATALOGS.items():
-            item = catalog['model'].objects.create(**{catalog['name_field']:'Название', 'description':'Текст'})
+            item = catalog['model'].objects.create(**{catalog['name_field']:'Название', 'description':'Текст', **({'category':'COND'} if slug == 'conditions' else {})})
             with self.subTest(slug=slug):
                 target = reverse('catalog_list_page', args=[slug])
                 detail = self.client.get(reverse('catalog_detail_page', args=[slug, item.pk]), follow=True)

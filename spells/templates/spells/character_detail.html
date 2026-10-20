@@ -1,0 +1,100 @@
+{% extends "spells/base.html" %}
+{% load static description_tags %}
+{% block title %}{{ character.name }} — Spellbook{% endblock %}
+{% block content %}
+<main class="character-detail" data-resource-url="{% url 'character_resource_change' character.pk %}">
+    <a class="btn btn-secondary" href="{% url 'character_list_page' %}">← Мои персонажи</a>
+    <div class="character-detail-heading">
+        {% if character.portrait %}<div class="character-detail-portrait"><img src="{{ character.portrait.url }}" alt="Портрет {{ character.name }}" style="object-position:{{ character.portrait_position_x }}% {{ character.portrait_position_y }}%; transform:scale({{ character.portrait_zoom|stringformat:'f' }});"></div>{% endif %}
+        <div><h1>{{ character.name }}</h1><p>{{ character.race }} · {{ character.character_class.name|default:'Без класса' }} · Уровень {{ character.level }}</p>{% if character.subclass %}<p>{{ character.subclass.name }}</p>{% endif %}</div>
+        <a class="btn btn-secondary" href="{% url 'character_edit_page' character.pk %}">Редактировать</a>
+    </div>
+    <div class="character-detail-tabs" role="tablist" aria-label="Карточка персонажа">
+        <button type="button" role="tab" id="tab-overview" aria-controls="overview" aria-selected="true">Персонаж</button>
+        <button type="button" role="tab" id="tab-health" aria-controls="health" aria-selected="false">Здоровье</button>
+        <button type="button" role="tab" id="tab-spellbooks" aria-controls="character-spellbooks" aria-selected="false">Спеллбуки</button>
+        <button type="button" role="tab" id="tab-equipment" aria-controls="equipment" aria-selected="false">Снаряжение и монеты</button>
+    </div>
+    <section id="overview" role="tabpanel" aria-labelledby="tab-overview" class="play-panel">
+        <div class="character-combat-stats">
+            <div><span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/armor.svg' %}" alt="">Класс доспеха</span><strong>{{ character.armor_class }}</strong></div>
+            <div><span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/speed.svg' %}" alt="">Скорость</span><strong>{{ character.speed }} <small>футов</small></strong></div>
+            <div><span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/proficiency.svg' %}" alt="">Бонус мастерства</span><strong>+{{ character.proficiency_bonus }}</strong></div>
+        </div>
+        <div class="ability-grid">{% for icon,label,value,modifier in abilities %}<div><span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/' %}{{ icon }}.svg" alt="">{{ label }}</span><strong>{{ value }}</strong><span>Модификатор {{ modifier|stringformat:'+d' }}</span></div>{% endfor %}</div>
+
+        <form data-active-form method="post">{% csrf_token %}<label class="character-active"><input type="checkbox" name="is_active" {% if character.is_active %}checked{% endif %}> Активный персонаж</label><span role="status" data-active-status></span></form>
+        <div class="character-background"><span>Предыстория</span><strong>{{ character.background|default:'Не указана' }}</strong></div>
+        <a class="btn btn-secondary" href="#character-spellbooks">Спеллбуки персонажа</a>
+    </section>
+    <section id="character-spellbooks" role="tabpanel" aria-labelledby="tab-spellbooks" class="play-panel" hidden>
+        <h2>Спеллбуки {{ character.name }}</h2>
+        <a class="btn" href="{% url 'spellbook_create_page' %}?owner={{ character.pk }}">+ Создать спеллбук</a>
+        <div class="character-books">
+            {% for book in character_spellbooks %}
+                <article><h3><a href="{% url 'spellbook_detail_page' book.pk %}">{{ book.name }}</a></h3>
+                    <p class="play-muted">{% if book.is_active %}Активный{% else %}Неактивный{% endif %}</p>
+                    <a class="btn btn-secondary" href="{% url 'spellbook_detail_page' book.pk %}">Открыть</a>
+                </article>
+            {% empty %}<p class="play-muted">У этого персонажа пока нет спеллбуков.</p>{% endfor %}
+        </div>
+    </section>
+    <section id="health" role="tabpanel" aria-labelledby="tab-health" class="play-panel" hidden>
+        <h2>Здоровье</h2><p class="hp-display"><img class="hp-icon" src="{% static 'spells/icons/heart.svg' %}" alt="Хиты"><span class="hp-values"><span data-hp-current class="{% if character.current_hit_points|add:character.current_hit_points <= character.max_hit_points %}hp-low{% endif %}">{{ character.current_hit_points }}</span><span class="hp-divider">/</span><span data-hp-max>{{ character.max_hit_points }}</span><span class="hp-temporary" {% if not character.temporary_hit_points %}hidden{% endif %} title="Временные хиты" aria-label="Временные хиты">(<span data-hp-temp>{{ character.temporary_hit_points }}</span>)</span></span></p>
+        <button type="button" data-open-calculator="hp-calculator">Рассчитать хиты</button>
+    </section>
+    <section id="equipment" role="tabpanel" aria-labelledby="tab-equipment" class="play-panel" hidden>
+        <h2>Монеты</h2><p>Всего в золоте: <strong data-gold-total>{{ character_state.gold_total }}</strong> зм</p>
+        <div class="coin-balances">{% for name,label,symbol,value in coins_display %}<span title="{{ label }}"><b class="coin-symbol coin-{{ name }}">{{ symbol }}</b> <span data-coin="{{ name }}">{{ value }}</span></span>{% endfor %}</div>
+        <button type="button" data-open-calculator="coin-calculator">Калькулятор монет</button>
+        <h2>Снаряжение и заметки</h2>
+        <form class="equipment-editor-form" data-equipment-form method="post" action="{% url 'character_resource_change' character.pk %}">{% csrf_token %}<input type="hidden" name="action" value="equipment">{{ equipment_form.as_p }}<button type="submit">Сохранить снаряжение</button><p role="status" data-equipment-status></p></form>
+    </section>
+    <dialog id="hp-calculator" class="play-dialog calculator-dialog" aria-labelledby="hp-title">
+        <button type="button" class="dialog-close" data-close-dialog aria-label="Закрыть">×</button><h2 id="hp-title">Хиты {{ character.name }}</h2>
+        <p class="hp-display"><img class="hp-icon" src="{% static 'spells/icons/heart.svg' %}" alt="Хиты"><span class="hp-values"><span data-hp-current class="{% if character.current_hit_points|add:character.current_hit_points <= character.max_hit_points %}hp-low{% endif %}">{{ character.current_hit_points }}</span><span class="hp-divider">/</span><span data-hp-max>{{ character.max_hit_points }}</span><span class="hp-temporary" {% if not character.temporary_hit_points %}hidden{% endif %} title="Временные хиты" aria-label="Временные хиты">(<span data-hp-temp>{{ character.temporary_hit_points }}</span>)</span></span></p>
+        <form data-calculator="health" method="post">{% csrf_token %}
+            <div class="calculator-entry"><label class="sr-only" for="hp-amount">Количество хитов</label><input id="hp-amount" name="amount" inputmode="numeric" autocomplete="off" placeholder="Например, 10+5"><button type="button" data-key="back" aria-label="Стереть цифру">⌫</button></div>
+            {% include 'spells/includes/keypad.html' %}
+            <div class="calculator-actions"><button type="submit" name="action" value="temporary">Временные</button><button type="submit" name="action" value="heal" class="heal-action">Лечение</button><button type="submit" name="action" value="damage" class="damage-action">Урон</button></div>
+            <div class="potion-actions" aria-label="Зелья лечения">
+                <button type="button" data-potion="small" title="Обычное зелье: 2d4+2" aria-label="Обычное зелье, лечение 2d4+2"><img src="{% static 'spells/icons/potion-small.svg' %}" alt=""><small>2d4+2</small></button>
+                <button type="button" data-potion="greater" title="Большое зелье: 4d4+4" aria-label="Большое зелье, лечение 4d4+4"><img src="{% static 'spells/icons/potion-greater.svg' %}" alt=""><small>4d4+4</small></button>
+                <button type="button" data-potion="superior" title="Превосходное зелье: 8d4+8" aria-label="Превосходное зелье, лечение 8d4+8"><img src="{% static 'spells/icons/potion-superior.svg' %}" alt=""><small>8d4+8</small></button>
+                <button type="button" data-potion="supreme" title="Высшее зелье: 10d4+20" aria-label="Высшее зелье, лечение 10d4+20"><img src="{% static 'spells/icons/potion-supreme.svg' %}" alt=""><small>10d4+20</small></button>
+            </div>
+            <details><summary>Максимум хитов</summary><p>Введи новый максимум в поле выше.</p><button type="submit" name="action" value="maximum">Установить максимум</button></details>
+            <p class="calculator-status" role="status" aria-live="polite"></p>
+        </form>
+    </dialog>
+    <dialog id="coin-calculator" class="play-dialog calculator-dialog coin-calculator-dialog" aria-labelledby="coin-title">
+        <button type="button" class="dialog-close" data-close-dialog aria-label="Закрыть">×</button><h2 id="coin-title">Монеты {{ character.name }}</h2>
+        <p>Всего в золоте: <strong data-gold-total>{{ character_state.gold_total }}</strong> зм</p>
+        <div class="coin-balances">{% for name,label,symbol,value in coins_display %}<span title="{{ label }}"><b class="coin-symbol coin-{{ name }}">{{ symbol }}</b> <span data-coin="{{ name }}">{{ value }}</span></span>{% endfor %}</div>
+        <div class="coin-calculator-layout">
+        <form data-calculator="coins" method="post">{% csrf_token %}
+            <div class="calculator-entry">
+                {% include 'spells/includes/coin_picker.html' with input_name='coin' selected='gold' picker_label='Выбрать монеты' %}
+                <label class="sr-only" for="coin-amount">Количество монет</label><input id="coin-amount" name="amount" inputmode="numeric" autocomplete="off"><button type="button" data-key="back" aria-label="Стереть цифру">⌫</button>
+            </div>
+            {% include 'spells/includes/keypad.html' %}
+            <div class="calculator-actions"><button type="submit" name="action" value="give" class="damage-action">Отдать</button><button type="submit" name="action" value="take" class="heal-action">Взять</button><button type="submit" name="action" value="coin_set">Установить остаток</button></div>
+            <p class="calculator-status" role="status" aria-live="polite"></p>
+        </form>
+        <form data-calculator="conversion" class="coin-conversion" method="post">{% csrf_token %}
+            <h3>Конвертация</h3>
+            <label for="conversion-amount">Количество</label><input id="conversion-amount" name="amount" type="number" min="1" max="1000000000" step="1" value="1" required>
+            <div class="coin-conversion-pickers">
+                {% include 'spells/includes/coin_picker.html' with input_name='from_coin' selected='gold' picker_label='Из каких монет' %}
+                <span aria-hidden="true">→</span>
+                {% include 'spells/includes/coin_picker.html' with input_name='to_coin' selected='silver' picker_label='В какие монеты' %}
+            </div>
+            <output data-conversion-preview aria-live="polite"></output>
+            <button type="submit" name="action" value="convert">Обменять в кошельке</button>
+            <p class="calculator-status" role="status" aria-live="polite"></p>
+        </form>
+        </div>
+    </dialog>
+</main>
+{% endblock %}
+{% block scripts %}<script src="{% static 'spells/character_tools.js' %}?v=20261009-1041"></script>{% endblock %}

@@ -250,7 +250,7 @@
                 </div>
 
                 <div class="character-content">
-                    <h2>{{ character.name }}</h2>
+                    <h2><a href="{% url 'character_detail_page' character.pk %}">{{ character.name }}</a></h2>
 
                     <div class="character-muted">
                         {{ character.race|default:"Раса не указана" }}
@@ -263,6 +263,7 @@
                     </p>
 
                     <div class="character-actions">
+                        <a class="btn" href="{% url 'character_detail_page' character.pk %}">Открыть</a>
                         <a
                             class="character-button"
                             href="{% url 'character_edit_page' character.pk %}"
@@ -281,7 +282,7 @@
                     <div class="character-stats">
                         <div class="character-stat">
                             <strong>
-                                {{ character.current_hit_points }}/{{ character.max_hit_points }}
+                                <span class="hp-current {% if character.current_hit_points|add:character.current_hit_points <= character.max_hit_points %}hp-low{% endif %}">{{ character.current_hit_points }}</span>/{{ character.max_hit_points }} {% if character.temporary_hit_points %}<span class="hp-temporary">({{ character.temporary_hit_points }})</span>{% endif %}
                             </strong>
                             <span>Хиты</span>
                         </div>

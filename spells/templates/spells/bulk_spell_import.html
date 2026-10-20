@@ -1,0 +1,23 @@
+{% extends "spells/form_base.html" %}
+{% block title %}Массовая загрузка заклинаний — Spellbook{% endblock %}
+{% block styles %}<style>
+.bulk-import{max-width:1100px;margin:auto;padding:32px 24px}.bulk-import h1{overflow-wrap:anywhere}.bulk-panel{padding:24px;margin-top:24px;border:1px solid #484960;border-radius:16px;background:#1c1d2a}.bulk-panel label{display:block;margin-bottom:12px}.bulk-panel input[type=file]{max-width:100%;box-sizing:border-box}.bulk-muted{color:#b8b9cc;line-height:1.6}.bulk-summary{display:flex;flex-wrap:wrap;gap:16px;margin:24px 0}.bulk-report{display:grid;gap:16px;padding:0;list-style:none}.bulk-report li{overflow-wrap:anywhere}.bulk-report article{padding:20px;border:1px solid #484960;border-radius:12px}.bulk-report h2{font-size:20px;margin:0 0 12px}.bulk-error,.errorlist{color:#fca5a5}.bulk-success{color:#86efac}.bulk-warning{color:#edd49b}.bulk-actions{margin-top:24px;display:flex;gap:12px;flex-wrap:wrap}@media(max-width:600px){.bulk-import{padding:24px 16px}.bulk-panel{padding:16px}}
+</style>{% endblock %}
+{% block content %}<main class="bulk-import">
+<a class="btn btn-secondary" href="{% url 'spell_list_page' %}">← Официальные заклинания</a>
+<h1>Массовая загрузка JSON</h1>
+<p class="bulk-muted">Выбери сразу несколько JSON-файлов с помощью Ctrl или Shift. В каждом файле может быть одно заклинание или список.</p>
+<p class="bulk-muted">Успешные записи станут официальными заклинаниями. Дубликаты не изменяются. Ошибка в одной записи не мешает загрузить остальные. Результат каждой записи появится в отчёте.</p>
+<p class="bulk-muted">В описаниях и тексте «На более высоком уровне» автоматически появятся ссылки на кубики и существующие справочники. Неоднозначные названия останутся текстом с предупреждением.</p>
+<form class="bulk-panel" method="post" enctype="multipart/form-data">{% csrf_token %}
+{% if form.errors %}<div role="alert">{{ form.non_field_errors }}{{ form.json_file.errors }}</div>{% endif %}
+{{ form.json_file.label_tag }}{{ form.json_file }}<p class="bulk-muted">{{ form.json_file.help_text }}</p>
+<div class="bulk-actions"><button type="submit">Импортировать заклинания</button></div>
+</form>
+{% if report %}<section aria-labelledby="import-report-title"><h2 id="import-report-title">Результат импорта</h2>
+<div class="bulk-summary"><span class="bulk-success">Загружено: {{ report.created }}</span><span>Дубликатов: {{ report.duplicates }}</span><span class="bulk-error">Ошибок: {{ report.errors }}</span></div>
+<ol class="bulk-report">{% for row in report.rows %}<li><article><h2>{{ row.index }}. {{ row.name|default:"Без названия" }}</h2>{% if row.source %}<p class="bulk-muted">Файл: {{ row.source }}</p>{% endif %}
+{% if row.status == 'created' %}<p class="bulk-success">Загружено · <a href="{% url 'spell_detail_page' row.pk %}">Открыть заклинание</a></p>{% elif row.status == 'duplicate' %}<p>Дубликат — пропущен</p>{% else %}<p class="bulk-error">Не загружено</p>{% endif %}
+{% for message in row.messages %}<p>{{ message }}</p>{% endfor %}{% for warning in row.warnings %}<p class="bulk-warning">{{ warning }}</p>{% endfor %}
+</article></li>{% endfor %}</ol></section>{% endif %}
+</main>{% endblock %}

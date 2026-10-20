@@ -65,6 +65,7 @@ class MagicSchool(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="id")
     name = models.CharField(max_length=99, verbose_name="Название")
     description = models.TextField(verbose_name="Описание")
+    image = models.ImageField(upload_to="magic_schools/", blank=True, verbose_name="Картинка")
     color = models.CharField(max_length=7, default="#3498db", verbose_name="Цвет школы магии")
 
     def __str__(self):
@@ -209,6 +210,7 @@ class Spell(models.Model):
 
     # Метаданные
     is_official = models.BooleanField(default=True, verbose_name="Официальное")
+    is_public = models.BooleanField(default=False, verbose_name="Публичное заклинание", help_text="Показывать авторское заклинание всем в общем каталоге.")
     created_by = models.ForeignKey(
         Player,
         on_delete=models.SET_NULL,
@@ -241,3 +243,17 @@ class Spell(models.Model):
             models.Index(fields=["concentration"]),
             models.Index(fields=["ritual"]),
         ]
+
+
+class Trait(models.Model):
+    name = models.CharField(max_length=150, unique=True, verbose_name="Название")
+    prerequisites = models.CharField(max_length=250, blank=True, verbose_name="Требования")
+    description = models.TextField(verbose_name="Описание")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Черта"
+        verbose_name_plural = "Черты"
+        ordering = ["name", "pk"]

@@ -1,3 +1,8 @@
+from spells.views.bulk_import import bulk_spell_import_page
+from spells.views.user_classes import user_class_create_page
+from spells.views.play_tools import catalog_link_search, catalog_preview
+from spells.views.plans import plan_create_page, plan_edit_page, plan_toggle_page, plan_delete_page
+from spells.views.play_tools import character_detail_page, character_resource_change, spell_link_search, spell_preview
 from spells.views.progression_pages import class_table_edit_page
 from django.contrib import admin
 from django.urls import include, path
@@ -51,6 +56,18 @@ from spells.views.catalog import (
 )
 
 urlpatterns = [
+    path("spells/import/bulk/", bulk_spell_import_page, name="bulk_spell_import_page"),
+    path("my-classes/new/", user_class_create_page, name="user_class_create_page"),
+    path("catalog-links/<slug:slug>/", catalog_link_search, name="catalog_link_search"),
+    path("catalog/<slug:slug>/<int:pk>/preview/", catalog_preview, name="catalog_preview"),
+    path("plans/new/", plan_create_page, name="plan_create_page"),
+    path("plans/<int:pk>/edit/", plan_edit_page, name="plan_edit_page"),
+    path("plans/<int:pk>/toggle/", plan_toggle_page, name="plan_toggle_page"),
+    path("plans/<int:pk>/delete/", plan_delete_page, name="plan_delete_page"),
+    path("characters/<int:pk>/", character_detail_page, name="character_detail_page"),
+    path("characters/<int:pk>/resources/", character_resource_change, name="character_resource_change"),
+    path("spell-links/", spell_link_search, name="spell_link_search"),
+    path("spells/<int:pk>/preview/", spell_preview, name="spell_preview"),
     path("catalog/<slug:slug>/<int:pk>/delete/", catalog_delete_page, name="catalog_delete_page"),
     path("classes/<int:pk>/table/edit/", class_table_edit_page, name="class_table_edit_page"),
     path("classes/<int:pk>/subclasses/<int:entry_pk>/table/edit/", class_table_edit_page, name="subclass_table_edit_page"),

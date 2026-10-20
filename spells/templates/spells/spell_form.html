@@ -237,6 +237,7 @@
         action="{% if editing %}{% url 'spell_edit_page' spell.pk %}{% elif official_import %}{% url 'official_spell_create_page' %}{% else %}{% url 'spell_create_page' %}{% endif %}"
     >
         {% csrf_token %}
+        {% if import_warnings %}<aside role="status"><h2>Проверь ссылки</h2><ul>{% for warning in import_warnings %}<li>{{ warning }}</li>{% endfor %}</ul></aside>{% endif %}
 
         {% if form.non_field_errors %}
             <div role="alert">{{ form.non_field_errors }}</div>

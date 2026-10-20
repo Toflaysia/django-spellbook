@@ -1,4 +1,5 @@
 {% extends "spells/form_base.html" %}
+{% load static %}
 
 {% block title %}
     {% if editing %}Редактирование персонажа{% else %}Новый персонаж{% endif %}
@@ -278,7 +279,10 @@
                             {% for field in group.fields %}
                                 {% if field.name == 'portrait' %}
                                     <div class="portrait-label">
-                                        {{ field.label_tag }}
+                                        {% if field.name == 'strength' or field.name == 'dexterity' or field.name == 'constitution' or field.name == 'intelligence' or field.name == 'wisdom' or field.name == 'charisma' %}
+                                <img class="ability-icon" src="{% static 'spells/icons/' %}{{ field.name }}.svg" alt="">
+                            {% endif %}
+                            {{ field.label_tag }}
                                     </div>
 
                                     {{ field }}
@@ -315,7 +319,10 @@
                             {% for field in group.fields %}
                                 {% if field.name != 'portrait' %}
                                     <div class="character-form-field">
-                                        {{ field.label_tag }}
+                                        {% if field.name == 'strength' or field.name == 'dexterity' or field.name == 'constitution' or field.name == 'intelligence' or field.name == 'wisdom' or field.name == 'charisma' %}
+                                <img class="ability-icon" src="{% static 'spells/icons/' %}{{ field.name }}.svg" alt="">
+                            {% endif %}
+                            {{ field.label_tag }}
                                         {{ field }}
                                         {{ field.errors }}
 
@@ -335,7 +342,10 @@
                     <div class="character-form-fields">
                         {% for field in group.fields %}
                             <div class="character-form-field">
-                                {{ field.label_tag }}
+                                {% if field.name == 'strength' or field.name == 'dexterity' or field.name == 'constitution' or field.name == 'intelligence' or field.name == 'wisdom' or field.name == 'charisma' %}
+                                <img class="ability-icon" src="{% static 'spells/icons/' %}{{ field.name }}.svg" alt="">
+                            {% endif %}
+                            {{ field.label_tag }}
                                 {{ field }}
                                 {{ field.errors }}
 
@@ -360,7 +370,7 @@
                 {% endif %}
             </button>
 
-            <a href="{% url 'character_list_page' %}">Отмена</a>
+            <a class="btn btn-secondary" href="{% url 'character_list_page' %}">Отмена</a>
         </div>
     </form>
 </main>

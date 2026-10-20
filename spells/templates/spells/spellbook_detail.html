@@ -130,7 +130,7 @@
 
 {% block content %}
 <main class="book-main">
-    <a href="{% url 'spellbook_list_page' %}">← Мои спеллбуки</a>
+    <a class="btn btn-secondary" href="{% url 'spellbook_list_page' %}">← Мои спеллбуки</a>
 
     <h1>{{ spellbook.name }}</h1>
     <div class="book-actions">
@@ -147,7 +147,7 @@
     </div>
     <p class="book-muted">
         Персонаж:
-        <a href="{% url 'character_edit_page' spellbook.owner.pk %}">
+        <a href="{% url 'character_detail_page' spellbook.owner.pk %}">
             {{ spellbook.owner.name }}
         </a>
     </p>

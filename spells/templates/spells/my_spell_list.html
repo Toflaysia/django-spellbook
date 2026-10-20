@@ -5,6 +5,7 @@
 
 {% block styles %}
 <style>
+    .spell-catalog-groups {display:flex;flex-wrap:wrap;gap:10px;margin:24px 0}
     .collection-main {
         max-width: 1100px;
         margin: auto;
@@ -193,10 +194,11 @@
 {% block content %}
 <main class="collection-main">
     <h1>Мои заклинания</h1>
+    {% include "spells/includes/spell_catalog_nav.html" with spell_group="mine" %}
 
     <p class="collection-muted">
         Твои авторские заклинания и заклинания,
-        сохранённые из официального каталога.
+        сохранённые из общего каталога.
     </p>
 
     <div class="collection-actions">
@@ -215,26 +217,7 @@
         </a>
     </div>
 
-    <form class="collection-search" method="get">
-        <input
-            type="search"
-            name="search"
-            value="{{ search }}"
-            placeholder="Название заклинания"
-            aria-label="Поиск в моих заклинаниях"
-        >
-
-        <button class="collection-button" type="submit">
-            Найти
-        </button>
-    </form>
-
-    {% if search %}
-        <p class="collection-muted">
-            Поиск: {{ search }}.
-            <a href="{% url 'my_spell_list_page' %}">Сбросить</a>
-        </p>
-    {% endif %}
+    {% include "spells/includes/spell_filters.html" %}
 
     <div class="collection-grid">
         {% for spell in spells %}
@@ -271,6 +254,7 @@
                     </a>
                 </h2>
 
+                {% if not spell.is_official %}<p class="collection-school">Автор: {{ spell.created_by.user.username|default:"Не указан" }} · {% if spell.is_public %}Публичное{% else %}Приватное{% endif %}</p>{% endif %}
                 <p class="collection-school">
                     {{ spell.school.name|default:"Школа не указана" }}
                 </p>
@@ -284,7 +268,7 @@
                         Подробнее
                     </a>
 
-                    {% if spell.is_official %}
+                    {% if spell.is_official or spell.created_by.user_id != request.user.id %}
                         <form
                             method="post"
                             action="{% url 'spell_unsave_page' spell.pk %}"
@@ -310,7 +294,7 @@
             </article>
         {% empty %}
             <div class="collection-empty">
-                {% if search %}
+                {% if has_active_filters %}
                     <p>По этому имени заклинания не найдены.</p>
                     <a href="{% url 'my_spell_list_page' %}">
                         Показать все мои заклинания
@@ -319,7 +303,7 @@
                     <p>В твоей коллекции пока нет заклинаний.</p>
                     <p>
                         Создай своё или добавь заклинание
-                        из официального каталога.
+                        из общего каталога.
                     </p>
                     <a href="{% url 'spell_list_page' %}">
                         Открыть официальные заклинания →

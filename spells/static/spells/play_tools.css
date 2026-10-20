@@ -1,0 +1,112 @@
+.shared-filters {margin:24px 0;padding:20px;border:1px solid #343548;border-radius:14px;background:#1c1d2a}
+.shared-filter-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.shared-filter-grid label {display:block;margin-bottom:6px;color:#b8b9cc}
+.shared-filter-grid input,.shared-filter-grid select,.calculator-entry input,.calculator-entry select {width:100%;min-width:0;padding:12px;border:1px solid #484960;border-radius:8px;background:#11121a;color:#ececf3;font:inherit}
+.shared-filter-actions {display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
+.shared-filters .errorlist {color:#fca5a5}
+.character-detail {max-width:1100px;margin:auto;padding:32px 24px}
+.character-detail-heading {display:flex;align-items:center;flex-wrap:wrap;gap:24px;margin:24px 0}
+.character-detail-heading h1 {margin:0;overflow-wrap:anywhere}.character-detail-heading>.btn {margin-left:auto}
+.character-detail-portrait {width:120px;height:120px;border-radius:16px;overflow:hidden}.character-detail-portrait img {width:100%;height:100%;object-fit:cover}
+.character-detail-tabs {display:flex;flex-wrap:wrap;gap:10px;margin:24px 0}
+.character-detail-tabs [role="tab"] {border:1px solid #484960;border-radius:10px;padding:12px 18px;background:#252637;color:#ececf3;font:inherit;cursor:pointer}
+.character-detail-tabs [aria-selected="true"] {background:#c4b5fd;color:#21163c}
+.play-panel {padding:28px;border:1px solid #343548;border-radius:16px;background:#1c1d2a}.play-panel[hidden] {display:none}
+.ability-grid {display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.ability-grid>div {display:flex;flex-direction:column;padding:16px;border:1px solid #484960;border-radius:10px}.ability-grid strong {font-size:28px}
+.play-dialog {box-sizing:border-box;position:fixed;width:min(740px,calc(100vw - 32px));max-height:85dvh;overflow:auto;padding:32px;border:1px solid #484960;border-radius:18px;background:#1c1d2a;color:#ececf3;box-shadow:0 20px 80px #0008}
+.play-dialog::backdrop {background:#000a}.play-dialog h2 {padding-right:44px;margin-top:0;overflow-wrap:anywhere}
+body .play-dialog .dialog-close {position:absolute;top:12px;right:12px;width:40px;min-height:40px;padding:0;background:transparent;color:#ececf3;font-size:28px;border-color:#484960}
+.calculator-dialog {width:min(570px,calc(100vw - 24px))}.hp-display {font-size:46px;text-align:center;line-height:1.2;color:#75b9b7;margin:20px 0}
+.calculator-entry {display:flex;gap:10px;margin:20px 0}.calculator-entry select {max-width:160px}.calculator-entry input {font-size:24px}
+.calculator-keypad {display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+body .calculator-keypad button {font-size:32px;background:#252637;color:#ececf3;border-color:#60617b;min-height:60px}
+.calculator-actions,.potion-actions {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+body .calculator-actions button,body .potion-actions button {padding:12px 6px;font-size:13px;background:#252637;color:#ececf3;border-color:#60617b}
+body .calculator-actions .heal-action {color:#7dd3c8}body .calculator-actions .damage-action {color:#fda4af}
+.potion-actions {grid-template-columns:repeat(4,minmax(0,1fr))}.potion-actions button {display:block!important}
+.calculator-status {min-height:26px;color:#ddd6fe}.coin-balances {display:flex;flex-wrap:wrap;gap:16px;margin:18px 0 24px}.coin-symbol {display:inline-flex;border:2px solid currentColor;width:24px;height:24px;align-items:center;justify-content:center;border-radius:50%;font-size:14px}.coin-gold {color:#ffd700}.coin-silver {color:#bfc0c5}.coin-copper {color:#c38a4d}.coin-platinum {color:#ececf3}.coin-electrum {color:#8ba9d6}
+.play-muted {color:#b8b9cc;font-size:13px}.play-panel summary {cursor:pointer;color:#c4b5fd}.play-panel details {margin-top:24px}.play-panel textarea {width:100%}
+.sr-only {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.preview-parameters {display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.preview-parameters dt {color:#b8b9cc}.preview-parameters dd {margin:0}.spell-preview {overflow-wrap:anywhere}.description-spell-link {color:#c4b5fd;text-decoration:underline;cursor:pointer}
+.dice-widget {position:fixed;right:20px;bottom:20px;z-index:1000}.dice-panel {width:min(330px,calc(100vw - 32px));margin-bottom:12px;padding:16px;border:1px solid #484960;border-radius:16px;background:#1c1d2a;box-shadow:0 8px 32px #0008;max-height:70dvh;overflow:auto}
+.dice-grid {display:grid;grid-template-columns:repeat(4,1fr);gap:8px}body .dice-grid button {padding:8px;background:#292a3c;color:#ececf3;border-color:#484960;min-height:50px}
+body button.dice-toggle {margin-left:auto;display:flex;width:56px;height:56px;padding:0;background:#8b5cf6;color:white;font-size:30px;border-radius:16px}
+.dice-form {display:flex;gap:8px;margin-top:12px}.dice-form input {width:100%;min-width:0;background:#11121a;color:#ececf3;border:1px solid #484960;border-radius:8px;padding:10px;font:inherit}.dice-history {padding:0;list-style:none;color:#b8b9cc;font-size:13px;overflow-wrap:anywhere}.dice-history li {border-top:1px solid #343548;padding:6px 0}.dice-result {font-size:22px;color:#ddd6fe;margin:12px 0}.dice-heading {display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+@media(max-width:650px){.shared-filter-grid {grid-template-columns:1fr 1fr}.character-detail{padding:24px 16px}.ability-grid{grid-template-columns:1fr 1fr}.play-dialog{padding:24px 16px}.play-panel{padding:20px}.potion-actions{grid-template-columns:1fr 1fr}.calculator-entry select{max-width:120px}.preview-parameters{grid-template-columns:1fr}.dice-widget{right:12px;bottom:12px}}
+@media(max-width:420px){.shared-filter-grid {grid-template-columns:1fr}}
+#spell-picker-search {width:100%;padding:12px;background:#11121a;border:1px solid #484960;border-radius:8px;color:#ececf3;font:inherit}
+[data-spell-results] {display:flex;flex-direction:column;gap:10px;margin-top:20px}
+body [data-spell-results] .spell-picker-item {justify-content:flex-start;text-align:left;background:#252637;color:#ececf3;border-color:#484960}
+
+body .calculator-keypad button:hover,body .dice-grid button:hover,body .calculator-actions button:hover,body .potion-actions button:hover {background:#343047;border-color:#a78bfa;color:#f5f3ff}
+body button.dice-toggle:hover {background:#a78bfa;color:#fff}
+
+.shared-filter-more {margin-top:18px;border-top:1px solid #343548;padding-top:14px}
+.shared-filter-more summary {width:fit-content;cursor:pointer;color:#c4b5fd;padding:4px 0}
+.shared-filter-more[open]>.shared-filter-grid {margin-top:18px}
+.shared-filter-count {display:inline-block;margin-left:8px;min-width:24px;padding:0 7px;border-radius:12px;background:#302943;color:#ddd6fe;text-align:center;font-size:13px}
+.catalog-component-filters {grid-template-columns:repeat(2,minmax(0,1fr))}
+.catalog-cost-range {grid-column:1 / -1;min-width:0;margin:0;padding:0;border:0}
+.catalog-cost-range legend {margin-bottom:8px;color:#b8b9cc}
+.catalog-cost-inputs {display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);align-items:start;gap:12px;max-width:660px}
+.catalog-cost-dash {padding-top:36px;text-align:center;color:#b8b9cc;font-size:22px;line-height:1.2}
+.catalog-search .catalog-cost-range input {width:100%;min-width:0}
+@media(max-width:600px){.catalog-component-filters{grid-template-columns:1fr}.catalog-cost-inputs{gap:8px;grid-template-columns:minmax(0,1fr) 16px minmax(0,1fr)}}
+.character-books {display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:16px;margin-top:20px}
+.character-books article {padding:20px;border:1px solid #484960;border-radius:12px;background:#11121a;overflow-wrap:anywhere}
+.character-books h3 {margin:0 0 12px}
+/* Dice controls are inset by another 2 cm on wide screens. */
+.dice-widget {right:calc(20px + 2cm);bottom:calc(20px + 2cm)}
+.dice-notifications {position:fixed;left:24px;top:24px;width:min(340px,calc(100vw - 48px));max-height:calc(100dvh - 48px);overflow-y:auto;z-index:1100;display:flex;flex-direction:column;gap:12px;pointer-events:none}
+.dice-notification {position:relative;padding:18px 48px 14px 18px;border:1px solid #81719f;border-radius:14px;background:#252637;box-shadow:0 8px 28px #0007;overflow-wrap:anywhere;pointer-events:auto}
+.dice-notification strong {color:#ddd6fe;font-size:20px}.dice-notification p {font-size:13px;color:#b8b9cc;margin:8px 0 0}
+body .dice-notification button.dice-notification-close {position:absolute;top:6px;right:6px;min-height:32px;width:32px;padding:0;background:transparent;color:#ececf3;font-size:24px;border:0}
+.ability-name {display:flex;align-items:center;gap:10px}.ability-icon {width:32px;height:32px;flex:none}.hp-display {display:flex;align-items:center;justify-content:center;gap:8px}.hp-icon {width:44px;height:44px;margin-right:6px}
+body .potion-actions button {display:flex!important;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px}.potion-actions img {width:58px;height:74px;object-fit:contain}
+.equipment-editor-form {margin-top:18px}
+.coin-calculator-dialog {width:min(900px,calc(100vw - 24px))}.coin-calculator-layout {display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:28px}
+.coin-conversion {border-left:1px solid #484960;padding-left:24px}.coin-conversion h3 {margin-top:0}.coin-conversion>label {display:block;margin-bottom:8px}.coin-conversion>input {width:100%;padding:12px;border:1px solid #484960;border-radius:8px;background:#11121a;color:#ececf3;font:inherit}.coin-conversion output {display:block;min-height:48px;margin:20px 0;color:#ddd6fe;overflow-wrap:anywhere}
+.coin-conversion-pickers {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px}
+.coin-picker {position:relative;flex:none}.coin-picker summary {display:flex;align-items:center;justify-content:center;gap:6px;list-style:none;padding:8px;border:1px solid #484960;border-radius:8px;background:#11121a;cursor:pointer}.coin-picker summary::-webkit-details-marker {display:none}.coin-picker img {width:36px;height:36px}.coin-picker-options {position:absolute;z-index:10;top:calc(100% + 8px);left:0;display:grid;grid-template-columns:repeat(3,48px);gap:6px;padding:8px;border:1px solid #484960;border-radius:10px;background:#252637;box-shadow:0 8px 24px #0008}
+.coin-picker:last-child .coin-picker-options {left:auto;right:0}
+body .coin-picker-options button {min-height:48px;padding:4px;background:transparent;border-color:#484960}body .coin-picker-options button[aria-pressed="true"] {border-color:#c4b5fd;background:#44365e}
+@media(max-width:650px){.dice-widget {right:calc(12px + 2cm);bottom:calc(12px + 2cm)}.dice-panel {width:min(330px,calc(100vw - 2cm - 24px))}.dice-grid {grid-template-columns:repeat(3,1fr)}.coin-calculator-layout {grid-template-columns:1fr}.coin-conversion {border-left:0;border-top:1px solid #484960;padding:20px 0 0}.dice-notifications {left:12px;top:12px;width:min(320px,calc(100vw - 24px))}}
+.hp-low {color:#f87171}.hp-temporary {color:#9ca3af;font-size:.6em;margin-left:8px;white-space:nowrap}
+.site-brand-icon {width:34px;height:34px;vertical-align:middle;flex:none}.site-brand {display:inline-flex;align-items:center;gap:10px}
+.catalog-card.school-themed,.catalog-panel.school-themed,.catalog-form-panel.school-themed {border:2px solid var(--school-color);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--school-color) 20%,transparent)}
+
+body .hp-current, body [data-hp-current] {color:#75b9b7} body .hp-low, body [data-hp-current].hp-low {color:#f87171} body .hp-temporary {color:#9ca3af}
+.character-combat-stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:24px}
+.character-combat-stats>div,.character-background {padding:18px;border:1px solid #484960;border-radius:12px;background:#252637}
+.character-combat-stats span,.character-background span {display:block;color:#b8b9cc}
+.character-combat-stats strong {display:block;font-size:28px;color:#ddd6fe}.character-combat-stats small{font-size:14px}
+.character-background{margin:20px 0}.character-active{display:flex;align-items:center;gap:10px;margin:20px 0}.character-active input{width:20px;height:20px;accent-color:#c4b5fd}
+@media(max-width:600px){.character-combat-stats{grid-template-columns:1fr}}
+
+body .hp-display .hp-values {display:inline-flex;align-items:baseline;gap:8px;font-size:inherit;font-weight:400;line-height:1.2}
+body .hp-display .hp-values>span {font-size:inherit;font-weight:inherit;line-height:inherit}
+body .hp-temporary {font-size:inherit;margin-left:0}
+body .hp-temporary[hidden] {display:none}
+
+body .ability-icon {width:40px;height:40px;flex:none;object-fit:contain}
+.character-combat-stats .ability-name {display:flex;align-items:center;gap:10px}
+
+/* Apply one type scale to every HP number, including nested temporary HP. */
+body .hp-display {font-size:clamp(28px,8vw,46px);font-variant-numeric:tabular-nums}
+body .hp-display .hp-values {flex-wrap:wrap;justify-content:center}
+body .hp-display .hp-values span {font-size:inherit;font-weight:inherit;line-height:inherit}
+
+.character-stat strong .hp-current, .character-stat strong .hp-temporary {display:inline;margin:0;font-size:inherit;font-weight:inherit;line-height:inherit}
+
+body button.description-dice-link {display:inline;min-height:0;padding:2px 6px;margin:0 2px;border:1px solid #78629e;border-radius:6px;background:#302943;color:#e9d5ff;font:inherit;line-height:inherit;vertical-align:baseline;cursor:pointer;white-space:normal;overflow-wrap:anywhere}
+body button.description-dice-link:hover {background:#46365c;color:#fff}
+.catalog-preview {overflow-wrap:anywhere}
+.catalog-preview-image {display:block;width:min(100%,260px);max-height:260px;object-fit:contain;margin:16px 0;border-radius:12px}
+.inline-dice-input {box-sizing:border-box;width:100%;padding:12px;background:#11121a;color:#ececf3;border:1px solid #484960;border-radius:8px;font:inherit}
+[data-dice-error] {color:#fca5a5}
+body .play-dialog .preview-back {margin-bottom:16px;background:#302943;color:#ddd6fe;border-color:#78629e}
+.preview-back[hidden] {display:none}
+.dice-notifications[popover] {position:fixed;inset:auto;left:20px;top:20px;margin:0;padding:0;border:0;background:transparent;color:#ececf3;max-height:calc(100dvh - 40px);overflow:auto;box-sizing:border-box}
+@media(max-width:650px){.dice-notifications[popover]{left:12px;top:12px;width:min(320px,calc(100vw - 24px))}}
+
+.description-surface span.description-dice-link {padding:0 3px;border-bottom:1px dashed #a78bfa;border-radius:3px;background:#302943;color:#e9d5ff}

@@ -1,6 +1,7 @@
 import json
 
 from django import forms
+from django.templatetags.static import static
 
 
 DESCRIPTION_PREFIX = "SPELLBOOK_BLOCKS_V1:"
@@ -18,27 +19,38 @@ def parse_description(value):
         if not isinstance(block, dict):
             raise ValueError("Неверный блок описания.")
 
-        if block.get("type") == "text":
+        if block.get("type") in ("text", "heading", "quote"):
             text = block.get("text")
 
             if not isinstance(text, str):
                 raise ValueError("Неверный текст описания.")
 
             if text.strip():
-                blocks.append({"type": "text", "text": text})
+                blocks.append({"type": block["type"], "text": text})
+
+        elif block.get("type") == "rule":
+            blocks.append({"type": "rule"})
+
+        elif block.get("type") == "list":
+            items = block.get("items")
+            if not isinstance(items, list) or any(not isinstance(item, str) for item in items):
+                raise ValueError("Неверный список.")
+            items = [item for item in items if item.strip()]
+            if items:
+                blocks.append({"type": "list", "items": items})
 
         elif block.get("type") == "table":
             rows = block.get("rows")
 
-            if not isinstance(rows, list) or not 1 <= len(rows) <= 9:
-                raise ValueError("В таблице должно быть от 1 до 9 строк.")
+            if not isinstance(rows, list) or not rows:
+                raise ValueError("В таблице должна быть хотя бы одна строка.")
 
             column_count = None
 
             for row in rows:
-                if not isinstance(row, list) or not 1 <= len(row) <= 9:
+                if not isinstance(row, list) or not row:
                     raise ValueError(
-                        "В таблице должно быть от 1 до 9 столбцов."
+                        "В таблице должен быть хотя бы один столбец."
                     )
 
                 if column_count is None:
@@ -65,6 +77,7 @@ class DescriptionFormMixin:
         "description",
         "features_description",
         "higher_level",
+        "equipment_description",
     )
 
     def __init__(self, *args, **kwargs):
@@ -75,6 +88,11 @@ class DescriptionFormMixin:
                 self.fields[name].widget.attrs[
                     "data-description-editor"
                 ] = "true"
+                from django.urls import reverse
+                self.fields[name].widget.attrs["data-spell-search-url"] = reverse("spell_link_search")
+                self.fields[name].widget.attrs["data-spell-preview-url"] = reverse("spell_preview", args=[0])
+                self.fields[name].widget.attrs["data-catalog-search-url"] = reverse("catalog_link_search", args=['schools'])
+                self.fields[name].widget.attrs["data-catalog-preview-url"] = reverse("catalog_preview", args=['schools', 0])
 
     def clean(self):
         cleaned_data = super().clean()
@@ -95,16 +113,17 @@ class DescriptionFormMixin:
                     name,
                     forms.ValidationError(
                         "Не удалось сохранить описание. "
-                        "Проверь таблицы: максимальный размер — 9 × 9."
+                        "Проверь формат блоков и одинаковое количество ячеек в строках таблиц."
                     ),
                 )
                 continue
 
             has_content = any(
                 (
-                    block["type"] == "text"
+                    block["type"] in ("text", "heading", "quote")
                     and block["text"].strip()
                 )
+                or (block["type"] == "list" and any(item.strip() for item in block["items"]))
                 or (
                     block["type"] == "table"
                     and any(
@@ -130,5 +149,5 @@ class DescriptionFormMixin:
 
 class DescriptionModelForm(DescriptionFormMixin, forms.ModelForm):
     class Media:
-        css = {"all": ("spells/description_editor.css",)}
-        js = ("spells/description_editor.js",)
+        css = {"all": (static("spells/description_editor.css") + "?v=20261020-json-import", static("spells/play_tools.css") + "?v=20261020-json-import")}
+        js = (static("spells/play_tools.js") + "?v=20261020-json-import", static("spells/description_editor.js") + "?v=20261020-json-import")

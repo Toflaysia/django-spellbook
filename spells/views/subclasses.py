@@ -1,3 +1,4 @@
+from spells.class_access import visible_classes
 from rest_framework import generics, serializers
 from rest_framework.permissions import AllowAny
 
@@ -24,7 +25,7 @@ class SubclassListView(generics.ListAPIView):
         )
         filters.is_valid(raise_exception=True)
 
-        queryset = Subclass.objects.order_by("name")
+        queryset = Subclass.objects.filter(character_class__in=visible_classes(self.request.user)).order_by("name")
         class_id = filters.validated_data.get("character_class")
 
         if class_id is not None:

@@ -1,8 +1,10 @@
 {% extends "spells/base.html" %}
+{% load static l10n %}
 
 {% block title %}Spellbook — персонажи и заклинания D&D{% endblock %}
 
 {% block styles %}
+<link rel="stylesheet" href="{% static 'spells/home_plans.css' %}?v=20261009-1133">
 <style>
     .home-main {
         max-width: 1100px;
@@ -191,6 +193,12 @@
         </div>
     </section>
 
+    {% if request.user.is_authenticated %}
+    <section class="home-plans" aria-labelledby="active-title"><h2 id="active-title">Активные персонажи</h2><div class="home-grid">
+    {% for character in active_characters %}<article class="home-card">{% if character.portrait %}<a class="home-character-portrait" href="{% url 'character_detail_page' character.pk %}"><img src="{{ character.portrait.url }}" alt="Портрет {{ character.name }}" loading="lazy" style="object-position:{{ character.portrait_position_x|unlocalize }}% {{ character.portrait_position_y|unlocalize }}%;transform:scale({{ character.portrait_zoom|unlocalize }});"></a>{% endif %}<h3><a href="{% url 'character_detail_page' character.pk %}">{{ character.name }}</a></h3><p>{{ character.character_class.name }} · Уровень {{ character.level }}</p><p>♥ <span class="hp-current {% if character.current_hit_points|add:character.current_hit_points <= character.max_hit_points %}hp-low{% endif %}">{{ character.current_hit_points }}</span>/{{ character.max_hit_points }} {% if character.temporary_hit_points %}<span class="hp-temporary">({{ character.temporary_hit_points }})</span>{% endif %}</p><a class="btn btn-secondary" href="{% url 'character_detail_page' character.pk %}">Открыть персонажа</a></article>
+    {% empty %}<p>Нет активных персонажей. Отметь галочку «Активный персонаж» в карточке нужного героя.</p>{% endfor %}</div></section>
+    {% include "spells/includes/home_plans.html" %}{% endif %}
+
     <div class="home-grid">
         <section class="home-card">
             <p class="home-card-label">ОБЩИЙ КАТАЛОГ</p>
@@ -270,3 +278,4 @@
     {% endif %}
 </main>
 {% endblock %}
+{% block scripts %}<script src="{% static 'spells/home_plans.js' %}?v=20261009-1131"></script>{% endblock %}

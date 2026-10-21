@@ -28,9 +28,11 @@ def linked_text(value):
         if kind == 'dice':
             if (len(identifier) <= 120 and re.fullmatch(r'[0-9dDkKhHlL+\s-]+', identifier)
                     and re.search(r'd\d', identifier, re.IGNORECASE)):
-                parts.append(f'<button type="button" class="description-dice-link" data-dice-expression="{escape(identifier)}" title="Бросить {escape(identifier)}">🎲 {escape(label)}</button>')
+                parts.append(f'<button type="button" class="description-dice-link" data-dice-expression="{escape(identifier)}" title="Бросить {escape(identifier)}">{escape(label)}</button>')
             else:
                 parts.append(str(escape(match[0])))
+        elif kind == 'component':
+            parts.append(str(escape(label)))
         elif re.fullmatch(r'\d{1,10}', identifier):
             pk = int(identifier)
             if kind == 'spell':

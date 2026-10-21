@@ -98,8 +98,9 @@ body .hp-display .hp-values span {font-size:inherit;font-weight:inherit;line-hei
 
 .character-stat strong .hp-current, .character-stat strong .hp-temporary {display:inline;margin:0;font-size:inherit;font-weight:inherit;line-height:inherit}
 
-body button.description-dice-link {display:inline;min-height:0;padding:2px 6px;margin:0 2px;border:1px solid #78629e;border-radius:6px;background:#302943;color:#e9d5ff;font:inherit;line-height:inherit;vertical-align:baseline;cursor:pointer;white-space:normal;overflow-wrap:anywhere}
-body button.description-dice-link:hover {background:#46365c;color:#fff}
+body button.description-dice-link {display:inline;min-height:0;min-width:0;padding:0;margin:0;border:0;border-bottom:1px dotted #858594;border-radius:0;background:transparent;color:inherit;font:inherit;line-height:inherit;vertical-align:baseline;cursor:pointer;white-space:normal;overflow-wrap:anywhere;box-shadow:none}
+body button.description-dice-link:hover {background:rgb(255 255 255 / 5%);color:inherit;border-bottom-color:currentColor;box-shadow:none}
+body button.description-dice-link:focus-visible {outline:2px solid #aaaaba;outline-offset:3px;box-shadow:none}
 .catalog-preview {overflow-wrap:anywhere}
 .catalog-preview-image {display:block;width:min(100%,260px);max-height:260px;object-fit:contain;margin:16px 0;border-radius:12px}
 .inline-dice-input {box-sizing:border-box;width:100%;padding:12px;background:#11121a;color:#ececf3;border:1px solid #484960;border-radius:8px;font:inherit}
@@ -109,4 +110,4 @@ body .play-dialog .preview-back {margin-bottom:16px;background:#302943;color:#dd
 .dice-notifications[popover] {position:fixed;inset:auto;left:20px;top:20px;margin:0;padding:0;border:0;background:transparent;color:#ececf3;max-height:calc(100dvh - 40px);overflow:auto;box-sizing:border-box}
 @media(max-width:650px){.dice-notifications[popover]{left:12px;top:12px;width:min(320px,calc(100vw - 24px))}}
 
-.description-surface span.description-dice-link {padding:0 3px;border-bottom:1px dashed #a78bfa;border-radius:3px;background:#302943;color:#e9d5ff}
+.description-surface span.description-dice-link {padding:0;border-bottom:1px dotted #858594;border-radius:0;background:transparent;color:inherit}

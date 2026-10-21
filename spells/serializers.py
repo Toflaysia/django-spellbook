@@ -169,6 +169,13 @@ class SubclassSerializer(serializers.ModelSerializer):
             "level_gained",
         ]
 class SpellSerializer(serializers.ModelSerializer):
+    material_components = serializers.JSONField(required=False)
+
+    def validate_material_components(self,value):
+        from spells.materials import normalize_materials
+        try:return normalize_materials(value)
+        except ValueError as error:raise serializers.ValidationError(str(error))
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request = self.context.get('request')

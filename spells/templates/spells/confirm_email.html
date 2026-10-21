@@ -1,0 +1,7 @@
+{% extends "spells/auth_base.html" %}
+{% block auth_page_title %}Подтверждение email{% endblock %}
+{% block auth_content %}<h1>Подтверждение email</h1>
+{% if confirmed %}<p>✓ Email подтверждён. Можно входить по адресу почты, восстанавливать пароль и включать почтовые напоминания.</p>
+{% elif valid_token %}<p>Нажми кнопку, чтобы подтвердить свой email.</p><form method="post">{% csrf_token %}<button type="submit">Подтвердить email</button></form>
+{% else %}<p>Ссылка недействительна, уже использована или срок её действия истёк. Запроси новое письмо в настройках email.</p>{% endif %}
+<div class="account-links"><a href="{% url 'login' %}">Войти</a>{% if request.user.is_authenticated %}<a href="{% url 'account_email_page' %}">Настройки email</a>{% endif %}</div>{% endblock %}

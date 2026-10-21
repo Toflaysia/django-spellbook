@@ -5,3 +5,4 @@ from .spells import *
 from .users import *
 
 from .plans import HomePlan
+from .account_email import AccountEmail

@@ -37,7 +37,6 @@ class UnicodeSearchTests(TestCase):
         fixtures = [
             ('schools', MagicSchool, {'name': 'Варварская магия'}),
             ('effects', Effect, {'name': 'Варварская ярость'}),
-            ('components', MaterialComponent, {'name': 'Варварский амулет'}),
             ('casting-times', SpellTime, {'time': 'Варварское действие'}),
             ('damage-types', DamageType, {'name': 'Варварский урон'}),
         ]

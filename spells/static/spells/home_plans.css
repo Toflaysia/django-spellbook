@@ -14,3 +14,9 @@ body .home-date-control button {flex:none;width:44px;height:44px;padding:0;font-
 
 .home-plan-form input[type="date"] {color-scheme:dark;min-height:48px;max-width:360px}
 .home-plan-form input[type="date"]::-webkit-calendar-picker-indicator {opacity:1;cursor:pointer}
+
+.home-plan-form input[type="checkbox"]{width:20px;height:20px;min-width:0;padding:0;vertical-align:middle;accent-color:#c4b5fd}.home-plan-form [data-reminder-time]{max-width:220px}
+
+.home-plan-form p[hidden]{display:none}.home-plan-form input[type="checkbox"]:disabled{opacity:.45;cursor:not-allowed}
+
+.home-plan-schedule{display:flex;flex-wrap:wrap;gap:16px}.home-plan-schedule>p{flex:1 1 200px;min-width:0;margin-top:0}.home-plan-schedule input{box-sizing:border-box;width:100%;max-width:100%}.home-plan-schedule[hidden]{display:none}

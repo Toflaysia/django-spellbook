@@ -153,7 +153,7 @@ def spell_link_search(request):
 
 @require_GET
 def spell_preview(request,pk):
-    spell=get_object_or_404(available_spells(request).select_related('school','time','created_by__user').prefetch_related('material_components','aviable_classes','effects'),pk=pk)
+    spell=get_object_or_404(available_spells(request).select_related('school','time','created_by__user').prefetch_related('aviable_classes','effects'),pk=pk)
     scope_spell_classes(spell, request.user)
     return render(request,'spells/includes/spell_preview.html',{'spell':spell})
 

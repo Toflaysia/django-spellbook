@@ -54,12 +54,12 @@ class JsonImportTests(TestCase):
         poison=DamageType.objects.create(name='Яд')
         self.assertIn('[[damage:'+str(poison.pk)+'|',ImportLinker(AnonymousUser()).description('Яд.'))
         value=ImportLinker(AnonymousUser()).description(self.native()['description']+' Тайное заклинание. Секретный класс.')
-        for kind in ('dice','condition','class','school','trait','effect','damage','component','time'):
+        for kind in ('dice','condition','class','school','trait','effect','damage','time'):
             self.assertIn('[['+kind+':',value,kind)
         self.assertNotIn('[[spell:',value)
         self.assertEqual(value.count('[[class:'),1)
         html=str(render_description(value))
-        for slug,item in [('conditions',self.condition),('effects',self.effect),('classes',self.cls),('schools',self.school),('traits',self.trait),('damage-types',self.damage),('components',self.component),('casting-times',self.time)]:
+        for slug,item in [('conditions',self.condition),('effects',self.effect),('classes',self.cls),('schools',self.school),('traits',self.trait),('damage-types',self.damage),('casting-times',self.time)]:
             self.assertIn(reverse('catalog_detail_page',args=[slug,item.pk]),html)
         self.assertIn('испуганным',html)
         self.assertIn('воина',html)

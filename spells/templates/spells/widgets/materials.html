@@ -1,0 +1,13 @@
+<div class="spell-materials" data-materials-widget>
+<input type="hidden" name="{{ widget.name }}__present" value="1">
+<div data-material-rows>
+{% for row in widget.rows %}
+<div class="spell-material-row" data-material-row>
+<label>Название<input type="text" name="{{ widget.name }}_name" id="{{ widget.attrs.id }}_{{ forloop.counter0 }}_name" value="{{ row.name }}" maxlength="5000" placeholder="Например, алмаз или щепотка пыли"></label>
+<label>Стоимость, зм<input type="number" name="{{ widget.name }}_cost" value="{{ row.cost|default_if_none:'' }}" min="0" max="9999999999.99" step="0.01" placeholder="Не указана"></label>
+<button type="button" class="btn-secondary" data-remove-material>Удалить</button>
+</div>
+{% endfor %}
+</div>
+<button type="button" class="btn-secondary" data-add-material>+ Добавить компонент</button>
+</div>

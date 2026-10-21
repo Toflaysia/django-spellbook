@@ -18,7 +18,6 @@ class CustomSpellQuerysetMixin:
             )
             .select_related("school", "time", "created_by__user")
             .prefetch_related(
-                "material_components",
                 "effects",
                 "aviable_classes",
                 "aviable_subclasses",

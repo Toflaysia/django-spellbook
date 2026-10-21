@@ -1,6 +1,7 @@
 {% load description_tags %}
 <article class="spell-preview">
 <h2>{{ spell.name }}</h2>
+{% include "spells/includes/spell_components_line.html" %}
 {% if not spell.is_official %}<p class="play-muted">Автор: {{ spell.created_by.user.username|default:"Не указан" }} · {% if spell.is_public %}Публичное заклинание{% else %}Приватное заклинание{% endif %}</p>{% endif %}
 <p>{% if spell.level == 0 %}Заговор{% else %}Уровень {{ spell.level }}{% endif %} · {% if spell.school_id %}<a href="{% url 'catalog_detail_page' 'schools' spell.school_id %}" data-catalog-kind="schools" data-catalog-id="{{ spell.school_id }}">{{ spell.school.name }}</a>{% else %}Школа не указана{% endif %}</p>
 <dl class="preview-parameters">
@@ -9,10 +10,10 @@
 <div><dt>Длительность</dt><dd>{{ spell.duration }}</dd></div>
 <div><dt>Механика</dt><dd>{{ spell.get_attack_type_display }}</dd></div>
 </dl>
-<p>{% if spell.concentration %}Концентрация · {% endif %}{% if spell.ritual %}Ритуал · {% endif %}Вербальный: {{ spell.verbal_component|yesno:'да,нет' }} · Соматический: {{ spell.somatic_component|yesno:'да,нет' }}</p>
+{% if spell.concentration or spell.ritual %}<p>{% if spell.concentration %}Концентрация{% endif %}{% if spell.ritual %}{% if spell.concentration %} · {% endif %}Ритуал{% endif %}</p>{% endif %}
 {{ spell.description|render_description }}
 {% if spell.higher_level %}<h3>На более высоком уровне</h3>{{ spell.higher_level|render_description }}{% endif %}
-{% if spell.material_components.all %}<h3>Материальные компоненты</h3><ul>{% for component in spell.material_components.all %}<li>{{ component.name }}{% if component.cost %} · {{ component.cost }} зм{% endif %}{% if component.is_consumable %} · расходуется{% endif %}{{ component.description|render_description }}</li>{% endfor %}</ul>{% endif %}
+
 {% if spell.aviable_classes.all %}<p>Классы: {% for cls in spell.aviable_classes.all %}{{ cls.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
 {% if spell.source_book %}<p>{{ spell.source_book }}{% if spell.page_number %} · стр. {{ spell.page_number }}{% endif %}</p>{% endif %}
 </article>

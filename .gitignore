@@ -10,3 +10,18 @@ __pycache__/
 .env
 /media/
 /dnd_site/spells/
+
+/email_settings.json
+/secret_key.txt
+/logs/
+
+# Generated updates and old backups
+/apply_*.py
+/*_payload.zip
+/*_manifest.json
+/update_backups/
+/cleanup_project.py
+# Local tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

@@ -235,15 +235,36 @@ class CharacterEditForm(CharacterCreateForm):
 
 
 class RegistrationForm(UserCreationForm):
+    email = forms.EmailField(label="Email", max_length=254, help_text="Нужен для подтверждения адреса, восстановления пароля и напоминаний.")
+
+    def clean_username(self):
+        value=super().clean_username()
+        if '@' in value:raise forms.ValidationError('Имя пользователя укажи без @. Для почты есть отдельное поле Email.')
+        return value
+
+    def clean_email(self):
+        from spells.email_accounts import normalize_email, email_available
+        email = normalize_email(self.cleaned_data['email'])
+        if not email_available(email):
+            raise forms.ValidationError("Этот email уже используется.")
+        return email
+
     class Meta:
         model = User
-        fields = ["username"]
+        fields = ["username", "email"]
         labels = {
             "username": "Имя пользователя",
         }
+        help_texts = {
+            "username": "До 150 символов: буквы, цифры и знаки ./+/-/_. Без @.",
+        }
+
+
+from spells.material_forms import MaterialsField
 
 
 class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
+    material_components = MaterialsField(label="Материальные компоненты",required=False)
     class Meta:
         model = Spell
         fields = [
@@ -280,7 +301,6 @@ class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
         widgets = {
             "description": forms.Textarea(attrs={"rows": 6}),
             "higher_level": forms.Textarea(attrs={"rows": 4}),
-            "material_components": forms.CheckboxSelectMultiple(),
             "effects": forms.CheckboxSelectMultiple(),
             "aviable_classes": forms.CheckboxSelectMultiple(),
             "aviable_subclasses": forms.CheckboxSelectMultiple(),
@@ -307,7 +327,6 @@ class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
         ]
 
         for field_name in [
-            "material_components",
             "effects",
             "aviable_classes",
             "aviable_subclasses",

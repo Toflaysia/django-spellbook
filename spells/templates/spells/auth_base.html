@@ -1,0 +1,8 @@
+{% extends "spells/base.html" %}
+{% block title %}{% block auth_page_title %}Аккаунт{% endblock %} — Spellbook{% endblock %}
+{% block styles %}<style>.account-main{box-sizing:border-box;max-width:560px;width:calc(100% - 32px);margin:40px auto}.account-panel{padding:28px;border:1px solid #484960;border-radius:16px;background:#1c1d2a}.account-panel h1{font-size:28px;margin-top:0;overflow-wrap:anywhere}.account-panel label{display:block;margin:18px 0 8px}.account-panel input:not([type=hidden]){box-sizing:border-box;width:100%;padding:12px;border:1px solid #484960;border-radius:8px;background:#11121a;color:#ececf3;font:inherit}.account-panel button{margin-top:12px}.account-muted,.account-panel .helptext{color:#b8b9cc;line-height:1.6}.account-panel .errorlist{color:#fca5a5;padding-left:20px}.account-notice{padding:12px;border:1px solid #655a80;border-radius:8px;margin:12px 0;overflow-wrap:anywhere}.account-address{overflow-wrap:anywhere}.account-links{display:flex;gap:16px;flex-wrap:wrap;margin-top:24px}@media(max-width:480px){.account-panel{padding:20px}.account-main{margin:24px auto}}</style>{% endblock %}
+{% block content %}<main class="account-main"><section class="account-panel">
+{% if messages %}<div aria-live="polite">{% for message in messages %}<p class="account-notice">{{ message }}</p>{% endfor %}</div>{% endif %}
+{% block auth_content %}{% endblock %}
+</section></main>{% endblock %}
+{% block dice_widget %}{% endblock %}

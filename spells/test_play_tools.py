@@ -151,11 +151,7 @@ class SpellFilterAndPreviewTests(TestCase):
 
     def test_component_and_school_filters(self):
         url=reverse('catalog_list_page',args=['components'])
-        response=self.client.get(url,{'search':'огн','is_consumable':'yes','is_focus':'no','min_cost':'10','max_cost':'11'})
-        self.assertEqual([s['pk'] for s in response.context['entries']],[self.component.pk])
-        response=self.client.get(url,{'min_cost':'12','max_cost':'1'})
-        self.assertTrue(response.context['extra_filters'].errors)
-        self.assertEqual(response.context['page'].paginator.count,0)
+        self.assertEqual(self.client.get(url).status_code,404)
         Spell.objects.create(name='Без школы',description='Текст',is_official=True,duration='Миг')
         url=reverse('catalog_list_page',args=['schools'])
         response=self.client.get(url,{'description':'ОГН','has_spells':'yes','level':'3'})

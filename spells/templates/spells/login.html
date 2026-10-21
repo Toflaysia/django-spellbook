@@ -153,7 +153,7 @@
 
             <div class="auth-field">
                 <label for="{{ form.username.id_for_label }}">
-                    Имя пользователя
+                    Email или имя пользователя
                 </label>
                 {{ form.username }}
                 {{ form.username.errors }}
@@ -172,6 +172,7 @@
             </button>
         </form>
 
+        <p><a href="{% url 'password_reset' %}">Забыли пароль?</a></p>
         <div class="auth-registration">
             <div class="auth-divider">
                 <span>Впервые в Spellbook?</span>

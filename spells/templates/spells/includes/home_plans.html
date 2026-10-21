@@ -1,7 +1,7 @@
 {% load description_tags %}
 <section id="plans" class="home-plans" aria-labelledby="plans-title">
     <div class="home-plans-heading"><h2 id="plans-title">Планы и напоминания</h2><span>Осталось: {{ unfinished_plans }}</span></div>
-    <p class="home-plans-muted">Твои личные записи. Напоминания по дате отображаются здесь.</p>
+    <p class="home-plans-muted">Твои личные записи. Напоминания по дате отображаются здесь. Для писем <a href="{% url 'account_email_page' %}">подтверди email</a>.</p>
     <div class="home-plan-create">
         <button type="button" data-toggle-plan-form aria-expanded="true" aria-controls="home-plan-create-form">+ Добавить план или напоминание</button>
         <form id="home-plan-create-form" data-has-errors="{{ plan_form.errors|yesno:'true,false' }}" method="post" action="{% url 'plan_create_page' %}" class="home-plan-form">{% csrf_token %}{{ plan_form.as_p }}<button type="submit">Добавить</button></form>
@@ -12,6 +12,7 @@
                 <div class="home-plan-content"><h3>{{ plan.title }}</h3>
                     {% if plan.is_done %}<span class="home-plan-badge">Выполнено</span>{% elif plan.reminder_status %}<span class="home-plan-badge">{{ plan.reminder_status }}</span>{% endif %}
                     {% if plan.reminder_date %}<p class="home-plans-muted">К {{ plan.reminder_date|date:'d.m.Y' }}</p>{% endif %}
+                    {% if plan.email_reminder %}<p class="home-plans-muted">Email: {{ plan.reminder_time|time:'H:i' }} · {% if plan.email_sent_for_date == plan.reminder_date %}Отправлено{% else %}Ожидает отправки{% endif %}</p>{% endif %}
                     {% if plan.text %}<div>{{ plan.text|render_description }}</div>{% endif %}
                 </div>
                 <div class="home-plan-actions">

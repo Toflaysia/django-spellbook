@@ -1,0 +1,81 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Spellbook: запустить сайт",
+      "type": "process",
+      "command": "${command:python.interpreterPath}",
+      "args": [
+        "manage.py",
+        "runserver"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "runOptions": {
+        "instanceLimit": 1
+      }
+    },
+    {
+      "label": "Spellbook: проверить проект",
+      "type": "process",
+      "command": "${command:python.interpreterPath}",
+      "args": [
+        "manage.py",
+        "check"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Spellbook: применить миграции",
+      "type": "process",
+      "command": "${command:python.interpreterPath}",
+      "args": [
+        "manage.py",
+        "migrate"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Spellbook: запустить тесты",
+      "type": "process",
+      "command": "${command:python.interpreterPath}",
+      "args": [
+        "manage.py",
+        "test",
+        "spells"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    }
+  ]
+}

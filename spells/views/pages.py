@@ -124,12 +124,21 @@ def register_page(request):
     )
 
     if request.method == "POST" and form.is_valid():
-        with transaction.atomic():
-            user = form.save()
-            Player.objects.create(user=user)
-
-        login(request, user)
-        return redirect("character_list_page")
+        from django.db import IntegrityError
+        from spells.models import AccountEmail
+        from spells.email_accounts import send_confirmation
+        from spells.views.accounts import confirmation_message
+        try:
+            with transaction.atomic():
+                user = form.save()
+                Player.objects.create(user=user)
+                AccountEmail.objects.create(user=user,email=form.cleaned_data['email'])
+        except IntegrityError:
+            form.add_error('email','Email или имя пользователя уже заняты.')
+        else:
+            login(request,user,backend='spells.email_accounts.EmailOrUsernameBackend')
+            confirmation_message(request,send_confirmation(user))
+            return redirect('account_email_page')
 
     return render(
         request,
@@ -156,7 +165,6 @@ def spell_detail_page(request, pk):
         visible_spells(request.user)
         .select_related("school", "time", "created_by__user")
         .prefetch_related(
-            "material_components",
             "aviable_classes",
         ),
         pk=pk,

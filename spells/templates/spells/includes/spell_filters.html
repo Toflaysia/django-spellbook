@@ -1,3 +1,4 @@
+{% load static %}
 <form class="shared-filters" method="get">
     {% if spell_group %}<input type="hidden" name="group" value="{{ spell_group }}">{% endif %}
     <div class="shared-filter-grid shared-filter-basic">
@@ -19,3 +20,5 @@
     </div>
 </form>
 <p class="catalog-muted">Найдено заклинаний: {{ spells|length }}</p>
+
+<script src="{% static 'spells/component_filters.js' %}?v=20261021-components" defer></script>

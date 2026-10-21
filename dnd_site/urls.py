@@ -1,3 +1,6 @@
+from spells.account_forms import EmailAuthenticationForm
+from spells.views.accounts import account_email_page, resend_confirmation, confirm_email, EmailPasswordResetView
+from django.contrib.auth import views as password_views
 from spells.views.bulk_import import bulk_spell_import_page
 from spells.views.user_classes import user_class_create_page
 from spells.views.play_tools import catalog_link_search, catalog_preview
@@ -56,6 +59,13 @@ from spells.views.catalog import (
 )
 
 urlpatterns = [
+    path('account/email/',account_email_page,name='account_email_page'),
+    path('account/email/resend/',resend_confirmation,name='resend_confirmation'),
+    path('account/email/confirm/<str:token>/',confirm_email,name='confirm_email'),
+    path('password-reset/',EmailPasswordResetView.as_view(),name='password_reset'),
+    path('password-reset/sent/',password_views.PasswordResetDoneView.as_view(template_name='spells/password_reset_done.html'),name='password_reset_done'),
+    path('password-reset/<uidb64>/<token>/',password_views.PasswordResetConfirmView.as_view(template_name='spells/password_reset_confirm.html'),name='password_reset_confirm'),
+    path('password-reset/complete/',password_views.PasswordResetCompleteView.as_view(template_name='spells/password_reset_complete.html'),name='password_reset_complete'),
     path("spells/import/bulk/", bulk_spell_import_page, name="bulk_spell_import_page"),
     path("my-classes/new/", user_class_create_page, name="user_class_create_page"),
     path("catalog-links/<slug:slug>/", catalog_link_search, name="catalog_link_search"),
@@ -126,6 +136,7 @@ urlpatterns = [
         "login/",
         LoginView.as_view(
             template_name="spells/login.html",
+            authentication_form=EmailAuthenticationForm,
             redirect_authenticated_user=True,
         ),
         name="login",

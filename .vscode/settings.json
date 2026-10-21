@@ -11,4 +11,6 @@
   "ruff.format.quoteStyle": "double",
   "ruff.organizeImports": true,
   "ruff.fixAll": true,
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv",
+  "python.terminal.activateEnvironment": true
 }

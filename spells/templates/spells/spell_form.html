@@ -1,4 +1,5 @@
 {% extends "spells/form_base.html" %}
+{% load static %}
 
 {% block title %}
     {% if editing %}Редактирование{% else %}Новое заклинание{% endif %}
@@ -6,6 +7,7 @@
 {% endblock %}
 
 {% block styles %}
+<link rel="stylesheet" href="{% static 'spells/spell_materials.css' %}?v=20261021-materials">
 <style>
     .spell-form-main {
         max-width: 1000px;
@@ -274,7 +276,7 @@
                 <div class="spell-form-fields">
                     {% for field in group.fields %}
                         <div class="spell-form-field {% if field.name == 'description' or field.name == 'higher_level' or field.name == 'material_components' or field.name == 'effects' or field.name == 'aviable_classes' or field.name == 'aviable_subclasses' %}spell-form-field-wide{% endif %}">
-                            {% if field.name == 'material_components' or field.name == 'effects' or field.name == 'aviable_classes' or field.name == 'aviable_subclasses' %}
+                            {% if field.name == 'effects' or field.name == 'aviable_classes' or field.name == 'aviable_subclasses' %}
                                 <fieldset class="spell-component-group">
                                     <legend>{{ field.label }}</legend>
 
@@ -351,6 +353,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{% static 'spells/spell_materials.js' %}?v=20261021-materials" defer></script>
 <script>
     (() => {
         const form = document.getElementById('spell-form');

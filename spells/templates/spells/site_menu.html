@@ -71,6 +71,7 @@
         text-transform: uppercase;
     }
 
+    .site-menu-home,
     .site-menu-group a {
         display: block;
         padding: 9px 10px;
@@ -80,6 +81,9 @@
         overflow-wrap: anywhere;
     }
 
+    .site-menu-home:hover,
+    .site-menu-home:focus-visible,
+    .site-menu-group a:focus-visible,
     .site-menu-group a:hover {
         background: #302943;
         color: #ddd6fe;
@@ -149,9 +153,7 @@
                 <a href="{% url 'catalog_list_page' 'casting-times' %}">
                     Время накладывания
                 </a>
-                <a href="{% url 'catalog_list_page' 'components' %}">
-                    Материальные компоненты
-                </a>
+
             </section>
 
             <section class="site-menu-group">
@@ -161,6 +163,12 @@
                 </a>
                 <a href="{% url 'catalog_list_page' 'traits' %}">Черты</a>
             </section>
+            {% if request.user.is_authenticated %}
+                <section class="site-menu-group">
+                    <h2>Безопасность</h2>
+                    <a href="{% url 'account_email_page' %}">Email и безопасность</a>
+                </section>
+            {% endif %}
         </div>
 </nav>
 </details>

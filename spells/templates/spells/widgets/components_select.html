@@ -1,0 +1,6 @@
+<details class="component-filter" data-component-filter>
+<summary aria-label="Выбрать компоненты"><span data-component-summary>{{ widget.selected_labels|default:'Любые компоненты' }}</span><span aria-hidden="true">▾</span></summary>
+<div class="component-filter-options" role="group" aria-label="Компоненты">
+{% for group_name,options,index in widget.optgroups %}{% for option in options %}{% include option.template_name with widget=option %}{% endfor %}{% endfor %}
+</div>
+</details>

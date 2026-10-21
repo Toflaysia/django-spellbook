@@ -77,14 +77,11 @@ def _foundry_initial(data):
     materials = section("materials")
     material_text = plain_text(materials.get("value"))
 
-    if material_text:
-        description += f"\n\nМатериальные компоненты: {material_text}"
-
-        if materials.get("consumed") is True:
-            description += "\nКомпоненты расходуются."
-
-        if materials.get("cost"):
-            description += f"\nСтоимость компонентов: {materials['cost']} зм."
+    from spells.materials import normalize_materials
+    material_items=normalize_materials([{'name':material_text,'cost':materials.get('cost')}] if material_text or materials.get('cost') else [])
+    # Foundry uses zero as the default when no monetary requirement is specified.
+    for item in material_items:
+        if item['cost'] is not None and float(item['cost']) == 0:item['cost']=None
 
     activation = section("activation")
     activation_type = activation.get("type")
@@ -162,6 +159,7 @@ def _foundry_initial(data):
         "description": description.strip(),
         "verbal_component": components.get("vocal") is True,
         "somatic_component": components.get("somatic") is True,
+        "material_components": material_items,
         "ritual": components.get("ritual") is True,
         "concentration": components.get("concentration") is True,
         "source_book": (
@@ -184,7 +182,7 @@ def validate_spell_payload(data):
 
 
 def _native_initial(data, user):
-    from spells.models import DamageType, Effect, MaterialComponent, Subclass
+    from spells.models import DamageType, Effect, Subclass
     from spells.class_access import visible_classes
     fields=('name','level','range','duration','concentration','ritual','verbal_component',
             'somatic_component','description','higher_level','attack_type',
@@ -207,12 +205,16 @@ def _native_initial(data, user):
     for name,model,field,label in [('school',MagicSchool,'name','Школа магии'),('time',SpellTime,'time','Время накладывания')]:
         initial[name]=resolve(data.get(name),model.objects.all(),field,label)
     classes=visible_classes(user)
-    for name,objects,label in [('material_components',MaterialComponent.objects.all(),'Материальные компоненты'),
-                               ('effects',Effect.objects.all(),'Эффекты'),('aviable_classes',classes,'Классы'),
+    for name,objects,label in [('effects',Effect.objects.all(),'Эффекты'),('aviable_classes',classes,'Классы'),
                                ('aviable_subclasses',Subclass.objects.filter(character_class__in=classes),'Подклассы')]:
         if name in data:
             if not isinstance(data[name],list):raise ValueError(label+': нужен список ID или названий.')
             initial[name]=[resolve(value,objects,'name',label) for value in data[name]]
+    from spells.materials import normalize_materials
+    value=data.get('material_components',data.get('materials',data.get('material_component',[])))
+    if isinstance(value,str) and ('material_cost' in data or 'material_component_cost' in data):
+        value={'name':value,'cost':data.get('material_cost',data.get('material_component_cost'))}
+    initial['material_components']=normalize_materials(value)
     return initial
 
 

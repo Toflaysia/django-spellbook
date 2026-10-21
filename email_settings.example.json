@@ -1,0 +1,10 @@
+{
+  "host": "",
+  "port": 587,
+  "username": "",
+  "password": "",
+  "from_email": "",
+  "use_tls": true,
+  "use_ssl": false,
+  "site_url": "http://127.0.0.1:8000"
+}

@@ -161,11 +161,7 @@ class Spell(models.Model):
     somatic_component = models.BooleanField(
         default=False, help_text="Соматический компонент", verbose_name="Соматический компонент"
     )
-    material_components = models.ManyToManyField(
-        MaterialComponent,
-        blank=True,
-        verbose_name="Материальный компонент",
-    )
+    material_components = models.JSONField(default=list, blank=True, verbose_name="Материальные компоненты")
 
     # Дистанция
     range = models.CharField(

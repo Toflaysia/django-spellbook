@@ -20,7 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-k(6!sb$+o$%mp+r)kdv5ffvd$gvjns#!vtu%7p0w_4*ch_71#u"
+from .email_config import project_secret_key
+SECRET_KEY = project_secret_key(BASE_DIR)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -130,3 +131,7 @@ LOGIN_REDIRECT_URL = "character_list_page"
 LOGOUT_REDIRECT_URL = "/login/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+# Optional SMTP configuration from email_settings.json or SPELLBOOK_EMAIL_*.
+from .email_config import configure_email
+globals().update(configure_email(BASE_DIR))
+AUTHENTICATION_BACKENDS = ['spells.email_accounts.EmailOrUsernameBackend']

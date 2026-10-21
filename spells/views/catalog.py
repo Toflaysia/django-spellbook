@@ -1,7 +1,7 @@
 from spells.class_access import visible_classes, require_class_editor, can_edit_class
 from spells.models import Trait
 import re
-from spells.filters import ComponentFilterForm, SchoolFilterForm
+from spells.filters import SchoolFilterForm
 from spells.description import DescriptionModelForm
 from django.core.paginator import Paginator
 from django.db.models import Count
@@ -20,7 +20,6 @@ from spells.models import (
     DamageType,
     Effect,
     MagicSchool,
-    MaterialComponent,
     SpellTime,
     Spell,
 )
@@ -49,16 +48,6 @@ CATALOGS = {
             "category",
             "duration",
             "damage_type",
-        ],
-    },
-    "components": {
-        "title": "Материальные компоненты",
-        "model": MaterialComponent,
-        "name_field": "name",
-        "fields": [
-            "cost",
-            "is_consumable",
-            "is_focus",
         ],
     },
     "casting-times": {
@@ -215,26 +204,18 @@ def catalog_list_page(request, slug):
             else:
                 objects = objects.none()
 
-    if slug in ("components", "schools"):
-        extra_filters = (ComponentFilterForm if slug == "components" else SchoolFilterForm)(request.GET or None)
+    if slug == "schools":
+        extra_filters = SchoolFilterForm(request.GET or None)
         has_active_filters |= any(request.GET.get(name) for name in extra_filters.fields)
         if extra_filters.is_bound:
             if extra_filters.is_valid():
                 values = extra_filters.cleaned_data
-                if slug == "components":
-                    for name in ("is_consumable", "is_focus"):
-                        if values[name]:
-                            objects = objects.filter(**{name: values[name] == "yes"})
-                    for name, lookup in (("min_cost", "cost__gte"), ("max_cost", "cost__lte")):
-                        if values[name] is not None:
-                            objects = objects.filter(**{lookup: values[name]})
-                else:
-                    official = Spell.objects.filter(is_official=True, school__isnull=False)
-                    if values["has_spells"]:
-                        ids = official.values_list("school_id", flat=True)
-                        objects = objects.filter(pk__in=ids) if values["has_spells"] == "yes" else objects.exclude(pk__in=ids)
-                    if values["level"]:
-                        objects = objects.filter(pk__in=official.filter(level=values["level"]).values_list("school_id", flat=True))
+                official = Spell.objects.filter(is_official=True, school__isnull=False)
+                if values["has_spells"]:
+                    ids = official.values_list("school_id", flat=True)
+                    objects = objects.filter(pk__in=ids) if values["has_spells"] == "yes" else objects.exclude(pk__in=ids)
+                if values["level"]:
+                    objects = objects.filter(pk__in=official.filter(level=values["level"]).values_list("school_id", flat=True))
                 query.update({name: value for name, value in values.items() if value not in ("", None)})
             else:
                 objects = objects.none()

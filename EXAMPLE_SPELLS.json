@@ -1,0 +1,24 @@
+{
+  "spells": [
+    {
+      "name": "Пример — пугающая искра",
+      "level": 1,
+      "school": "Воплощение",
+      "time": "Действие",
+      "duration": "Минута",
+      "description": "Воин наносит 2к6+3 урона. Цель становится испуганным. Пример — усиленная искра.",
+      "higher_level": "Добавьте 1d6 урона.",
+      "verbal_component": true,
+      "somatic_component": true
+    },
+    {
+      "name": "Пример — усиленная искра",
+      "level": 2,
+      "school": "Воплощение",
+      "time": "Действие",
+      "duration": "Мгновенная",
+      "description": "Наносит 3d6 урона.",
+      "verbal_component": true
+    }
+  ]
+}

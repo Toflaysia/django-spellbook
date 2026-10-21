@@ -93,13 +93,6 @@
         margin: 0;
     }
 
-    .spell-component-list {
-        padding-left: 20px;
-    }
-
-    .spell-component-list li + li {
-        margin-top: 12px;
-    }
 
     @media (max-width: 600px) {
         .spell-main {
@@ -136,14 +129,7 @@
     <div class="spell-heading">
         <h1>{{ spell.name }}</h1>
 
-        <p class="spell-muted">
-            {% if spell.level == 0 %}
-                Заговор
-            {% else %}
-                Уровень {{ spell.level }}
-            {% endif %}
-            · {% if spell.school_id %}<a href="{% url 'catalog_detail_page' 'schools' spell.school_id %}" data-catalog-kind="schools" data-catalog-id="{{ spell.school_id }}">{{ spell.school.name }}</a>{% else %}Школа не указана{% endif %}
-        </p>
+        {% include "spells/includes/spell_components_line.html" %}
 
         <div class="spell-tags">
             {% if is_custom %}
@@ -168,21 +154,29 @@
                 <a class="spell-button spell-button-danger" href="{% url 'spell_delete_page' spell.pk %}">Удалить</a>
             {% elif request.user.is_authenticated %}
                 {% if is_saved %}
-                    <span class="spell-tag">✓ Уже добавлено</span>
-                    <a href="{% url 'my_spell_list_page' %}">Открыть мои заклинания →</a>
+                    <div class="spell-collection-action"><span class="spell-tag">✓ Уже добавлено</span>
+                    <a href="{% url 'my_spell_list_page' %}">Открыть мои заклинания →</a></div>
                 {% else %}
-                    <form method="post" action="{% url 'spell_save_page' spell.pk %}">
+                    <form class="spell-collection-action" method="post" action="{% url 'spell_save_page' spell.pk %}">
                         {% csrf_token %}<button class="spell-button" type="submit">Добавить в мои заклинания</button>
                     </form>
                 {% endif %}
             {% else %}
-                <a class="spell-button" href="{% url 'login' %}?next={% url 'spell_detail_page' spell.pk %}">Войти, чтобы добавить</a>
+                <a class="spell-button spell-collection-action" href="{% url 'login' %}?next={% url 'spell_detail_page' spell.pk %}">Войти, чтобы добавить</a>
             {% endif %}
         </div>
     </div>
 
     <section class="spell-panel" aria-labelledby="spell-parameters">
         <h2 id="spell-parameters">Параметры заклинания</h2>
+        <p class="spell-school-level">
+            {% if spell.level == 0 %}
+                Заговор
+            {% else %}
+                Уровень {{ spell.level }}
+            {% endif %}
+            · {% if spell.school_id %}<a href="{% url 'catalog_detail_page' 'schools' spell.school_id %}" data-catalog-kind="schools" data-catalog-id="{{ spell.school_id }}">{{ spell.school.name }}</a>{% else %}Школа не указана{% endif %}
+        </p>
 
         <dl class="spell-details">
             <div>
@@ -205,16 +199,6 @@
                 <dd>{{ spell.get_attack_type_display }}</dd>
             </div>
 
-            <div>
-                <dt>Вербальный компонент</dt>
-                <dd>{{ spell.verbal_component|yesno:"Да,Нет" }}</dd>
-            </div>
-
-            <div>
-                <dt>Соматический компонент</dt>
-                <dd>{{ spell.somatic_component|yesno:"Да,Нет" }}</dd>
-            </div>
-
             {% if spell.saving_throw_ability %}
                 <div>
                     <dt>Характеристика спасброска</dt>
@@ -233,33 +217,7 @@
             {{ spell.higher_level|render_description }}
         {% endif %}
 
-        {% if spell.material_components.all %}
-            <h2>Материальные компоненты</h2>
 
-            <ul class="spell-component-list">
-                {% for component in spell.material_components.all %}
-                    <li>
-                        <strong>{{ component.name }}</strong>
-
-                        {% if component.description %}
-                            <div>{{ component.description|render_description }}</div>
-                        {% endif %}
-
-                        {% if component.cost %}
-                            <div class="spell-muted">
-                                Стоимость: {{ component.cost }} зм
-                            </div>
-                        {% endif %}
-
-                        {% if component.is_consumable %}
-                            <div class="spell-muted">
-                                Расходуется при использовании
-                            </div>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
 
         {% if spell.aviable_classes.all %}
             <h2>Доступные классы</h2>

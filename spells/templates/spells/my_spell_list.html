@@ -253,6 +253,7 @@
                         {{ spell.name }}
                     </a>
                 </h2>
+                {% include "spells/includes/spell_components_line.html" %}
 
                 {% if not spell.is_official %}<p class="collection-school">Автор: {{ spell.created_by.user.username|default:"Не указан" }} · {% if spell.is_public %}Публичное{% else %}Приватное{% endif %}</p>{% endif %}
                 <p class="collection-school">

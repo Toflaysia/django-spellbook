@@ -1,3 +1,6 @@
+from spells.models import AccountEmail
+from spells.email_accounts import normalize_email, email_available, send_confirmation
+from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -12,6 +15,21 @@ User = get_user_model()
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
+    email_confirmation_status = serializers.SerializerMethodField()
+
+    def get_email_confirmation_status(self, user):
+        return getattr(user,'_email_confirmation_status','')
+
+    def validate_username(self,value):
+        if '@' in value:raise serializers.ValidationError('Имя пользователя укажи без @.')
+        return value
+
+    def validate_email(self, value):
+        value=normalize_email(value)
+        if not email_available(value):raise serializers.ValidationError('Этот email уже используется.')
+        return value
+
     password = serializers.CharField(
         write_only=True,
         trim_whitespace=False,
@@ -26,6 +44,8 @@ class RegistrationSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "username",
+            "email",
+            "email_confirmation_status",
             "password",
             "password_confirm",
         ]
@@ -48,13 +68,16 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    @transaction.atomic
     def create(self, validated_data):
-        validated_data.pop("password_confirm")
-
-        user = User.objects.create_user(**validated_data)
-        Player.objects.create(user=user)
-
+        validated_data.pop('password_confirm')
+        try:
+            with transaction.atomic():
+                user=User.objects.create_user(**validated_data)
+                Player.objects.create(user=user)
+                AccountEmail.objects.create(user=user,email=user.email)
+        except IntegrityError:
+            raise serializers.ValidationError({'email':'Email или имя пользователя уже заняты.'})
+        user._email_confirmation_status=send_confirmation(user)
         return user
 
 

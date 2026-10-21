@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from urllib.parse import quote
 from spells.description import DESCRIPTION_PREFIX, parse_description
-from spells.models import Effect, DamageType, MagicSchool, MaterialComponent, SpellTime, Trait
+from spells.models import Effect, DamageType, MagicSchool, SpellTime, Trait
 from spells.class_access import visible_classes
 from spells.spell_access import visible_spells
 
@@ -85,7 +85,7 @@ class ImportLinker:
                 ('effect',Effect.objects.exclude(category='COND'),'name'),
                 ('damage',DamageType.objects.all(),'name'),('school',MagicSchool.objects.all(),'name'),
                 ('trait',Trait.objects.all(),'name'),('class',visible_classes(user),'name'),
-                ('component',MaterialComponent.objects.all(),'name'),('time',SpellTime.objects.all(),'time'),
+                ('time',SpellTime.objects.all(),'time'),
                 ('spell',visible_spells(user),'name')]
         for kind,objects,field in groups:
             for pk,name in objects.values_list('pk',field):

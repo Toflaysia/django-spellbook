@@ -1,0 +1,9 @@
+{% extends "spells/auth_base.html" %}
+{% block auth_page_title %}Email и безопасность{% endblock %}
+{% block auth_content %}<h1>Email и безопасность</h1>
+{% if email_address %}<p class="account-address">Email: <strong>{{ email_address.email }}</strong></p><p>{% if email_address.verified_at %}✓ Адрес подтверждён{% else %}Адрес ещё не подтверждён{% endif %}</p>{% else %}<p>Добавь email для восстановления пароля и почтовых напоминаний.</p>{% endif %}
+<p class="account-muted">Твой email виден только тебе и администратору. При смене адреса потребуется подтвердить новый; до этого входи по имени пользователя.</p>
+{% if email_address and not email_address.verified_at %}<form method="post" action="{% url 'resend_confirmation' %}">{% csrf_token %}<button type="submit">Отправить подтверждение повторно</button></form>{% endif %}
+{% if not mail_ready %}<p class="account-notice">Отправка писем пока не настроена. Обратись к администратору сайта.</p>{% endif %}
+<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Сохранить email</button></form>
+<div class="account-links"><a href="{% url 'home_page' %}">На главную</a><a href="{% url 'password_reset' %}">Восстановить пароль</a></div>{% endblock %}

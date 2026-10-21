@@ -5,7 +5,11 @@ from spells.models import Spell, MagicSchool, CharacterClass, Effect, DamageType
 
 YES_NO = [('', 'Все варианты'), ('yes', 'Да'), ('no', 'Нет')]
 
+from spells.component_filters import COMPONENT_CHOICES, ComponentsSelect
+
+
 class SpellFilterForm(forms.Form):
+    components=forms.MultipleChoiceField(label="Компоненты",required=False,choices=COMPONENT_CHOICES,widget=ComponentsSelect)
     search = forms.CharField(label='Название', required=False, max_length=150, widget=forms.TextInput(attrs={'type': 'search', 'placeholder': 'Начни вводить название'}))
     level = forms.ChoiceField(label='Уровень', required=False, choices=[('', 'Все уровни'), ('0', 'Заговор'), *((str(n), f'Уровень {n}') for n in range(1,10))])
     school = forms.ModelChoiceField(label='Школа магии', required=False, queryset=MagicSchool.objects.none(), empty_label='Все школы')
@@ -28,11 +32,11 @@ class SpellFilterForm(forms.Form):
 
     @property
     def basic_fields(self):
-        return [self[name] for name in ('search', 'level', 'school')]
+        return [self[name] for name in ('search', 'level', 'school', 'components')]
 
     @property
     def advanced_fields(self):
-        return [self[name] for name in self.fields if name not in ('search', 'level', 'school')]
+        return [self[name] for name in self.fields if name not in ('search', 'level', 'school', 'components')]
 
     @property
     def advanced_count(self):
@@ -48,6 +52,9 @@ class SpellFilterForm(forms.Form):
         if not self.is_valid():
             return queryset.none()
         values = self.cleaned_data
+        for component in values['components']:
+            if component=='material':queryset=queryset.exclude(material_components=[])
+            else:queryset=queryset.filter(**{component+'_component':True})
         if values['search']:
             queryset = queryset.filter(name__icontains=values['search'])
         for name in ('level','school','time','attack_type'):

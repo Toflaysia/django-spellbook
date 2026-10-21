@@ -207,6 +207,7 @@
                         {{ spell.name }}
                     </a>
                 </h2>
+                {% include "spells/includes/spell_components_line.html" %}
 
                 {% if not spell.is_official %}<p class="catalog-muted">Автор: {{ spell.created_by.user.username|default:"Не указан" }}</p>{% endif %}
                 <p class="catalog-school">

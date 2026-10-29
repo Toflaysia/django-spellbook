@@ -25,3 +25,7 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Статика, собранная при контейнерном запуске
+/.docker-static/
+/setup_docker.py

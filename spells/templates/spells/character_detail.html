@@ -1,9 +1,9 @@
 {% extends "spells/base.html" %}
 {% load static description_tags %}
 {% block title %}{{ character.name }} — Spellbook{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'spells/character_combat.css' %}?v=20261028-conditions-ui"><link rel="stylesheet" href="{% static 'spells/character_rests.css' %}?v=20261028-controls"><link rel="stylesheet" href="{% static 'spells/character_checks.css' %}?v=20261021-editor">{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'spells/character_combat.css' %}?v=20261028-conditions-ui"><link rel="stylesheet" href="{% static 'spells/character_rests.css' %}?v=20261029-abilities"><link rel="stylesheet" href="{% static 'spells/character_checks.css' %}?v=20261021-editor"><link rel="stylesheet" href="{% static 'spells/character_abilities.css' %}?v=20261029">{% endblock %}
 {% block content %}
-<main class="character-detail" data-combat-url="{% url 'character_combat_change' character.pk %}" data-spell-search-url="{% url 'concentration_spell_search' character.pk %}" data-resource-url="{% url 'character_resource_change' character.pk %}">
+<main class="character-detail" data-rest-url="{% url 'character_rest_change' character.pk %}" data-combat-url="{% url 'character_combat_change' character.pk %}" data-spell-search-url="{% url 'concentration_spell_search' character.pk %}" data-resource-url="{% url 'character_resource_change' character.pk %}">
     <a class="btn btn-secondary" href="{% url 'character_list_page' %}">← Мои персонажи</a>
     <div class="character-detail-heading">
         {% if character.portrait %}<div class="character-detail-portrait"><img src="{{ character.portrait.url }}" alt="Портрет {{ character.name }}" style="object-position:{{ character.portrait_position_x }}% {{ character.portrait_position_y }}%; transform:scale({{ character.portrait_zoom|stringformat:'f' }});"></div>{% endif %}
@@ -15,6 +15,7 @@
     <div class="combat-quick" data-combat-quick hidden></div>
     <div class="character-detail-tabs" role="tablist" aria-label="Карточка персонажа">
         <button type="button" role="tab" id="tab-overview" aria-controls="overview" aria-selected="true">Персонаж</button>
+        <button type="button" role="tab" id="tab-abilities" aria-controls="character-abilities" aria-selected="false">Способности</button>
         <button type="button" role="tab" id="tab-checks" aria-controls="character-checks" aria-selected="false">Дополнительно</button>
         <button type="button" role="tab" id="tab-health" aria-controls="health" aria-selected="false">Здоровье</button>
         <button type="button" role="tab" id="tab-spellbooks" aria-controls="character-spellbooks" aria-selected="false">Спеллбуки</button>
@@ -44,6 +45,7 @@
         <div class="character-background"><span>Предыстория</span><strong>{{ character.background|default:'Не указана' }}</strong></div>
         <a class="btn btn-secondary" href="#character-spellbooks">Спеллбуки персонажа</a>
     </section>
+    <section id="character-abilities" role="tabpanel" aria-labelledby="tab-abilities" class="play-panel" hidden>{% include "spells/includes/character_abilities.html" %}</section>
     <section id="character-spellbooks" role="tabpanel" aria-labelledby="tab-spellbooks" class="play-panel" hidden>
         <h2>Спеллбуки {{ character.name }}</h2>
         <section class="spellcasting-summary" aria-labelledby="spellcasting-summary-title">
@@ -136,4 +138,4 @@
     </dialog>
 </main>
 {% endblock %}
-{% block scripts %}<script src="{% static 'spells/character_combat.js' %}?v=20261028-concentration-tab" defer></script><script src="{% static 'spells/character_rests.js' %}?v=20261028-controls" defer></script><script src="{% static 'spells/character_skill_circles.js' %}?v=20261021-editor" defer></script><script src="{% static 'spells/character_tools.js' %}?v=20261028-concentration"></script>{% endblock %}
+{% block scripts %}<script src="{% static 'spells/character_combat.js' %}?v=20261029-abilities" defer></script><script src="{% static 'spells/character_rests.js' %}?v=20261029-abilities" defer></script><script src="{% static 'spells/character_skill_circles.js' %}?v=20261021-editor" defer></script><script src="{% static 'spells/character_tools.js' %}?v=20261028-concentration"></script>{% endblock %}

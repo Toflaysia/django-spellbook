@@ -15,9 +15,12 @@ from spells.models import ClassSection
 from spells.description import DescriptionFormMixin
 from spells.progression import progression_headers, progression_cells
 
+
 @require_GET
 def class_detail_page(request, pk):
-    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
+    character_class = get_object_or_404(
+        visible_classes(request.user).select_related("created_by__user"), pk=pk
+    )
     subclasses = character_class.subclasses.order_by("name", "pk")
 
     selected_subclass = None
@@ -59,7 +62,10 @@ def class_detail_page(request, pk):
             "proficiency": 2 + (level - 1) // 4,
             "features": features_by_level.get(level, []),
             "cells": progression_cells(
-                table_columns, level, features_by_level.get(level, []), selected_subclass,
+                table_columns,
+                level,
+                features_by_level.get(level, []),
+                selected_subclass,
             ),
         }
         for level in range(1, 21)
@@ -79,6 +85,8 @@ def class_detail_page(request, pk):
             "sections": list(character_class.sections.all()),
         },
     )
+
+
 class SubclassForm(DescriptionFormMixin, forms.ModelForm):
     class Meta:
         model = Subclass
@@ -113,9 +121,7 @@ class ClassFeatureForm(DescriptionFormMixin, forms.ModelForm):
     levels = forms.CharField(
         label="Уровни получения",
         help_text="Укажи уровни через запятую. Например: 3, 7, 10.",
-        widget=forms.TextInput(
-            attrs={"placeholder": "3, 7, 10"}
-        ),
+        widget=forms.TextInput(attrs={"placeholder": "3, 7, 10"}),
     )
 
     class Meta:
@@ -124,6 +130,9 @@ class ClassFeatureForm(DescriptionFormMixin, forms.ModelForm):
             "name",
             "levels",
             "is_optional",
+            "resource_formula",
+            "resource_amount",
+            "resource_refresh_on",
             "subclass",
             "description",
         ]
@@ -134,16 +143,27 @@ class ClassFeatureForm(DescriptionFormMixin, forms.ModelForm):
     def __init__(self, *args, character_class, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["subclass"].queryset = (
-            character_class.subclasses.order_by("name", "pk")
+        for key in ("resource_amount", "resource_refresh_on"):
+            self.fields[key].required = False
+        self.fields["resource_amount"].help_text = (
+            "Фиксированный максимум или множитель выбранной формулы."
+        )
+
+        self.fields["subclass"].queryset = character_class.subclasses.order_by(
+            "name", "pk"
         )
         self.fields["subclass"].empty_label = "Общее умение класса"
 
         if not self.is_bound:
             self.initial["levels"] = ", ".join(
-                str(level)
-                for level in self.instance.acquisition_levels
+                str(level) for level in self.instance.acquisition_levels
             )
+
+    def clean_resource_amount(self):
+        return self.cleaned_data.get("resource_amount") or 1
+
+    def clean_resource_refresh_on(self):
+        return self.cleaned_data.get("resource_refresh_on") or "long"
 
     def clean_levels(self):
         text = self.cleaned_data["levels"]
@@ -157,9 +177,7 @@ class ClassFeatureForm(DescriptionFormMixin, forms.ModelForm):
             )
 
         if any(level < 1 or level > 20 for level in levels):
-            raise forms.ValidationError(
-                "Каждый уровень должен быть от 1 до 20."
-            )
+            raise forms.ValidationError("Каждый уровень должен быть от 1 до 20.")
 
         return sorted(set(levels))
 
@@ -172,8 +190,11 @@ class ClassFeatureForm(DescriptionFormMixin, forms.ModelForm):
 
         return cleaned_data
 
+
 def save_class_entry(request, pk, kind, entry_pk=None):
-    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
+    character_class = get_object_or_404(
+        visible_classes(request.user).select_related("created_by__user"), pk=pk
+    )
 
     require_class_editor(request.user, character_class)
 
@@ -263,10 +284,13 @@ def class_feature_create_page(request, pk):
 def class_feature_edit_page(request, pk, entry_pk):
     return save_class_entry(request, pk, "feature", entry_pk)
 
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def class_feature_delete_page(request, pk, entry_pk):
-    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
+    character_class = get_object_or_404(
+        visible_classes(request.user).select_related("created_by__user"), pk=pk
+    )
 
     require_class_editor(request.user, character_class)
 
@@ -297,6 +321,8 @@ def class_feature_delete_page(request, pk, entry_pk):
             "return_url": return_url,
         },
     )
+
+
 class ClassSectionForm(DescriptionFormMixin, forms.ModelForm):
     class Meta:
         model = ClassSection
@@ -311,7 +337,9 @@ class ClassSectionForm(DescriptionFormMixin, forms.ModelForm):
 
 
 def save_class_section(request, pk, entry_pk=None):
-    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
+    character_class = get_object_or_404(
+        visible_classes(request.user).select_related("created_by__user"), pk=pk
+    )
 
     require_class_editor(request.user, character_class)
 
@@ -362,10 +390,13 @@ def class_section_create_page(request, pk):
 def class_section_edit_page(request, pk, entry_pk):
     return save_class_section(request, pk, entry_pk)
 
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def class_section_delete_page(request, pk, entry_pk):
-    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
+    character_class = get_object_or_404(
+        visible_classes(request.user).select_related("created_by__user"), pk=pk
+    )
 
     require_class_editor(request.user, character_class)
 
@@ -394,10 +425,13 @@ def class_section_delete_page(request, pk, entry_pk):
         },
     )
 
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def subclass_delete_page(request, pk, entry_pk):
-    character_class = get_object_or_404(visible_classes(request.user).select_related("created_by__user"), pk=pk)
+    character_class = get_object_or_404(
+        visible_classes(request.user).select_related("created_by__user"), pk=pk
+    )
     require_class_editor(request.user, character_class)
     subclass = get_object_or_404(
         Subclass,

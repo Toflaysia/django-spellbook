@@ -6,6 +6,7 @@
     const status=(text,error=false)=>root.querySelectorAll('[data-combat-status]').forEach(n=>{n.textContent=text;n.classList.toggle('combat-error',error);});
     const catalog=JSON.parse(document.getElementById('condition-choice-catalog').textContent),editor=root.querySelector('#condition-editor'),conditionForm=editor.querySelector('form');
     let conditionTrigger=null;
+    // Состояния и концентрация выводятся из одного серверного состояния.
     function paint(){
         const active=Boolean(state.concentration.name);
         const conditions=root.querySelector('[data-condition-list]');conditions.replaceChildren();
@@ -32,7 +33,7 @@
             const form=make('form',null,{'data-combat-form':'concentration_check',class:'concentration-check'});
             form.append(make('strong',c.damage?`Урон ${c.damage} · СЛ ${c.dc}`:`Проверка мастера · СЛ ${c.dc}`),make('input',null,{type:'hidden',name:'check_id',value:c.id}));
             const label=make('label','Режим броска'),select=make('select',null,{name:'mode'});for(const [value,text] of [['normal','Обычный'],['advantage','Преимущество'],['disadvantage','Помеха']])select.append(make('option',text,{value}));label.append(select);form.append(label);
-            const actions=make('div',null,{class:'concentration-check-actions'});actions.append(make('button','Бросить спасбросок',{type:'submit','data-roll-check':''}),make('button','Мой бросок: успех',{type:'submit','data-outcome':'success',class:'btn-secondary'}),make('button','Мой бросок: провал',{type:'submit','data-outcome':'failure',class:'btn-secondary'}));form.append(actions);checks.append(form);
+            const actions=make('div',null,{class:'concentration-check-actions'});actions.append(make('button','Бросить спасбросок',{type:'submit','data-roll-check':''}));form.append(actions);checks.append(form);
         });
         const quick=character.querySelector('[data-combat-quick]');quick.replaceChildren();quick.hidden=!active;
         if(active)quick.append(make('button',`Концентрация: ${state.concentration.name}${state.checks.length?` · проверок: ${state.checks.length}`:''}`,{type:'button','data-open-concentration':'',class:'combat-chip'}));
@@ -94,7 +95,8 @@
     root.addEventListener('submit',async event=>{
         const form=event.target.closest('[data-combat-form]');if(!form)return;event.preventDefault();if(busy)return;
         const body=new FormData(form);let action=form.dataset.combatForm;
-        if(action==='concentration_check'){action=event.submitter?.hasAttribute('data-roll-check')?'concentration_roll':'concentration_manual';if(action==='concentration_manual')body.set('outcome',event.submitter?.dataset.outcome||'');}
+        // В интерфейсе оставлен серверный бросок: результат не берётся из кнопки «успех».
+        if(action==='concentration_check')action='concentration_roll';
         if(action==='condition_add'&&!body.get('condition_id')){status('Сначала выбери состояние.',true);return;}
         body.set('action',action);
         if(await send(body)){if(['condition_add','concentration_start'].includes(action))form.reset();if(action==='condition_add')editor.close();if(action==='concentration_start')root.querySelector('[data-concentration-editor]').open=false;}

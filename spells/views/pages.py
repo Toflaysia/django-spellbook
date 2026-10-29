@@ -24,6 +24,7 @@ from spells.forms import (
 from spells.models import Person, Player, Spell, MagicSchool, Spellbook
 from spells.spell_import import build_spell_initial
 
+
 @login_required
 def character_list_page(request):
     search = request.GET.get("search", "").strip()
@@ -46,6 +47,8 @@ def character_list_page(request):
             "search": search,
         },
     )
+
+
 @login_required
 def character_create_page(request):
     form = CharacterCreateForm(
@@ -69,9 +72,12 @@ def character_create_page(request):
         "spells/character_form.html",
         {"form": form},
     )
+
+
 @login_required
 @transaction.atomic
 def character_edit_page(request, pk):
+    # После сохранения возвращаемся к этому персонажу; список нужен только при выходе со страницы персонажа.
     character = get_object_or_404(
         Person.objects.select_for_update(),
         pk=pk,
@@ -88,6 +94,7 @@ def character_edit_page(request, pk):
     if request.method == "POST" and form.is_valid():
         character = form.save(commit=False)
         from spells.combat import end_concentration
+
         if character.current_hit_points == 0:
             end_concentration(character)
         character.combat_revision += 1
@@ -104,6 +111,8 @@ def character_edit_page(request, pk):
             "editing": True,
         },
     )
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def character_delete_page(request, pk):
@@ -122,51 +131,66 @@ def character_delete_page(request, pk):
         "spells/character_confirm_delete.html",
         {"character": character},
     )
+
+
 @require_http_methods(["GET", "POST"])
 def register_page(request):
     if request.user.is_authenticated:
         return redirect("character_list_page")
 
-    form = RegistrationForm(
-        request.POST if request.method == "POST" else None
-    )
+    form = RegistrationForm(request.POST if request.method == "POST" else None)
 
     if request.method == "POST" and form.is_valid():
         from django.db import IntegrityError
         from spells.models import AccountEmail
         from spells.email_accounts import send_confirmation
         from spells.views.accounts import confirmation_message
+
         try:
             with transaction.atomic():
                 user = form.save()
                 Player.objects.create(user=user)
-                AccountEmail.objects.create(user=user,email=form.cleaned_data['email'])
+                AccountEmail.objects.create(user=user, email=form.cleaned_data["email"])
         except IntegrityError:
-            form.add_error('email','Email или имя пользователя уже заняты.')
+            form.add_error("email", "Email или имя пользователя уже заняты.")
         else:
-            login(request,user,backend='spells.email_accounts.EmailOrUsernameBackend')
-            confirmation_message(request,send_confirmation(user))
-            return redirect('account_email_page')
+            login(request, user, backend="spells.email_accounts.EmailOrUsernameBackend")
+            confirmation_message(request, send_confirmation(user))
+            return redirect("account_email_page")
 
     return render(
         request,
         "spells/register.html",
         {"form": form},
     )
+
+
 def spell_list_page(request):
-    group = request.GET.get('group', 'official')
-    if group not in ('official', 'unofficial'):
-        raise Http404('Раздел заклинаний не найден.')
+    # Фильтры применяются к доступным пользователю записям, а не ко всей базе без ограничений.
+    group = request.GET.get("group", "official")
+    if group not in ("official", "unofficial"):
+        raise Http404("Раздел заклинаний не найден.")
     filters = SpellFilterForm(request.GET or None, user=request.user)
-    objects = visible_spells(request.user).filter(is_official=group == 'official')
-    if group == 'unofficial':
+    objects = visible_spells(request.user).filter(is_official=group == "official")
+    if group == "unofficial":
         objects = objects.filter(is_public=True)
-    spells = filters.apply(objects).select_related("school", "time", "created_by__user").order_by("name", "pk")
-    return render(request, "spells/spell_list.html", {
-        "spells": spells, "spell_filters": filters, "spell_group": group,
-        "search": request.GET.get("search", ""),
-        "has_active_filters": any(request.GET.get(name) for name in filters.fields),
-    })
+    spells = (
+        filters.apply(objects)
+        .select_related("school", "time", "created_by__user")
+        .order_by("name", "pk")
+    )
+    return render(
+        request,
+        "spells/spell_list.html",
+        {
+            "spells": spells,
+            "spell_filters": filters,
+            "spell_group": group,
+            "search": request.GET.get("search", ""),
+            "has_active_filters": any(request.GET.get(name) for name in filters.fields),
+        },
+    )
+
 
 def spell_detail_page(request, pk):
     spell = get_object_or_404(
@@ -193,10 +217,17 @@ def spell_detail_page(request, pk):
             "spell": spell,
             "is_custom": not spell.is_official,
             "can_edit_spell": can_edit_spell(request.user, spell),
-            "is_spell_author": bool(request.user.is_authenticated and spell.created_by_id and spell.created_by.user_id == request.user.pk and not spell.is_official),
+            "is_spell_author": bool(
+                request.user.is_authenticated
+                and spell.created_by_id
+                and spell.created_by.user_id == request.user.pk
+                and not spell.is_official
+            ),
             "is_saved": is_saved,
         },
     )
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def spell_create_page(request):
@@ -225,15 +256,28 @@ def spell_create_page(request):
         "spells/spell_form.html",
         {"form": form},
     )
+
+
 @login_required
 def my_spell_list_page(request):
     filters = SpellFilterForm(request.GET or None, mine=True, user=request.user)
-    spells = filters.apply(collected_spells(request.user)).select_related("school", "time", "created_by__user").order_by("name", "pk")
-    return render(request, "spells/my_spell_list.html", {
-        "spells": spells, "spell_filters": filters,
-        "search": request.GET.get("search", ""),
-        "has_active_filters": any(request.GET.get(name) for name in filters.fields),
-    })
+    spells = (
+        filters.apply(collected_spells(request.user))
+        .select_related("school", "time", "created_by__user")
+        .order_by("name", "pk")
+    )
+    return render(
+        request,
+        "spells/my_spell_list.html",
+        {
+            "spells": spells,
+            "spell_filters": filters,
+            "search": request.GET.get("search", ""),
+            "has_active_filters": any(request.GET.get(name) for name in filters.fields),
+        },
+    )
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def spell_import_page(request):
@@ -246,14 +290,21 @@ def spell_import_page(request):
         try:
             initial = build_spell_initial(form.import_data, user=request.user)
         except (ValueError, TypeError, KeyError, RecursionError) as error:
-            form.add_error('json_file', str(error))
-            return render(request, 'spells/spell_import.html', {'form': form, 'official_import': False})
+            form.add_error("json_file", str(error))
+            return render(
+                request,
+                "spells/spell_import.html",
+                {"form": form, "official_import": False},
+            )
         spell_form = CustomSpellForm(initial=initial, user=request.user)
 
         return render(
             request,
             "spells/spell_form.html",
-            {"form": spell_form, "import_warnings": initial.get("_import_warnings", [])},
+            {
+                "form": spell_form,
+                "import_warnings": initial.get("_import_warnings", []),
+            },
         )
 
     return render(
@@ -261,6 +312,8 @@ def spell_import_page(request):
         "spells/spell_import.html",
         {"form": form},
     )
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def spell_edit_page(request, pk):
@@ -298,20 +351,28 @@ def spell_edit_page(request, pk):
             "spell": spell,
         },
     )
+
+
 def home_page(request):
     from spells.views.plans import home_context
+
     return render(request, "spells/home.html", home_context(request))
+
+
 @login_required
 @require_http_methods(["POST"])
 def spell_save_page(request, pk):
     spell = get_object_or_404(
-        visible_spells(request.user), pk=pk,
+        visible_spells(request.user),
+        pk=pk,
     )
 
     player, _ = Player.objects.get_or_create(user=request.user)
     player.saved_spells.add(spell)
 
     return redirect("spell_detail_page", pk=spell.pk)
+
+
 @login_required
 @require_http_methods(["POST"])
 def spell_unsave_page(request, pk):
@@ -325,6 +386,8 @@ def spell_unsave_page(request, pk):
     player.saved_spells.remove(spell)
 
     return redirect("my_spell_list_page")
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def official_spell_import_page(request):
@@ -340,8 +403,12 @@ def official_spell_import_page(request):
         try:
             initial = build_spell_initial(form.import_data, user=AnonymousUser())
         except (ValueError, TypeError, KeyError, RecursionError) as error:
-            form.add_error('json_file', str(error))
-            return render(request, 'spells/spell_import.html', {'form': form, 'official_import': True})
+            form.add_error("json_file", str(error))
+            return render(
+                request,
+                "spells/spell_import.html",
+                {"form": form, "official_import": True},
+            )
         spell_form = CustomSpellForm(initial=initial, user=request.user)
         spell_form.fields.pop("is_public", None)
 
@@ -396,6 +463,8 @@ def official_spell_create_page(request):
             "official_import": True,
         },
     )
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def spell_delete_page(request, pk):
@@ -415,6 +484,8 @@ def spell_delete_page(request, pk):
         "spells/spell_confirm_delete.html",
         {"spell": spell},
     )
+
+
 @login_required
 def spellbook_list_page(request):
     search = request.GET.get("search", "").strip()
@@ -429,8 +500,7 @@ def spellbook_list_page(request):
 
     if search:
         spellbooks = spellbooks.filter(
-            Q(name__icontains=search)
-            | Q(owner__name__icontains=search)
+            Q(name__icontains=search) | Q(owner__name__icontains=search)
         )
 
     return render(
@@ -452,7 +522,15 @@ def spellbook_create_page(request):
     initial = {}
     owner = None
     if request.GET.get("owner"):
-        owner = get_object_or_404(Person, pk=request.GET["owner"] if request.GET["owner"].isdigit() and len(request.GET["owner"]) <= 10 else 0, player__user=request.user)
+        owner = get_object_or_404(
+            Person,
+            pk=(
+                request.GET["owner"]
+                if request.GET["owner"].isdigit() and len(request.GET["owner"]) <= 10
+                else 0
+            ),
+            player__user=request.user,
+        )
         initial["owner"] = owner.pk
     form = SpellbookForm(
         request.POST if request.method == "POST" else None,
@@ -482,6 +560,8 @@ def spellbook_create_page(request):
         "spells/spellbook_form.html",
         {"form": form, "return_character": owner},
     )
+
+
 @login_required
 def spellbook_detail_page(request, pk):
     spellbook = get_object_or_404(
@@ -505,13 +585,18 @@ def spellbook_detail_page(request, pk):
         "spells/spellbook_detail.html",
         {
             "spellbook": spellbook,
-            "spells": spellbook.spells.filter(pk__in=visible_spells(request.user)).order_by("level", "name"),
+            "spells": spellbook.spells.filter(
+                pk__in=visible_spells(request.user)
+            ).order_by("level", "name"),
             "slots": slots,
         },
     )
+
+
 @login_required
 @require_POST
 def spellbook_slot_change_page(request, pk):
+    # Сервер проверяет принадлежность спеллбука и границы числа ячеек.
     slot = request.POST.get("slot")
     action = request.POST.get("action")
 
@@ -545,6 +630,8 @@ def spellbook_slot_change_page(request, pk):
             spellbook.save(update_fields=[current_field])
 
     return redirect("spellbook_detail_page", pk=pk)
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def spellbook_edit_page(request, pk):

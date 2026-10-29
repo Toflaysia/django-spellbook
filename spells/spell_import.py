@@ -31,9 +31,7 @@ def plain_text(value):
     parser.close()
 
     lines = [
-        line.strip()
-        for line in "".join(parser.parts).splitlines()
-        if line.strip()
+        line.strip() for line in "".join(parser.parts).splitlines() if line.strip()
     ]
 
     return "\n\n".join(lines)
@@ -78,10 +76,16 @@ def _foundry_initial(data):
     material_text = plain_text(materials.get("value"))
 
     from spells.materials import normalize_materials
-    material_items=normalize_materials([{'name':material_text,'cost':materials.get('cost')}] if material_text or materials.get('cost') else [])
-    # Foundry uses zero as the default when no monetary requirement is specified.
+
+    material_items = normalize_materials(
+        [{"name": material_text, "cost": materials.get("cost")}]
+        if material_text or materials.get("cost")
+        else []
+    )
+    # В Foundry нулевая стоимость обычно означает отсутствие указанного денежного требования.
     for item in material_items:
-        if item['cost'] is not None and float(item['cost']) == 0:item['cost']=None
+        if item["cost"] is not None and float(item["cost"]) == 0:
+            item["cost"] = None
 
     activation = section("activation")
     activation_type = activation.get("type")
@@ -97,10 +101,7 @@ def _foundry_initial(data):
             "hour": "1 час",
         }.get(activation_type, "")
     else:
-        time_text = (
-            f"{activation_cost} {activation_label}"
-            if activation_label else ""
-        )
+        time_text = f"{activation_cost} {activation_label}" if activation_label else ""
 
     duration = section("duration")
     duration_type = duration.get("units")
@@ -113,7 +114,8 @@ def _foundry_initial(data):
         duration_label = duration_units.get(duration_type, "")
         duration_text = (
             f"{duration.get('value', '')} {duration_label}".strip()
-            if duration_label else ""
+            if duration_label
+            else ""
         )
 
     spell_range = section("range")
@@ -142,11 +144,11 @@ def _foundry_initial(data):
 
     school = (
         MagicSchool.objects.filter(name__iexact=school_name).first()
-        if school_name else None
+        if school_name
+        else None
     )
     casting_time = (
-        SpellTime.objects.filter(time__iexact=time_text).first()
-        if time_text else None
+        SpellTime.objects.filter(time__iexact=time_text).first() if time_text else None
     )
 
     return {
@@ -163,81 +165,138 @@ def _foundry_initial(data):
         "ritual": components.get("ritual") is True,
         "concentration": components.get("concentration") is True,
         "source_book": (
-            system.get("source")
-            if isinstance(system.get("source"), str)
-            else ""
+            system.get("source") if isinstance(system.get("source"), str) else ""
         ),
     }
 
 
 def validate_spell_payload(data):
+    # Неверный тип входных данных нужно поймать до обращения к вложенным полям.
     if not isinstance(data, dict):
-        raise ValueError('Запись должна быть объектом JSON.')
-    if data.get('type', 'spell') != 'spell':
-        raise ValueError('Эта запись не является заклинанием.')
-    if not isinstance(data.get('name'), str) or not data['name'].strip():
-        raise ValueError('В записи отсутствует название заклинания.')
-    if 'system' in data and not isinstance(data['system'], dict):
-        raise ValueError('Раздел system должен быть объектом JSON.')
+        raise ValueError("Запись должна быть объектом JSON.")
+    if data.get("type", "spell") != "spell":
+        raise ValueError("Эта запись не является заклинанием.")
+    if not isinstance(data.get("name"), str) or not data["name"].strip():
+        raise ValueError("В записи отсутствует название заклинания.")
+    if "system" in data and not isinstance(data["system"], dict):
+        raise ValueError("Раздел system должен быть объектом JSON.")
 
 
 def _native_initial(data, user):
     from spells.models import DamageType, Effect, Subclass
     from spells.class_access import visible_classes
-    fields=('name','level','range','duration','concentration','ritual','verbal_component',
-            'somatic_component','description','higher_level','attack_type',
-            'saving_throw_ability','source_book','page_number')
-    initial={name:data[name] for name in fields if name in data}
-    for name in ('concentration','ritual','verbal_component','somatic_component'):
+
+    fields = (
+        "name",
+        "level",
+        "range",
+        "duration",
+        "concentration",
+        "ritual",
+        "verbal_component",
+        "somatic_component",
+        "description",
+        "higher_level",
+        "attack_type",
+        "saving_throw_ability",
+        "source_book",
+        "page_number",
+    )
+    initial = {name: data[name] for name in fields if name in data}
+    for name in ("concentration", "ritual", "verbal_component", "somatic_component"):
         if name in initial and not isinstance(initial[name], bool):
-            raise ValueError('Поле '+name+' должно содержать true или false.')
-    initial['name']=data['name'].strip()
-    def resolve(value,objects,field,label):
-        if value in (None,''):return None
-        if isinstance(value,bool) or not isinstance(value,(str,int)):
-            raise ValueError(label+': укажи ID или название.')
-        if isinstance(value,int):matches=list(objects.filter(pk=value).values_list('pk',flat=True)[:2])
+            raise ValueError("Поле " + name + " должно содержать true или false.")
+    initial["name"] = data["name"].strip()
+
+    def resolve(value, objects, field, label):
+        if value in (None, ""):
+            return None
+        if isinstance(value, bool) or not isinstance(value, (str, int)):
+            raise ValueError(label + ": укажи ID или название.")
+        if isinstance(value, int):
+            matches = list(objects.filter(pk=value).values_list("pk", flat=True)[:2])
         else:
             from spells.import_links import key
-            matches=[pk for pk,name in objects.values_list('pk',field) if key(name)==key(value)]
-        if len(matches)!=1:raise ValueError(label+': «'+str(value)+'» не найдено или неоднозначно.')
+
+            matches = [
+                pk
+                for pk, name in objects.values_list("pk", field)
+                if key(name) == key(value)
+            ]
+        if len(matches) != 1:
+            raise ValueError(
+                label + ": «" + str(value) + "» не найдено или неоднозначно."
+            )
         return matches[0]
-    for name,model,field,label in [('school',MagicSchool,'name','Школа магии'),('time',SpellTime,'time','Время накладывания')]:
-        initial[name]=resolve(data.get(name),model.objects.all(),field,label)
-    classes=visible_classes(user)
-    for name,objects,label in [('effects',Effect.objects.all(),'Эффекты'),('aviable_classes',classes,'Классы'),
-                               ('aviable_subclasses',Subclass.objects.filter(character_class__in=classes),'Подклассы')]:
+
+    for name, model, field, label in [
+        ("school", MagicSchool, "name", "Школа магии"),
+        ("time", SpellTime, "time", "Время накладывания"),
+    ]:
+        initial[name] = resolve(data.get(name), model.objects.all(), field, label)
+    classes = visible_classes(user)
+    for name, objects, label in [
+        ("effects", Effect.objects.all(), "Эффекты"),
+        ("aviable_classes", classes, "Классы"),
+        (
+            "aviable_subclasses",
+            Subclass.objects.filter(character_class__in=classes),
+            "Подклассы",
+        ),
+    ]:
         if name in data:
-            if not isinstance(data[name],list):raise ValueError(label+': нужен список ID или названий.')
-            initial[name]=[resolve(value,objects,'name',label) for value in data[name]]
+            if not isinstance(data[name], list):
+                raise ValueError(label + ": нужен список ID или названий.")
+            initial[name] = [
+                resolve(value, objects, "name", label) for value in data[name]
+            ]
     from spells.materials import normalize_materials
-    value=data.get('material_components',data.get('materials',data.get('material_component',[])))
-    if isinstance(value,str) and ('material_cost' in data or 'material_component_cost' in data):
-        value={'name':value,'cost':data.get('material_cost',data.get('material_component_cost'))}
-    initial['material_components']=normalize_materials(value)
+
+    value = data.get(
+        "material_components", data.get("materials", data.get("material_component", []))
+    )
+    if isinstance(value, str) and (
+        "material_cost" in data or "material_component_cost" in data
+    ):
+        value = {
+            "name": value,
+            "cost": data.get("material_cost", data.get("material_component_cost")),
+        }
+    initial["material_components"] = normalize_materials(value)
     return initial
 
 
 def build_spell_initial(data, user=None, *, linker=None, auto_links=True):
+    # Сначала определяем формат JSON, затем приводим поля к форме нашего сайта.
     validate_spell_payload(data)
-    initial=_foundry_initial(data) if 'system' in data else _native_initial(data,user)
-    initial.setdefault('level', 0)
-    initial.setdefault('attack_type', 'NONE')
-    if 'system' in data:
-        system=data['system']
-        extra=system.get('higher_level',system.get('higherLevel',''))
-        if isinstance(extra,str):initial['higher_level']=plain_text(extra)
-    for name in ('description','higher_level'):
-        value=initial.get(name,'')
-        if not isinstance(value,str):raise ValueError('Поле '+name+' должно содержать текст.')
-        from spells.description import DESCRIPTION_PREFIX,parse_description
-        if len(value)>100000:raise ValueError('Описание длиннее 100 000 символов.')
-        if value.startswith(DESCRIPTION_PREFIX):parse_description(value)
-        elif 'system' not in data:value=plain_text(value)
-        initial[name]=value
+    initial = (
+        _foundry_initial(data) if "system" in data else _native_initial(data, user)
+    )
+    initial.setdefault("level", 0)
+    initial.setdefault("attack_type", "NONE")
+    if "system" in data:
+        system = data["system"]
+        extra = system.get("higher_level", system.get("higherLevel", ""))
+        if isinstance(extra, str):
+            initial["higher_level"] = plain_text(extra)
+    for name in ("description", "higher_level"):
+        value = initial.get(name, "")
+        if not isinstance(value, str):
+            raise ValueError("Поле " + name + " должно содержать текст.")
+        from spells.description import DESCRIPTION_PREFIX, parse_description
+
+        if len(value) > 100000:
+            raise ValueError("Описание длиннее 100 000 символов.")
+        if value.startswith(DESCRIPTION_PREFIX):
+            parse_description(value)
+        elif "system" not in data:
+            value = plain_text(value)
+        initial[name] = value
     if auto_links:
         from spells.import_links import ImportLinker
-        linker=linker or ImportLinker(user)
-        for name in ('description','higher_level'):initial[name]=linker.description(initial[name])
-        initial['_import_warnings']=sorted(linker.warnings)
+
+        linker = linker or ImportLinker(user)
+        for name in ("description", "higher_level"):
+            initial[name] = linker.description(initial[name])
+        initial["_import_warnings"] = sorted(linker.warnings)
     return initial

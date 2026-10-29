@@ -21,7 +21,9 @@ class PortraitInput(forms.ClearableFileInput):
     template_name = "spells/widgets/portrait_input.html"
 
 
-class CharacterCreateForm(CharacterChecksFormMixin, DescriptionFormMixin, forms.ModelForm):
+class CharacterCreateForm(
+    CharacterChecksFormMixin, DescriptionFormMixin, forms.ModelForm
+):
     class Meta:
         model = Person
         fields = [
@@ -35,6 +37,10 @@ class CharacterCreateForm(CharacterChecksFormMixin, DescriptionFormMixin, forms.
             "background",
             "character_class",
             "primary_class_level",
+            "subclass",
+            "second_class",
+            "second_class_level",
+            "second_subclass",
             "strength",
             "dexterity",
             "constitution",
@@ -55,31 +61,59 @@ class CharacterCreateForm(CharacterChecksFormMixin, DescriptionFormMixin, forms.
         }
         widgets = {
             "portrait": PortraitInput(),
-            "portrait_position_x": RangeInput(
-                attrs={"min": 0, "max": 100, "step": 1}
-            ),
-            "portrait_position_y": RangeInput(
-                attrs={"min": 0, "max": 100, "step": 1}
-            ),
-            "portrait_zoom": RangeInput(
-                attrs={"min": 1, "max": 3, "step": 0.1}
-            ),
+            "portrait_position_x": RangeInput(attrs={"min": 0, "max": 100, "step": 1}),
+            "portrait_position_y": RangeInput(attrs={"min": 0, "max": 100, "step": 1}),
+            "portrait_zoom": RangeInput(attrs={"min": 1, "max": 3, "step": 0.1}),
         }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         classes = visible_classes(user)
-        if 'character_class' in self.fields:
+        if "character_class" in self.fields:
             if self.instance.pk and self.instance.character_class_id:
-                classes = classes | type(self.instance.character_class).objects.filter(pk=self.instance.character_class_id)
-            self.fields['character_class'].queryset = classes.order_by('name','pk')
-        if 'subclass' in self.fields:
-            self.fields['subclass'].queryset = Subclass.objects.filter(character_class__in=classes)
-        if 'aviable_classes' in self.fields:
-            self.fields['aviable_classes'].queryset = classes.order_by('name','pk')
-            self.fields['aviable_subclasses'].queryset = Subclass.objects.filter(character_class__in=classes).order_by('name','pk')
+                classes = classes | type(self.instance.character_class).objects.filter(
+                    pk=self.instance.character_class_id
+                )
+            self.fields["character_class"].queryset = classes.order_by("name", "pk")
+        if "subclass" in self.fields:
+            self.fields["subclass"].queryset = Subclass.objects.filter(
+                character_class__in=classes
+            )
+        if "aviable_classes" in self.fields:
+            self.fields["aviable_classes"].queryset = classes.order_by("name", "pk")
+            self.fields["aviable_subclasses"].queryset = Subclass.objects.filter(
+                character_class__in=classes
+            ).order_by("name", "pk")
+        if "second_class" in self.fields:
+            # В редактировании оставляем ранее выбранный класс доступным, даже если его видимость изменилась.
+            secondary = classes
+            if self.instance.pk and self.instance.second_class_id:
+                secondary = secondary | type(self.instance.second_class).objects.filter(
+                    pk=self.instance.second_class_id
+                )
+            self.fields["second_class"].queryset = secondary.order_by("name", "pk")
+            self.fields["second_subclass"].queryset = Subclass.objects.filter(
+                character_class__in=secondary
+            )
+            self.fields["second_class_level"].required = False
+        for field in ("subclass", "second_subclass"):
+            if field in self.fields:
+                self.fields[field].widget.attrs["data-subclass-options"] = json.dumps(
+                    [
+                        {
+                            "id": item.pk,
+                            "class_id": item.character_class_id,
+                            "level": item.level_gained,
+                            "name": item.name,
+                        }
+                        for item in self.fields[field].queryset
+                    ],
+                    ensure_ascii=False,
+                )
         if "is_active" in self.fields:
-            self.fields["is_active"].help_text = "Отметь, если персонаж используется в игре. Активных персонажей может быть несколько."
+            self.fields["is_active"].help_text = (
+                "Отметь, если персонаж используется в игре. Активных персонажей может быть несколько."
+            )
 
     @property
     def field_groups(self):
@@ -93,6 +127,10 @@ class CharacterCreateForm(CharacterChecksFormMixin, DescriptionFormMixin, forms.
                     "background",
                     "character_class",
                     "primary_class_level",
+                    "subclass",
+                    "second_class",
+                    "second_class_level",
+                    "second_subclass",
                     "is_active",
                     "is_favorite",
                     "is_public",
@@ -147,22 +185,65 @@ class CharacterCreateForm(CharacterChecksFormMixin, DescriptionFormMixin, forms.
             }
             for group_id, title, field_names in groups
         ]
-        checks = {group['id']: group for group in self.check_groups}
+        checks = {group["id"]: group for group in self.check_groups}
         for group in base_groups:
-            if group['id'] == 'abilities':
-                group['ability_rows'] = [{'field':field,'save':checks['saves']['rows'][index]} for index,field in enumerate(group['fields'])]
-            elif group['id'] == 'combat':
-                group['subgroups'] = [checks['speeds']]
-        derived = dict(checks['derived'], subgroups=[checks['passives']])
+            if group["id"] == "abilities":
+                group["ability_rows"] = [
+                    {"field": field, "save": checks["saves"]["rows"][index]}
+                    for index, field in enumerate(group["fields"])
+                ]
+            elif group["id"] == "combat":
+                group["subgroups"] = [checks["speeds"]]
+        derived = dict(checks["derived"], subgroups=[checks["passives"]])
         return base_groups + [derived]
+
+    def clean(self):
+        # Проверки формы повторяют ограничения сервера: связанные поля должны согласовываться.
+        data = super().clean()
+        data["second_class_level"] = data.get("second_class_level") or 0
+        for class_field, level_field, sub_field in (
+            ("character_class", "primary_class_level", "subclass"),
+            ("second_class", "second_class_level", "second_subclass"),
+        ):
+            cls, level, sub = (
+                data.get(class_field),
+                data.get(level_field),
+                data.get(sub_field),
+            )
+            if class_field == "second_class" and bool(cls) != bool(level):
+                self.add_error(
+                    level_field,
+                    "Для второго класса укажи уровень; без класса оставь 0.",
+                )
+            if sub and (not cls or sub.character_class_id != cls.pk):
+                self.add_error(
+                    sub_field, "Подкласс должен относиться к выбранному классу."
+                )
+            elif sub and level is not None and level < sub.level_gained:
+                self.add_error(
+                    sub_field,
+                    f"Подкласс доступен с {sub.level_gained}-го уровня этого класса.",
+                )
+        if (
+            # Один класс нельзя выбрать дважды: его уровни должны находиться в одном поле.
+            data.get("second_class")
+            and data.get("character_class") == data["second_class"]
+        ):
+            self.add_error("second_class", "Основной и второй класс должны отличаться.")
+        if (data.get("primary_class_level") or 0) + data[
+            "second_class_level"
+        ] + self.instance.warlock_level > 20:
+            self.add_error(
+                "primary_class_level",
+                "Суммарный уровень персонажа не может превышать 20.",
+            )
+        return data
 
     def clean_max_hit_points(self):
         value = self.cleaned_data["max_hit_points"]
 
         if value < 1:
-            raise forms.ValidationError(
-                "Хиты должны быть не меньше 1."
-            )
+            raise forms.ValidationError("Хиты должны быть не меньше 1.")
 
         return value
 
@@ -170,9 +251,7 @@ class CharacterCreateForm(CharacterChecksFormMixin, DescriptionFormMixin, forms.
         value = self.cleaned_data["armor_class"]
 
         if value < 0:
-            raise forms.ValidationError(
-                "Класс доспеха не может быть отрицательным."
-            )
+            raise forms.ValidationError("Класс доспеха не может быть отрицательным.")
 
         return value
 
@@ -180,9 +259,7 @@ class CharacterCreateForm(CharacterChecksFormMixin, DescriptionFormMixin, forms.
         value = self.cleaned_data["speed"]
 
         if value < 0:
-            raise forms.ValidationError(
-                "Скорость не может быть отрицательной."
-            )
+            raise forms.ValidationError("Скорость не может быть отрицательной.")
 
         return value
 
@@ -197,6 +274,7 @@ class CharacterEditForm(CharacterCreateForm):
         ]
 
     def clean(self):
+        # Проверки формы повторяют ограничения сервера: связанные поля должны согласовываться.
         cleaned_data = super().clean()
 
         maximum = cleaned_data.get("max_hit_points")
@@ -221,41 +299,28 @@ class CharacterEditForm(CharacterCreateForm):
                 "Временные хиты не могут быть отрицательными.",
             )
 
-        if self.instance.subclass_id:
-            subclass = self.instance.subclass
-            character_class = cleaned_data.get("character_class")
-            level = cleaned_data.get("primary_class_level")
-
-            if (
-                character_class is None
-                or subclass.character_class_id != character_class.pk
-            ):
-                self.add_error(
-                    "character_class",
-                    "Сначала убери текущий подкласс через API, "
-                    "чтобы изменить класс.",
-                )
-            elif level is not None and level < subclass.level_gained:
-                self.add_error(
-                    "primary_class_level",
-                    f"Текущий подкласс требует уровень "
-                    f"не ниже {subclass.level_gained}.",
-                )
-
         return cleaned_data
 
 
 class RegistrationForm(UserCreationForm):
-    email = forms.EmailField(label="Email", max_length=254, help_text="Нужен для подтверждения адреса, восстановления пароля и напоминаний.")
+    email = forms.EmailField(
+        label="Email",
+        max_length=254,
+        help_text="Нужен для подтверждения адреса, восстановления пароля и напоминаний.",
+    )
 
     def clean_username(self):
-        value=super().clean_username()
-        if '@' in value:raise forms.ValidationError('Имя пользователя укажи без @. Для почты есть отдельное поле Email.')
+        value = super().clean_username()
+        if "@" in value:
+            raise forms.ValidationError(
+                "Имя пользователя укажи без @. Для почты есть отдельное поле Email."
+            )
         return value
 
     def clean_email(self):
         from spells.email_accounts import normalize_email, email_available
-        email = normalize_email(self.cleaned_data['email'])
+
+        email = normalize_email(self.cleaned_data["email"])
         if not email_available(email):
             raise forms.ValidationError("Этот email уже используется.")
         return email
@@ -275,7 +340,10 @@ from spells.material_forms import MaterialsField
 
 
 class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
-    material_components = MaterialsField(label="Материальные компоненты",required=False)
+    material_components = MaterialsField(
+        label="Материальные компоненты", required=False
+    )
+
     class Meta:
         model = Spell
         fields = [
@@ -320,17 +388,23 @@ class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk and self.instance.is_official:
-            self.fields.pop('is_public', None)
+            self.fields.pop("is_public", None)
         classes = visible_classes(user)
-        if 'character_class' in self.fields:
+        if "character_class" in self.fields:
             if self.instance.pk and self.instance.character_class_id:
-                classes = classes | type(self.instance.character_class).objects.filter(pk=self.instance.character_class_id)
-            self.fields['character_class'].queryset = classes.order_by('name','pk')
-        if 'subclass' in self.fields:
-            self.fields['subclass'].queryset = Subclass.objects.filter(character_class__in=classes)
-        if 'aviable_classes' in self.fields:
-            self.fields['aviable_classes'].queryset = classes.order_by('name','pk')
-            self.fields['aviable_subclasses'].queryset = Subclass.objects.filter(character_class__in=classes).order_by('name','pk')
+                classes = classes | type(self.instance.character_class).objects.filter(
+                    pk=self.instance.character_class_id
+                )
+            self.fields["character_class"].queryset = classes.order_by("name", "pk")
+        if "subclass" in self.fields:
+            self.fields["subclass"].queryset = Subclass.objects.filter(
+                character_class__in=classes
+            )
+        if "aviable_classes" in self.fields:
+            self.fields["aviable_classes"].queryset = classes.order_by("name", "pk")
+            self.fields["aviable_subclasses"].queryset = Subclass.objects.filter(
+                character_class__in=classes
+            ).order_by("name", "pk")
 
         self.fields["level"].choices = [
             (0, "Заговор"),
@@ -342,9 +416,8 @@ class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
             "aviable_classes",
             "aviable_subclasses",
         ]:
-            self.fields[field_name].help_text = (
-                "Отметь необходимые значения."
-            )
+            self.fields[field_name].help_text = "Отметь необходимые значения."
+
     @property
     def field_groups(self):
         groups = [
@@ -411,11 +484,13 @@ class CustomSpellForm(DescriptionFormMixin, forms.ModelForm):
         ]
 
     def clean(self):
+        # Проверки формы повторяют ограничения сервера: связанные поля должны согласовываться.
         cleaned_data = super().clean()
 
-        if (
-            cleaned_data.get("attack_type") == Spell.AttackType.SAVE_THROW
-            and not cleaned_data.get("saving_throw_ability")
+        if cleaned_data.get(
+            "attack_type"
+        ) == Spell.AttackType.SAVE_THROW and not cleaned_data.get(
+            "saving_throw_ability"
         ):
             self.add_error(
                 "saving_throw_ability",
@@ -437,9 +512,7 @@ class SpellImportForm(forms.Form):
     json_file = forms.FileField(
         label="Файл заклинания",
         help_text="Выбери файл в формате JSON. Максимальный размер — 1 МБ.",
-        widget=forms.ClearableFileInput(
-            attrs={"accept": ".json,application/json"}
-        ),
+        widget=forms.ClearableFileInput(attrs={"accept": ".json,application/json"}),
     )
 
     def clean_json_file(self):
@@ -459,6 +532,7 @@ class SpellImportForm(forms.Form):
             )
 
         from spells.spell_import import validate_spell_payload
+
         try:
             validate_spell_payload(data)
         except ValueError as error:
@@ -511,9 +585,7 @@ class SpellbookForm(DescriptionFormMixin, forms.ModelForm):
         ).order_by("name")
 
         self.fields["spells"].queryset = (
-            collected_spells(user)
-            .distinct()
-            .order_by("level", "name")
+            collected_spells(user).distinct().order_by("level", "name")
         )
 
         self.fields["spells"].help_text = (
@@ -525,9 +597,7 @@ class SpellbookForm(DescriptionFormMixin, forms.ModelForm):
             field.label = f"Ячейки {level}-го уровня"
             field.widget.attrs["min"] = 0
 
-        self.fields["warlock_slot_level"].widget.attrs.update(
-            {"min": 0, "max": 5}
-        )
+        self.fields["warlock_slot_level"].widget.attrs.update({"min": 0, "max": 5})
         self.fields["warlock_max_slots"].widget.attrs["min"] = 0
 
     @property
@@ -546,10 +616,7 @@ class SpellbookForm(DescriptionFormMixin, forms.ModelForm):
             (
                 "slots",
                 "Ячейки заклинаний",
-                [
-                    f"max_spell_slots_{level}"
-                    for level in range(1, 10)
-                ],
+                [f"max_spell_slots_{level}" for level in range(1, 10)],
             ),
             (
                 "warlock",
@@ -568,12 +635,12 @@ class SpellbookForm(DescriptionFormMixin, forms.ModelForm):
         ]
 
     def clean(self):
+        # Проверки формы повторяют ограничения сервера: связанные поля должны согласовываться.
         cleaned_data = super().clean()
 
-        slot_fields = [
-            f"max_spell_slots_{level}"
-            for level in range(1, 10)
-        ] + ["warlock_max_slots"]
+        slot_fields = [f"max_spell_slots_{level}" for level in range(1, 10)] + [
+            "warlock_max_slots"
+        ]
 
         for field_name in slot_fields:
             value = cleaned_data.get(field_name)

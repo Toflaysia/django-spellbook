@@ -1,0 +1,24 @@
+{% load description_tags %}
+<div class="character-abilities">
+    <div class="ability-heading"><div><h2>Способности</h2><p class="play-muted">Умения твоего класса и подкласса, доступные на текущем уровне.</p></div><a class="btn btn-secondary" href="{% url 'character_edit_page' character.pk %}#section-basic">Класс и подкласс</a></div>
+    <p class="rest-status" data-rest-status role="status" aria-live="polite"></p>
+    {% for group in ability_sheet.classes %}
+        <section class="ability-group"><h3>{{ group.name }} <span class="ability-level">{{ group.level }} ур.</span></h3>
+            <div class="ability-grid">{% for feature in group.features %}{% include "spells/includes/ability_card.html" %}{% empty %}<p class="play-muted">У этого класса пока нет доступных умений в справочнике.</p>{% endfor %}</div>
+        </section>
+    {% empty %}<p class="play-muted">Выбери класс в редактировании персонажа, чтобы увидеть его умения.</p>{% endfor %}
+    {% for group in ability_sheet.subclasses %}
+        <section class="ability-group"><h3>Подкласс: {{ group.name }}</h3><div class="ability-grid">{% for feature in group.features %}{% include "spells/includes/ability_card.html" %}{% empty %}<p class="play-muted">Умения этого подкласса ещё не заполнены в справочнике.</p>{% endfor %}</div></section>
+    {% endfor %}
+    <section class="ability-group"><h3>Мои дополнительные ресурсы</h3><p class="play-muted">Для предметов и особых способностей, не указанных в классе.</p>
+        <div data-resource-list class="rest-resources"></div>
+        <details class="rest-add"><summary>Добавить ресурс</summary>
+            <form data-rest-form="resource_create">{% csrf_token %}
+                <label>Название<input name="name" maxlength="80" required placeholder="Название способности"></label>
+                <label>Максимум<input type="number" name="maximum" min="1" max="9999" step="1" value="1" inputmode="numeric" required></label>
+                <label>Восстановление<select name="refresh_on"><option value="short">Короткий и длинный отдых</option><option value="long" selected>Длинный отдых</option><option value="manual">Вручную</option></select></label>
+                <button type="submit">Добавить ресурс</button>
+            </form>
+        </details>
+    </section>
+</div>

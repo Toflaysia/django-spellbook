@@ -17,6 +17,7 @@
         });
     }
     const tabs=[...root.querySelectorAll('[role="tab"]')];
+    // Адрес сохраняет выбранную вкладку, поэтому после обновления можно вернуться к тому же блоку.
     function activate(tab, update=true){
         tabs.forEach(t=>{t.setAttribute('aria-selected',String(t===tab));t.tabIndex=t===tab?0:-1;});
         root.querySelectorAll('[role="tabpanel"]').forEach(p=>{p.hidden=p.id!==tab.getAttribute('aria-controls');});
@@ -40,6 +41,7 @@
         const dialog=document.getElementById(button.dataset.openCalculator);dialog.showModal();dialog.querySelector('input[name="amount"]').focus();
     }));
     root.querySelectorAll('[data-close-dialog]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
+    // На странице несколько показателей хитов: обновляем их все, включая окно отдыха.
     function paint(data){
         root.querySelectorAll('[data-hp-current]').forEach(n=>{n.textContent=data.current;n.classList.toggle('hp-low',data.current*2<=data.maximum);});
         root.querySelectorAll('[data-hp-max]').forEach(n=>n.textContent=data.maximum);

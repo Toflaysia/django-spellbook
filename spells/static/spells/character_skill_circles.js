@@ -1,3 +1,4 @@
+// Кружочки меняют владение, а итоговые значения пересчитываются на сервере.
 (() => {
     const root=document.querySelector('.character-detail');
     if(!root)return;

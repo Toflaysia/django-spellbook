@@ -3,12 +3,12 @@ import json
 from django import forms
 from django.templatetags.static import static
 
-
 DESCRIPTION_PREFIX = "SPELLBOOK_BLOCKS_V1:"
 
 
 def parse_description(value):
-    payload = json.loads(value[len(DESCRIPTION_PREFIX):])
+    # Описание разбирается как данные редактора, а не как исполняемый HTML или Python.
+    payload = json.loads(value[len(DESCRIPTION_PREFIX) :])
 
     if not isinstance(payload, list):
         raise ValueError("Неверный формат описания.")
@@ -33,7 +33,9 @@ def parse_description(value):
 
         elif block.get("type") == "list":
             items = block.get("items")
-            if not isinstance(items, list) or any(not isinstance(item, str) for item in items):
+            if not isinstance(items, list) or any(
+                not isinstance(item, str) for item in items
+            ):
                 raise ValueError("Неверный список.")
             items = [item for item in items if item.strip()]
             if items:
@@ -49,16 +51,13 @@ def parse_description(value):
 
             for row in rows:
                 if not isinstance(row, list) or not row:
-                    raise ValueError(
-                        "В таблице должен быть хотя бы один столбец."
-                    )
+                    raise ValueError("В таблице должен быть хотя бы один столбец.")
 
                 if column_count is None:
                     column_count = len(row)
                 elif len(row) != column_count:
                     raise ValueError(
-                        "Во всех строках должно быть одинаковое "
-                        "количество столбцов."
+                        "Во всех строках должно быть одинаковое " "количество столбцов."
                     )
 
                 if any(not isinstance(cell, str) for cell in row):
@@ -85,14 +84,21 @@ class DescriptionFormMixin:
 
         for name in self.description_field_names:
             if name in self.fields:
-                self.fields[name].widget.attrs[
-                    "data-description-editor"
-                ] = "true"
+                self.fields[name].widget.attrs["data-description-editor"] = "true"
                 from django.urls import reverse
-                self.fields[name].widget.attrs["data-spell-search-url"] = reverse("spell_link_search")
-                self.fields[name].widget.attrs["data-spell-preview-url"] = reverse("spell_preview", args=[0])
-                self.fields[name].widget.attrs["data-catalog-search-url"] = reverse("catalog_link_search", args=['schools'])
-                self.fields[name].widget.attrs["data-catalog-preview-url"] = reverse("catalog_preview", args=['schools', 0])
+
+                self.fields[name].widget.attrs["data-spell-search-url"] = reverse(
+                    "spell_link_search"
+                )
+                self.fields[name].widget.attrs["data-spell-preview-url"] = reverse(
+                    "spell_preview", args=[0]
+                )
+                self.fields[name].widget.attrs["data-catalog-search-url"] = reverse(
+                    "catalog_link_search", args=["schools"]
+                )
+                self.fields[name].widget.attrs["data-catalog-preview-url"] = reverse(
+                    "catalog_preview", args=["schools", 0]
+                )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -123,14 +129,13 @@ class DescriptionFormMixin:
                     block["type"] in ("text", "heading", "quote")
                     and block["text"].strip()
                 )
-                or (block["type"] == "list" and any(item.strip() for item in block["items"]))
+                or (
+                    block["type"] == "list"
+                    and any(item.strip() for item in block["items"])
+                )
                 or (
                     block["type"] == "table"
-                    and any(
-                        cell.strip()
-                        for row in block["rows"]
-                        for cell in row
-                    )
+                    and any(cell.strip() for row in block["rows"] for cell in row)
                 )
                 for block in blocks
             )
@@ -140,14 +145,23 @@ class DescriptionFormMixin:
                 continue
 
             cleaned_data[name] = (
-                DESCRIPTION_PREFIX
-                + json.dumps(blocks, ensure_ascii=False)
-                if blocks else ""
+                DESCRIPTION_PREFIX + json.dumps(blocks, ensure_ascii=False)
+                if blocks
+                else ""
             )
 
         return cleaned_data
 
+
 class DescriptionModelForm(DescriptionFormMixin, forms.ModelForm):
     class Media:
-        css = {"all": (static("spells/description_editor.css") + "?v=20261021-theme", static("spells/play_tools.css") + "?v=20261028-polish")}
-        js = (static("spells/play_tools.js") + "?v=20261028-polish", static("spells/description_editor.js") + "?v=20261020-json-import")
+        css = {
+            "all": (
+                static("spells/description_editor.css") + "?v=20261021-theme",
+                static("spells/play_tools.css") + "?v=20261028-polish",
+            )
+        }
+        js = (
+            static("spells/play_tools.js") + "?v=20261028-polish",
+            static("spells/description_editor.js") + "?v=20261020-json-import",
+        )

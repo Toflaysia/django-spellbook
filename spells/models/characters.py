@@ -1,5 +1,10 @@
+from spells.ability_rules import RULE_CHOICES, FORMULA_CHOICES
 from spells.rest_validation import validate_spent_hit_dice
-from spells.character_checks import validate_check_settings, proficiency, calculated_checks
+from spells.character_checks import (
+    validate_check_settings,
+    proficiency,
+    calculated_checks,
+)
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -7,7 +12,11 @@ from django.utils.timezone import now
 
 from spells.models.enums import Alignment, Characters, Dice, MagicType
 from spells.models.users import Player
-from spells.progression import TABLE_TYPES, validate_class_columns, validate_subclass_columns
+from spells.progression import (
+    TABLE_TYPES,
+    validate_class_columns,
+    validate_subclass_columns,
+)
 
 
 class CharacterClass(models.Model):
@@ -15,10 +24,23 @@ class CharacterClass(models.Model):
 
     id = models.AutoField(primary_key=True, verbose_name="id")
     name = models.CharField(max_length=50, verbose_name="Название")
-    created_by = models.ForeignKey(Player, null=True, blank=True, on_delete=models.CASCADE, related_name="created_classes", verbose_name="Автор")
+    created_by = models.ForeignKey(
+        Player,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="created_classes",
+        verbose_name="Автор",
+    )
     is_official = models.BooleanField(default=True, verbose_name="Официальный класс")
-    is_public = models.BooleanField(default=False, verbose_name="Публичный класс", help_text="Другие пользователи смогут просматривать класс и выбирать его для персонажа.")
-    image = models.ImageField(upload_to="class_images/", blank=True, verbose_name="Картинка класса")
+    is_public = models.BooleanField(
+        default=False,
+        verbose_name="Публичный класс",
+        help_text="Другие пользователи смогут просматривать класс и выбирать его для персонажа.",
+    )
+    image = models.ImageField(
+        upload_to="class_images/", blank=True, verbose_name="Картинка класса"
+    )
 
     @property
     def display_image_url(self):
@@ -26,18 +48,27 @@ class CharacterClass(models.Model):
             return self.image.url
         from django.templatetags.static import static
         from spells.class_access import class_emblem
-        return static('spells/class_emblems/' + class_emblem(self.name) + '.svg')
+
+        return static("spells/class_emblems/" + class_emblem(self.name) + ".svg")
 
     def clean(self):
         super().clean()
         if self.created_by_id and self.is_official:
-            raise ValidationError({'is_official': 'Пользовательский класс не может быть официальным.'})
+            raise ValidationError(
+                {"is_official": "Пользовательский класс не может быть официальным."}
+            )
+
     description = models.TextField(verbose_name="Описание")
     progression_table_type = models.CharField(
-        max_length=20, choices=TABLE_TYPES, default="basic", verbose_name="Вид таблицы развития",
+        max_length=20,
+        choices=TABLE_TYPES,
+        default="basic",
+        verbose_name="Вид таблицы развития",
     )
     progression_columns = models.JSONField(
-        default=list, blank=True, validators=[validate_class_columns],
+        default=list,
+        blank=True,
+        validators=[validate_class_columns],
         verbose_name="Столбцы таблицы развития",
     )
     magic_type = models.CharField(
@@ -60,6 +91,15 @@ class CharacterClass(models.Model):
         verbose_name="Заклинательная характеристика",
     )
 
+    ability_rules = models.CharField(
+        max_length=12,
+        blank=True,
+        default="",
+        choices=RULE_CHOICES,
+        verbose_name="Правила ресурсов",
+        help_text="Выбери набор D&D 5e 2014 или используй только умения справочника.",
+    )
+
     def __str__(self):
         return self.name
 
@@ -67,8 +107,16 @@ class CharacterClass(models.Model):
         verbose_name = "Класс"
         verbose_name_plural = "Классы"
         constraints = [
-            models.UniqueConstraint(fields=['name'], condition=models.Q(created_by__isnull=True), name='unique_shared_class_name'),
-            models.UniqueConstraint(fields=['created_by', 'name'], condition=models.Q(created_by__isnull=False), name='unique_author_class_name'),
+            models.UniqueConstraint(
+                fields=["name"],
+                condition=models.Q(created_by__isnull=True),
+                name="unique_shared_class_name",
+            ),
+            models.UniqueConstraint(
+                fields=["created_by", "name"],
+                condition=models.Q(created_by__isnull=False),
+                name="unique_author_class_name",
+            ),
         ]
 
 
@@ -85,7 +133,9 @@ class Subclass(models.Model):
         verbose_name="Класс",
     )
     progression_columns = models.JSONField(
-        default=list, blank=True, validators=[validate_subclass_columns],
+        default=list,
+        blank=True,
+        validators=[validate_subclass_columns],
         verbose_name="Дополнительные столбцы подкласса",
     )
     features_description = models.TextField(
@@ -100,12 +150,18 @@ class Subclass(models.Model):
 
     def clean(self):
         super().clean()
-        if self.pk and self.character_class_id and self.features.exclude(
-            character_class_id=self.character_class_id,
-        ).exists():
-            raise ValidationError({
-                "character_class": "У подкласса есть умения другого класса. Нельзя перенести его в этот класс.",
-            })
+        if (
+            self.pk
+            and self.character_class_id
+            and self.features.exclude(
+                character_class_id=self.character_class_id,
+            ).exists()
+        ):
+            raise ValidationError(
+                {
+                    "character_class": "У подкласса есть умения другого класса. Нельзя перенести его в этот класс.",
+                }
+            )
 
     def __str__(self):
         return f"{self.name} ({self.character_class.name})"
@@ -174,6 +230,13 @@ class Person(models.Model):
         verbose_name="Уровень основного класса",
     )
 
+    selected_optional_features = models.ManyToManyField(
+        "spells.ClassFeature",
+        blank=True,
+        related_name="selected_by",
+        verbose_name="Выбранные опциональные умения",
+    )
+
     # Раса
     race = models.CharField(max_length=100, blank=True, verbose_name="Раса")
     subrace = models.CharField(max_length=100, blank=True, verbose_name="Подраса")
@@ -230,11 +293,19 @@ class Person(models.Model):
     )
 
     gold_coins = models.PositiveIntegerField(default=0, verbose_name="Золотые монеты")
-    silver_coins = models.PositiveIntegerField(default=0, verbose_name="Серебряные монеты")
+    silver_coins = models.PositiveIntegerField(
+        default=0, verbose_name="Серебряные монеты"
+    )
     copper_coins = models.PositiveIntegerField(default=0, verbose_name="Медные монеты")
-    platinum_coins = models.PositiveIntegerField(default=0, verbose_name="Платиновые монеты")
-    electrum_coins = models.PositiveIntegerField(default=0, verbose_name="Электрумовые монеты")
-    equipment_description = models.TextField(blank=True, verbose_name="Снаряжение и заметки")
+    platinum_coins = models.PositiveIntegerField(
+        default=0, verbose_name="Платиновые монеты"
+    )
+    electrum_coins = models.PositiveIntegerField(
+        default=0, verbose_name="Электрумовые монеты"
+    )
+    equipment_description = models.TextField(
+        blank=True, verbose_name="Снаряжение и заметки"
+    )
 
     armor_class = models.IntegerField(default=10, verbose_name="Класс доспеха (КД)")
     initiative_bonus = models.IntegerField(
@@ -250,16 +321,38 @@ class Person(models.Model):
     )
 
     combat_revision = models.PositiveIntegerField(default=0, editable=False)
-    concentration_spell = models.ForeignKey('spells.Spell', null=True, blank=True, on_delete=models.SET_NULL, related_name='concentrating_characters')
-    concentration_name = models.CharField(max_length=150, blank=True, verbose_name='Концентрация')
+    concentration_spell = models.ForeignKey(
+        "spells.Spell",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="concentrating_characters",
+    )
+    concentration_name = models.CharField(
+        max_length=150, blank=True, verbose_name="Концентрация"
+    )
 
-    spent_hit_dice = models.JSONField(default=dict, blank=True, validators=[validate_spent_hit_dice], verbose_name='Потраченные кости хитов')
-    fallback_hit_die = models.PositiveSmallIntegerField(default=8, choices=[(4,'d4'),(6,'d6'),(8,'d8'),(10,'d10'),(12,'d12')], verbose_name='Кость хитов без класса')
+    spent_hit_dice = models.JSONField(
+        default=dict,
+        blank=True,
+        validators=[validate_spent_hit_dice],
+        verbose_name="Потраченные кости хитов",
+    )
+    fallback_hit_die = models.PositiveSmallIntegerField(
+        default=8,
+        choices=[(4, "d4"), (6, "d6"), (8, "d8"), (10, "d10"), (12, "d12")],
+        verbose_name="Кость хитов без класса",
+    )
     rest_revision = models.PositiveIntegerField(default=0, editable=False)
     last_short_rest_at = models.DateTimeField(null=True, blank=True)
     last_long_rest_at = models.DateTimeField(null=True, blank=True)
 
-    check_settings = models.JSONField(default=dict, blank=True, validators=[validate_check_settings], verbose_name="Навыки и расчёты")
+    check_settings = models.JSONField(
+        default=dict,
+        blank=True,
+        validators=[validate_check_settings],
+        verbose_name="Навыки и расчёты",
+    )
 
     @property
     def effective_proficiency_bonus(self):
@@ -467,6 +560,8 @@ class Person(models.Model):
         verbose_name = "Персонаж"
         verbose_name_plural = "Персонажи"
         ordering = ["-is_favorite", "-updated_at"]
+
+
 class ClassFeature(models.Model):
     """Умение класса или подкласса, получаемое на заданном уровне."""
 
@@ -515,6 +610,30 @@ class ClassFeature(models.Model):
 
     is_optional = models.BooleanField(default=False, verbose_name="Опциональное умение")
 
+    resource_formula = models.CharField(
+        max_length=16,
+        blank=True,
+        default="",
+        choices=FORMULA_CHOICES,
+        verbose_name="Счётчик ресурса",
+    )
+    resource_amount = models.PositiveIntegerField(
+        default=1,
+        validators=[MinValueValidator(1), MaxValueValidator(9999)],
+        verbose_name="Число использований / множитель",
+        help_text="Для фиксированного значения — максимум. Для формулы — множитель.",
+    )
+    resource_refresh_on = models.CharField(
+        max_length=6,
+        default="long",
+        choices=[
+            ("short", "Короткий и длинный отдых"),
+            ("long", "Длинный отдых"),
+            ("manual", "Вручную"),
+        ],
+        verbose_name="Восстановление ресурса",
+    )
+
     @property
     def acquisition_levels(self):
         if self.levels:
@@ -534,16 +653,14 @@ class ClassFeature(models.Model):
         super().clean()
 
         if self.levels:
-            if (
-                not isinstance(self.levels, list)
-                or any(
-                    type(level) is not int or not 1 <= level <= 20
-                    for level in self.levels
-                )
+            if not isinstance(self.levels, list) or any(
+                type(level) is not int or not 1 <= level <= 20 for level in self.levels
             ):
-                raise ValidationError({
-                    "levels": "Укажи уровни от 1 до 20.",
-                })
+                raise ValidationError(
+                    {
+                        "levels": "Укажи уровни от 1 до 20.",
+                    }
+                )
 
             self.levels = sorted(set(self.levels))
             self.level = self.levels[0]
@@ -557,20 +674,23 @@ class ClassFeature(models.Model):
             self.character_class_id
             and subclass.character_class_id != self.character_class_id
         ):
-            raise ValidationError({
-                "subclass": "Выбранный подкласс не относится к этому классу.",
-            })
+            raise ValidationError(
+                {
+                    "subclass": "Выбранный подкласс не относится к этому классу.",
+                }
+            )
 
-        if any(
-            level < subclass.level_gained
-            for level in self.acquisition_levels
-        ):
-            raise ValidationError({
-                "levels": (
-                    "Умения этого подкласса нельзя получить раньше "
-                    f"{subclass.level_gained}-го уровня."
-                ),
-            })
+        if any(level < subclass.level_gained for level in self.acquisition_levels):
+            raise ValidationError(
+                {
+                    "levels": (
+                        "Умения этого подкласса нельзя получить раньше "
+                        f"{subclass.level_gained}-го уровня."
+                    ),
+                }
+            )
+
+
 class ClassSection(models.Model):
     """Текстовый раздел страницы класса."""
 

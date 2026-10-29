@@ -1,4 +1,3 @@
-"""Открой этот файл в VS Code и нажми ▶ «Запустить файл Python»."""
 from pathlib import Path
 import os
 import subprocess

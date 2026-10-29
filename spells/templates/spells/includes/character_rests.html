@@ -1,18 +1,9 @@
-<div class="character-rests" data-rest-url="{% url 'character_rest_change' character.pk %}">
+<div class="character-rests">
     {{ rest_state|json_script:"character-rest-state" }}
     <h2>Отдых и восстановление</h2>
     <div class="rest-actions"><button type="button" data-rest-open="short-rest">Короткий отдых</button><button type="button" data-rest-open="long-rest">Длинный отдых</button></div>
     <p class="rest-hint">Правила D&D 5e 2014. Отдых применяется после его завершения в игре.</p>
     <div class="hit-dice-summary" data-dice-summary></div>
-    <h3>Ресурсы способностей</h3><div data-resource-list class="rest-resources"></div>
-    <details class="rest-add"><summary>Добавить ресурс</summary>
-        <form data-rest-form="resource_create">{% csrf_token %}
-            <label>Название<input name="name" maxlength="80" required placeholder="Например, Второе дыхание"></label>
-            <label>Максимум использований<input type="number" step="1" inputmode="numeric" name="maximum" min="1" max="9999" value="1" required></label>
-            <label>Восстановление<select name="refresh_on"><option value="short">Короткий и длинный отдых</option><option value="long" selected>Длинный отдых</option><option value="manual">Только вручную</option></select></label>
-            <button type="submit">Добавить ресурс</button>
-        </form>
-    </details>
     <p class="rest-status" data-rest-status role="status" aria-live="polite"></p>
     <dialog id="short-rest" class="play-dialog rest-dialog" aria-labelledby="short-rest-title">
         <button type="button" class="dialog-close" data-rest-close aria-label="Закрыть">×</button>

@@ -1,0 +1,8 @@
+{% load description_tags %}
+<article class="ability-card">
+    <div class="ability-card-heading"><h4>{{ feature.name }}</h4><span class="ability-level">с {{ feature.level }} ур.</span></div>
+    {% if feature.optional %}<form data-rest-form="ability_toggle" class="ability-optional">{% csrf_token %}<input type="hidden" name="feature_id" value="{{ feature.id }}"><label><input type="checkbox" name="enabled" value="true" {% if feature.selected %}checked{% endif %}> Выбрать опциональное умение</label><button type="submit" class="btn-secondary">Сохранить выбор</button></form>{% endif %}
+    {% if feature.note %}<p class="ability-note">{{ feature.note }}</p>{% endif %}
+    {% if feature.description %}<details class="ability-description"><summary>Описание умения</summary><div class="description-content">{{ feature.description|render_description }}</div></details>{% endif %}
+    {% if feature.resource_key %}<div data-ability-resource="{{ feature.resource_key }}" class="ability-resource"></div>{% endif %}
+</article>

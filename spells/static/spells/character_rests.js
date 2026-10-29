@@ -1,5 +1,5 @@
 (() => {
-    const root=document.querySelector('.character-rests');
+    const root=document.querySelector('[data-rest-url]');
     if(!root)return;
     let state=JSON.parse(document.getElementById('character-rest-state').textContent),busy=false;
     const make=(tag,text,attrs={})=>{
@@ -8,7 +8,25 @@
     };
     const button=(text,action,extra={})=>{const node=make('button',text,{type:'button','data-rest-action':action,...extra});return node;};
     const status=(text,error=false)=>root.querySelectorAll('[data-rest-status]').forEach(n=>{n.textContent=text;n.classList.toggle('rest-error',error);});
+    // Счётчики всегда рисуются из ответа сервера; браузер не назначает себе остаток ресурса.
     function paint(){
+        root.querySelectorAll('[data-ability-resource]').forEach(container=>{
+            const row=state.ability_resources.find(r=>r.key===container.dataset.abilityResource);
+            if(!row){container.replaceChildren();return;}
+            const previous=container.querySelector('input')?.value||'1';
+            container.replaceChildren();
+            const title=make('div',null,{class:'ability-balance'});
+            title.append(make('strong',row.maximum===null?'Без ограничений':`${row.current} / ${row.maximum}`),make('small',row.refresh_label));
+            container.append(title);
+            if(row.maximum===null)return;
+            const form=make('form',null,{'data-rest-form':'ability_spend',class:'ability-use'});
+            form.append(make('input',null,{type:'hidden',name:'key',value:row.key}));
+            const label=make('label','Количество'),input=make('input',null,{type:'number',name:'quantity',min:1,max:Math.max(row.maximum,row.spent,1),step:1,value:previous,inputmode:'numeric',required:'','aria-label':`Количество: ${row.name}`});
+            label.append(input);form.append(label);
+            const spend=make('button',row.code==='second_wind'?'Восстановить хиты':'Использовать',{type:'submit','data-ability-operation':'ability_spend'});spend.disabled=row.current===0;
+            const restore=make('button','Вернуть',{type:'submit','data-ability-operation':'ability_restore',class:'btn-secondary'});restore.disabled=row.spent===0;
+            form.append(spend,restore);container.append(form);
+        });
         const summary=root.querySelector('[data-dice-summary]');summary.replaceChildren();
         state.dice.forEach(d=>summary.append(make('span',`d${d.die}: ${d.available} / ${d.maximum}`,{class:'rest-chip',title:'Доступные кости хитов / максимум'})));
         const spend=root.querySelector('[data-spend-dice]');spend.replaceChildren();
@@ -45,6 +63,7 @@
         inputs.forEach(input=>{const controls=input.closest('.rest-number-control');controls.querySelector('[data-recovery-step="-1"]').disabled=Number(input.value)<=0;controls.querySelector('[data-recovery-step="1"]').disabled=Number(input.value)>=Number(input.max);});
     }
     root.addEventListener('input',event=>{if(event.target.matches('[data-recover-dice] input'))recoveryTotal();});
+    // Одна отправка за раз защищает от двойного нажатия. Версия обнаруживает старые данные другой вкладки.
     async function send(body){
         if(busy)return false;busy=true;root.setAttribute('aria-busy','true');
         body.set('revision',state.revision);body.set('csrfmiddlewaretoken',root.querySelector('[name=csrfmiddlewaretoken]').value);
@@ -54,6 +73,7 @@
             try{data=await response.json();}catch{throw new Error('Не удалось получить ответ. Обнови страницу перед повторной попыткой.');}
             if(data.rest)state=data.rest;
             if(data.combat)document.querySelector('.character-detail').dispatchEvent(new CustomEvent('spellbook:combat-updated',{detail:data.combat}));
+            // Лечение должно сразу обновить все места, где показаны хиты персонажа.
             if(data.health)document.querySelector('.character-detail').dispatchEvent(new CustomEvent('spellbook:rest-updated',{detail:data.health}));
             if(!response.ok)throw new Error(data.error||'Не удалось сохранить изменения.');
             status(data.message);return true;
@@ -73,10 +93,12 @@
     });
     root.addEventListener('submit',async event=>{
         const form=event.target.closest('[data-rest-form]');if(!form)return;event.preventDefault();if(busy)return;
-        const body=new FormData(form);body.set('action',form.dataset.restForm);
+        const body=new FormData(form);body.set('action',event.submitter?.dataset.abilityOperation||form.dataset.restForm);
+        if(form.dataset.restForm==='ability_toggle')body.set('enabled',String(form.elements.enabled.checked));
         if(await send(body)){
             if(form.dataset.restForm==='resource_create'){form.reset();form.closest('details').open=false;}
-            else{form.closest('dialog').close();}
+            else if(form.dataset.restForm==='ability_toggle'){location.reload();}
+            else{form.closest('dialog')?.close();}
         }
     });
     paint();

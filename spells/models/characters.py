@@ -1,3 +1,5 @@
+from spells.rest_validation import validate_spent_hit_dice
+from spells.character_checks import validate_check_settings, proficiency, calculated_checks
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -247,6 +249,26 @@ class Person(models.Model):
         verbose_name="Бонус мастерства",
     )
 
+    combat_revision = models.PositiveIntegerField(default=0, editable=False)
+    concentration_spell = models.ForeignKey('spells.Spell', null=True, blank=True, on_delete=models.SET_NULL, related_name='concentrating_characters')
+    concentration_name = models.CharField(max_length=150, blank=True, verbose_name='Концентрация')
+
+    spent_hit_dice = models.JSONField(default=dict, blank=True, validators=[validate_spent_hit_dice], verbose_name='Потраченные кости хитов')
+    fallback_hit_die = models.PositiveSmallIntegerField(default=8, choices=[(4,'d4'),(6,'d6'),(8,'d8'),(10,'d10'),(12,'d12')], verbose_name='Кость хитов без класса')
+    rest_revision = models.PositiveIntegerField(default=0, editable=False)
+    last_short_rest_at = models.DateTimeField(null=True, blank=True)
+    last_long_rest_at = models.DateTimeField(null=True, blank=True)
+
+    check_settings = models.JSONField(default=dict, blank=True, validators=[validate_check_settings], verbose_name="Навыки и расчёты")
+
+    @property
+    def effective_proficiency_bonus(self):
+        return proficiency(self)
+
+    @property
+    def computed_checks(self):
+        return calculated_checks(self)
+
     spellcasting_ability = models.CharField(
         max_length=3,
         choices=Characters.choices,
@@ -333,14 +355,14 @@ class Person(models.Model):
         """Сложность спасбросков от заклинаний"""
         if not self.spellcasting_ability:
             return 0
-        return 8 + self.proficiency_bonus + self.spellcasting_modifier
+        return 8 + self.effective_proficiency_bonus + self.spellcasting_modifier
 
     @property
     def spell_attack_bonus(self):
         """Бонус атаки заклинаниями"""
         if not self.spellcasting_ability:
             return 0
-        return self.proficiency_bonus + self.spellcasting_modifier
+        return self.effective_proficiency_bonus + self.spellcasting_modifier
 
     @property
     def max_spell_slots(self):

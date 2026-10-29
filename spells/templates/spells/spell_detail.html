@@ -23,7 +23,7 @@
     }
 
     .spell-muted {
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
     }
 
     .spell-actions,
@@ -40,30 +40,30 @@
         justify-content: center;
         padding: 10px 16px;
         border-radius: 8px;
-        background: #c4b5fd;
-        color: #21163c;
+        background: var(--sb-accent, #c4b5fd);
+        color: var(--sb-on-accent, #21163c);
         font-weight: 600;
         text-decoration: none;
     }
 
     .spell-button:hover {
-        background: #ddd6fe;
+        background: var(--sb-accent-hover, #ddd6fe);
     }
 
     .spell-tag {
         padding: 4px 10px;
         border-radius: 8px;
-        background: #302943;
-        color: #c4b5fd;
+        background: var(--sb-accent-soft, #302943);
+        color: var(--sb-accent-ink, #c4b5fd);
         font-size: 13px;
     }
 
     .spell-panel {
         margin-top: 24px;
         padding: 28px;
-        border: 1px solid #343548;
+        border: 1px solid var(--sb-border, #343548);
         border-radius: 16px;
-        background: #1c1d2a;
+        background: var(--sb-surface, #1c1d2a);
         overflow-wrap: anywhere;
     }
 
@@ -85,7 +85,7 @@
 
     .spell-details dt {
         margin-bottom: 6px;
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         font-size: 14px;
     }
 
@@ -111,13 +111,13 @@
             font-size: 28px;
         }
         .spell-button-danger {
-            border: 1px solid #754052;
+            border: 1px solid var(--sb-danger-border, #754052);
             background: transparent;
-            color: #fda4af;
+            color: var(--sb-danger-ink, #fda4af);
         }
 
         .spell-button-danger:hover {
-            background: #39232c;
+            background: var(--sb-danger-soft, #39232c);
         }
     }
 </style>
@@ -147,7 +147,7 @@
             {% endif %}
         </div>
 
-        {% if is_custom %}<p class="spell-muted">Автор: {{ spell.created_by.user.username|default:"Не указан" }} · {% if spell.is_public %}Публичное заклинание{% else %}Приватное заклинание{% endif %}</p>{% endif %}
+        {% if is_custom %}<p class="spell-muted">Автор: {% if spell.created_by_id %}<a href="{% url 'profile_page' spell.created_by.user_id %}">{{ spell.created_by }}</a>{% else %}Не указан{% endif %} · {% if spell.is_public %}Публичное заклинание{% else %}Приватное заклинание{% endif %}</p>{% endif %}
         <div class="spell-actions">
             {% if can_edit_spell %}<a class="spell-button" href="{% url 'spell_edit_page' spell.pk %}">Редактировать</a>{% endif %}
             {% if is_spell_author %}

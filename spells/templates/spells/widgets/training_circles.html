@@ -1,0 +1,8 @@
+<div class="training-options" role="radiogroup" aria-label="Степень владения">
+{% for group_name, options, index in widget.optgroups %}{% for option in options %}
+<label class="training-option" title="{{ option.label }}">
+<input type="radio" name="{{ option.name }}" value="{{ option.value }}"{% include "django/forms/widgets/attrs.html" with widget=option %}>
+<span class="training-option-symbol" data-training="{{ option.value }}" aria-hidden="true">{{ option.symbol }}</span><span class="sr-only">{{ option.label }}</span>
+</label>
+{% endfor %}{% endfor %}
+</div>

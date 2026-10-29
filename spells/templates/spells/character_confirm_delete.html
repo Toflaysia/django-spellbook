@@ -12,9 +12,9 @@
 
     .delete-panel {
         padding: 28px;
-        border: 1px solid #343548;
+        border: 1px solid var(--sb-border, #343548);
         border-radius: 16px;
-        background: #1c1d2a;
+        background: var(--sb-surface, #1c1d2a);
     }
 
     .delete-title {
@@ -30,10 +30,10 @@
     .delete-warning {
         margin: 24px 0;
         padding: 16px;
-        border: 1px solid #754052;
+        border: 1px solid var(--sb-danger-border, #754052);
         border-radius: 8px;
-        background: #39232c;
-        color: #fda4af;
+        background: var(--sb-danger-soft, #39232c);
+        color: var(--sb-danger-ink, #fda4af);
     }
 
     .delete-actions {
@@ -50,7 +50,7 @@
         align-items: center;
         justify-content: center;
         padding: 12px 18px;
-        border: 1px solid #45465f;
+        border: 1px solid var(--sb-border-strong, #45465f);
         border-radius: 8px;
         font: inherit;
         font-weight: 600;
@@ -59,22 +59,22 @@
     }
 
     .delete-confirm {
-        border-color: #754052;
-        background: #39232c;
-        color: #fda4af;
+        border-color: var(--sb-danger-border, #754052);
+        background: var(--sb-danger-soft, #39232c);
+        color: var(--sb-danger-ink, #fda4af);
     }
 
     .delete-confirm:hover {
-        background: #4b2b37;
+        background: var(--sb-danger-soft-hover, #4b2b37);
     }
 
     .delete-cancel {
-        background: #292a3c;
-        color: #ececf3;
+        background: var(--sb-surface-soft, #292a3c);
+        color: var(--sb-text, #ececf3);
     }
 
     .delete-cancel:hover {
-        background: #35364b;
+        background: var(--sb-surface-soft, #35364b);
     }
 
     @media (max-width: 480px) {

@@ -1,5 +1,10 @@
+from copy import deepcopy
+from spells.character_checks import ABILITIES, SKILLS
 from spells.spell_access import visible_spells
 from spells.class_access import scope_spell_classes
+from spells.templatetags.description_tags import description_text
+from spells.rests import rest_state
+from spells.combat import combat_state, concentration_damage
 import re
 import secrets
 from decimal import Decimal
@@ -33,11 +38,20 @@ class EquipmentForm(DescriptionModelForm):
 @require_GET
 def character_detail_page(request, pk):
     person=get_object_or_404(Person.objects.select_related('character_class','subclass'),pk=pk,player__user=request.user)
+    checks=person.computed_checks
+    ability_cards=[]
+    for name,label in ABILITIES.items():
+        save=next(row for row in checks['saves'] if row['key']==name)
+        skills=[row for row in checks['skills'] if next(item[2] for item in SKILLS if item[0]==row['key'])==name]
+        ability_cards.append({'key':name,'label':label,'score':getattr(person,name),'modifier':(getattr(person,name)-10)//2,'save':save,'skills':skills})
     return render(request,'spells/character_detail.html',{
         'character_spellbooks':person.spellbooks.order_by('name','pk'),
         'character':person, 'equipment_form':EquipmentForm(instance=person), 'coin_types':COINS,
         'coins_display':[(name,label,symbol,getattr(person,name+'_coins')) for name,label,symbol,_ in COINS],
-        'character_state':state(person),
+        'character_state':state(person), 'rest_state':rest_state(person),
+        'combat_state':combat_state(person, request.user),
+        'condition_catalog':[{'id':condition.pk,'name':condition.name,'description':description_text(condition.description)} for condition in Effect.objects.filter(category='COND').order_by('name','pk')],
+        'checks':checks, 'ability_cards':ability_cards,
         'abilities':[(name,person._meta.get_field(name).verbose_name,getattr(person,name),(getattr(person,name)-10)//2) for name in ('strength','dexterity','constitution','intelligence','wisdom','charisma')],
     })
 
@@ -66,6 +80,34 @@ def character_resource_change(request, pk):
                     raise ValueError('Укажи статус персонажа.')
                 person.is_active=selected=='true'
                 person.save(update_fields=['is_active','updated_at'])
+            elif action=='training':
+                group=request.POST.get('group')
+                key=request.POST.get('key')
+                training=request.POST.get('training')
+                allowed={row[0] for row in SKILLS} if group=='skills' else set(ABILITIES) if group=='saves' else set()
+                choices={'none','proficient','expertise','half'} if group=='skills' else {'none','proficient'}
+                if key not in allowed or training not in choices:
+                    raise ValueError('Неверный навык или степень владения.')
+                config=deepcopy(person.check_settings or {})
+                config.setdefault(group,{}).setdefault(key,{})['training']=training
+                person.check_settings=config
+                person.save(update_fields=['check_settings','updated_at'])
+                return JsonResponse({'checks':person.computed_checks,'message':'Владение сохранено.'})
+            elif action=='check_bonus':
+                group=request.POST.get('group')
+                key=request.POST.get('key')
+                allowed={row[0] for row in SKILLS} if group=='skills' else set(ABILITIES) if group=='saves' else set()
+                raw=request.POST.get('bonus','')
+                if key not in allowed or not re.fullmatch(r'[+-]?\d{1,4}',raw):
+                    raise ValueError('Укажи целый бонус от −1000 до 1000.')
+                value=int(raw)
+                if not -1000<=value<=1000:
+                    raise ValueError('Укажи целый бонус от −1000 до 1000.')
+                config=deepcopy(person.check_settings or {})
+                config.setdefault(group,{}).setdefault(key,{})['bonus']=value
+                person.check_settings=config
+                person.save(update_fields=['check_settings','updated_at'])
+                return JsonResponse({'checks':person.computed_checks,'message':'Бонус сохранён.'})
             elif action=='equipment':
                 form=EquipmentForm(request.POST,instance=person)
                 if not form.is_valid():
@@ -89,6 +131,7 @@ def character_resource_change(request, pk):
                     absorbed=min(person.temporary_hit_points,value)
                     person.temporary_hit_points-=absorbed
                     person.current_hit_points=max(0,person.current_hit_points-(value-absorbed))
+                    note+=concentration_damage(person,value)
                 elif action=='temporary':
                     person.temporary_hit_points=max(person.temporary_hit_points,value)
                     note='Временные хиты сохранены. Они не складываются: используется большее значение.'
@@ -97,7 +140,8 @@ def character_resource_change(request, pk):
                         raise ValueError('Максимум хитов должен быть больше нуля.')
                     person.max_hit_points=value
                     person.current_hit_points=min(person.current_hit_points,value)
-                person.save(update_fields=['current_hit_points','temporary_hit_points','max_hit_points','updated_at'])
+                person.rest_revision+=1
+                person.save(update_fields=['current_hit_points','temporary_hit_points','max_hit_points','rest_revision','combat_revision','concentration_spell','concentration_name','updated_at'])
             elif action == 'convert':
                 rates={name:rate for name,_,_,rate in COINS}
                 source=request.POST.get('from_coin','')
@@ -137,7 +181,7 @@ def character_resource_change(request, pk):
                 raise ValueError('Неизвестное действие.')
         except ValueError as error:
             return JsonResponse({'error':str(error)},status=400)
-    return JsonResponse({**state(person),'message':note})
+    return JsonResponse({**state(person),'message':note,'combat':combat_state(person,request.user)})
 
 def available_spells(request):
     return visible_spells(request.user)

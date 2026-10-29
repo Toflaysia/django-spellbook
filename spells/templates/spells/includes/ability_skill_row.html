@@ -1,0 +1,11 @@
+<div class="ability-skill-row" data-check-group="{{ group }}" data-check-key="{{ row.key }}">
+    <button type="button" class="training-cycle" data-training="{{ row.training_value }}" aria-label="{% if save %}Спасбросок {% endif %}{{ row.label }}: {{ row.training }}. Изменить владение" title="{{ row.training }}. Нажми для переключения">
+        <span aria-hidden="true">{% if row.training_value == 'proficient' %}●{% elif row.training_value == 'expertise' %}◎{% elif row.training_value == 'half' %}◐{% else %}○{% endif %}</span>
+    </button>
+    <span class="ability-skill-name">{% if save %}Спасбросок{% else %}{{ row.label }}{% endif %}</span>
+    <button type="button" class="skill-value" data-dice-expression="{{ row.dice }}" title="{{ row.formula }}" aria-label="{% if save %}Спасбросок {% endif %}{{ row.label }}: бросить {{ row.dice }}">{{ row.total|stringformat:'+d' }}</button>
+    <details class="skill-calculation"><summary>Бонус и расчёт</summary><p data-check-formula>{{ row.formula }}</p><p data-check-training>{{ row.training }}</p><form class="skill-bonus-form" data-group="{{ group }}" data-key="{{ row.key }}" method="post" action="{% url 'character_resource_change' character.pk %}">
+        {% csrf_token %}<label for="bonus-{{ group }}-{{ row.key }}">Дополнительный бонус</label>
+        <div><input id="bonus-{{ group }}-{{ row.key }}" name="bonus" type="number" min="-1000" max="1000" step="1" required value="{{ row.bonus }}"><button type="submit">Сохранить бонус</button></div>
+    </form></details>
+</div>

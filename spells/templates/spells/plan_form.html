@@ -1,7 +1,7 @@
 {% extends "spells/form_base.html" %}
 {% load static %}
 {% block title %}Редактирование плана — Spellbook{% endblock %}
-{% block styles %}<link rel="stylesheet" href="{% static 'spells/home_plans.css' %}?v=20261021-plan-date-menu">{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'spells/home_plans.css' %}?v=20261021-theme">{% endblock %}
 {% block content %}<main class="home-plan-edit"><a class="btn btn-secondary" href="{% url 'home_page' %}#plans" data-confirm-unsaved>← Планы и напоминания</a><h1>Редактирование плана</h1>
 <form method="post" class="home-plan-form">{% csrf_token %}{{ form.as_p }}<div class="home-plan-actions"><button type="submit">Сохранить</button><a class="btn btn-secondary" href="{% url 'home_page' %}#plans">Отмена</a></div></form>
 </main>{% endblock %}

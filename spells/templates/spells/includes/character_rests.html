@@ -1,0 +1,39 @@
+<div class="character-rests" data-rest-url="{% url 'character_rest_change' character.pk %}">
+    {{ rest_state|json_script:"character-rest-state" }}
+    <h2>Отдых и восстановление</h2>
+    <div class="rest-actions"><button type="button" data-rest-open="short-rest">Короткий отдых</button><button type="button" data-rest-open="long-rest">Длинный отдых</button></div>
+    <p class="rest-hint">Правила D&D 5e 2014. Отдых применяется после его завершения в игре.</p>
+    <div class="hit-dice-summary" data-dice-summary></div>
+    <h3>Ресурсы способностей</h3><div data-resource-list class="rest-resources"></div>
+    <details class="rest-add"><summary>Добавить ресурс</summary>
+        <form data-rest-form="resource_create">{% csrf_token %}
+            <label>Название<input name="name" maxlength="80" required placeholder="Например, Второе дыхание"></label>
+            <label>Максимум использований<input type="number" step="1" inputmode="numeric" name="maximum" min="1" max="9999" value="1" required></label>
+            <label>Восстановление<select name="refresh_on"><option value="short">Короткий и длинный отдых</option><option value="long" selected>Длинный отдых</option><option value="manual">Только вручную</option></select></label>
+            <button type="submit">Добавить ресурс</button>
+        </form>
+    </details>
+    <p class="rest-status" data-rest-status role="status" aria-live="polite"></p>
+    <dialog id="short-rest" class="play-dialog rest-dialog" aria-labelledby="short-rest-title">
+        <button type="button" class="dialog-close" data-rest-close aria-label="Закрыть">×</button>
+        <h2 id="short-rest-title">Короткий отдых</h2><p>Не менее 1 часа спокойного отдыха. Каждая кость восстанавливает хиты: бросок + модификатор Телосложения, минимум 0.</p>
+        <div class="rest-health" aria-label="Хиты во время отдыха"><span>Хиты</span><strong><span data-hp-current class="{% if character.current_hit_points|add:character.current_hit_points <= character.max_hit_points %}hp-low{% endif %}">{{ character.current_hit_points }}</span> / <span data-hp-max>{{ character.max_hit_points }}</span></strong><span class="hp-temporary" {% if not character.temporary_hit_points %}hidden{% endif %}>Временные: <span data-hp-temp>{{ character.temporary_hit_points }}</span></span></div>
+        <p class="rest-status" data-rest-status role="status" aria-live="polite"></p>
+        <h3>Кости хитов</h3><p>Трать по одной и решай, нужна ли следующая.</p><div data-spend-dice class="rest-dice"></div>
+        <form data-rest-form="short_rest">{% csrf_token %}
+            <fieldset><legend>Восстановить ячейки колдуна в спеллбуках</legend><div data-rest-books></div></fieldset>
+            <p class="rest-hint">Обычные ячейки не восстанавливаются. Ресурсы короткого отдыха заполнятся до максимума.</p>
+            <button type="submit">Завершить короткий отдых</button>
+        </form>
+    </dialog>
+    <dialog id="long-rest" class="play-dialog rest-dialog" aria-labelledby="long-rest-title">
+        <button type="button" class="dialog-close" data-rest-close aria-label="Закрыть">×</button>
+        <h2 id="long-rest-title">Длинный отдых</h2><p>Не менее 8 часов, включая 6 часов сна. Не чаще одного раза за игровые сутки. В начале нужен хотя бы 1 хит.</p>
+        <p>Хиты восстановятся до максимума, временные хиты обнулятся, концентрация прекратится. Ресурсы короткого и длинного отдыха заполнятся.</p>
+        <form data-rest-form="long_rest">{% csrf_token %}
+            <fieldset><legend>Восстановление костей хитов</legend><p>Можно вернуть до <strong data-recovery-budget></strong> потраченных костей. Выбери их типы и количество.</p><div data-recover-dice class="rest-dice"></div><p class="rest-recovery-total" data-recovery-total role="status" aria-live="polite"></p></fieldset>
+            <fieldset><legend>Восстановить все ячейки в спеллбуках</legend><div data-rest-books></div></fieldset>
+            <button type="submit">Завершить длинный отдых</button>
+        </form><p class="rest-status" data-rest-status role="status" aria-live="polite"></p>
+    </dialog>
+</div>

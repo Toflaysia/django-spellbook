@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block styles %}
-<link rel="stylesheet" href="{% static 'spells/spell_materials.css' %}?v=20261021-materials">
+<link rel="stylesheet" href="{% static 'spells/spell_materials.css' %}?v=20261021-theme">
 <style>
     .spell-form-main {
         max-width: 1000px;
@@ -27,14 +27,14 @@
 
     .spell-form-muted,
     .spell-form-help {
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
     }
 
     .spell-form-panel {
         padding: 28px;
-        border: 1px solid #343548;
+        border: 1px solid var(--sb-border, #343548);
         border-radius: 16px;
-        background: #1c1d2a;
+        background: var(--sb-surface, #1c1d2a);
     }
 
     .spell-form-tabs {
@@ -43,7 +43,7 @@
         gap: 8px;
         padding-bottom: 20px;
         margin-bottom: 24px;
-        border-bottom: 1px solid #343548;
+        border-bottom: 1px solid var(--sb-border, #343548);
     }
 
     .spell-form-tab {
@@ -51,19 +51,19 @@
         border: none;
         border-radius: 10px;
         background: transparent;
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         font: inherit;
         font-weight: 600;
         cursor: pointer;
     }
 
     .spell-form-tab:hover {
-        background: #292a3c;
+        background: var(--sb-surface-soft, #292a3c);
     }
 
     .spell-form-tab[aria-selected="true"] {
-        background: #c4b5fd;
-        color: #21163c;
+        background: var(--sb-accent, #c4b5fd);
+        color: var(--sb-on-accent, #21163c);
     }
 
     .spell-form-section[hidden] {
@@ -100,10 +100,10 @@
     .spell-form-field textarea {
         width: 100%;
         padding: 12px;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 8px;
-        background: #11121a;
-        color: #f3f4f6;
+        background: var(--sb-page, #11121a);
+        color: var(--sb-text, #f3f4f6);
         font: inherit;
     }
 
@@ -121,7 +121,7 @@
         height: 20px;
         margin: 0;
         padding: 0;
-        accent-color: #c4b5fd;
+        accent-color: var(--sb-accent, #c4b5fd);
         cursor: pointer;
     }
 
@@ -132,7 +132,7 @@
 
     .spell-form-panel .errorlist {
         padding-left: 20px;
-        color: #fca5a5;
+        color: var(--sb-danger-ink, #fca5a5);
     }
 
     .spell-form-actions {
@@ -168,24 +168,24 @@
         gap: 12px;
         margin: 0;
         padding: 12px 16px;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 10px;
-        background: #11121a;
+        background: var(--sb-page, #11121a);
         cursor: pointer;
     }
 
     .spell-component-choice:hover {
-        border-color: #a78bfa;
-        background: #252033;
+        border-color: var(--sb-accent, #a78bfa);
+        background: var(--sb-surface-soft, #252033);
     }
 
     .spell-component-choice:focus-within {
-        border-color: #c4b5fd;
+        border-color: var(--sb-accent, #c4b5fd);
     }
 
     .spell-component-choice:has(input:checked) {
-        border-color: #a78bfa;
-        background: #302943;
+        border-color: var(--sb-accent, #a78bfa);
+        background: var(--sb-accent-soft, #302943);
     }
 
     .spell-component-choice span {

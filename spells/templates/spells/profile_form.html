@@ -1,0 +1,11 @@
+{% extends 'spells/form_base.html' %}
+{% load static %}
+{% block title %}Мой профиль — редактирование — Spellbook{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'spells/profiles.css' %}?v=20261028-profiles">{% endblock %}
+{% block content %}
+<main class="profile-page"><h1>Мой профиль</h1><p class="profile-muted">Имя, аватар, описание и выбранная роль будут видны другим пользователям.</p>
+<form class="profile-edit-form" method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.non_field_errors }}
+{% for field in form %}<div class="profile-field">{{ field.label_tag }}{{ field }}{{ field.errors }}{% if field.help_text %}<p class="profile-muted profile-help">{{ field.help_text }}</p>{% endif %}</div>{% endfor %}
+<div class="profile-actions"><button type="submit">Сохранить профиль</button><a class="btn btn-secondary" href="{% url 'my_profile_page' %}">Отмена</a></div>
+</form></main>
+{% endblock %}

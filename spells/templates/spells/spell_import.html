@@ -17,16 +17,16 @@
     }
 
     .import-intro {
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         line-height: 1.7;
     }
 
     .import-panel {
         margin-top: 24px;
         padding: 28px;
-        border: 1px solid #343548;
+        border: 1px solid var(--sb-border, #343548);
         border-radius: 16px;
-        background: #1c1d2a;
+        background: var(--sb-surface, #1c1d2a);
     }
 
     .import-panel label {
@@ -39,27 +39,27 @@
         width: 100%;
         min-width: 0;
         padding: 12px;
-        border: 1px dashed #484960;
+        border: 1px dashed var(--sb-border-strong, #484960);
         border-radius: 8px;
-        background: #11121a;
-        color: #f3f4f6;
+        background: var(--sb-page, #11121a);
+        color: var(--sb-text, #f3f4f6);
         font: inherit;
     }
 
     .import-panel input[type="file"]::file-selector-button {
         margin-right: 12px;
         padding: 8px 12px;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 6px;
-        background: #292a3c;
-        color: #ececf3;
+        background: var(--sb-surface-soft, #292a3c);
+        color: var(--sb-text, #ececf3);
         font: inherit;
         cursor: pointer;
     }
 
     .import-help {
         margin: 12px 0;
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         font-size: 13px;
     }
 
@@ -67,8 +67,8 @@
         margin-top: 24px;
         padding: 16px;
         border-radius: 8px;
-        background: #29233e;
-        color: #ddd6fe;
+        background: var(--sb-surface-soft, #29233e);
+        color: var(--sb-accent-ink, #ddd6fe);
         font-size: 14px;
     }
 
@@ -84,20 +84,20 @@
         padding: 12px 20px;
         border: none;
         border-radius: 8px;
-        background: #c4b5fd;
-        color: #21163c;
+        background: var(--sb-accent, #c4b5fd);
+        color: var(--sb-on-accent, #21163c);
         font: inherit;
         font-weight: 600;
         cursor: pointer;
     }
 
     .import-submit:hover {
-        background: #ddd6fe;
+        background: var(--sb-accent-hover, #ddd6fe);
     }
 
     .import-panel .errorlist {
         padding-left: 20px;
-        color: #fca5a5;
+        color: var(--sb-danger-ink, #fca5a5);
         line-height: 1.5;
     }
 

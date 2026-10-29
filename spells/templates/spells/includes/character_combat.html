@@ -1,0 +1,18 @@
+<details class="character-combat" id="character-combat">
+    <summary>Концентрация</summary>
+    <div class="combat-content">
+        <div data-concentration-current></div>
+        <details class="combat-editor" data-concentration-editor><summary>Выбрать заклинание</summary>
+        <form data-concentration-search class="concentration-search"><label>Найти заклинание<input type="search" name="search" maxlength="150" placeholder="Название заклинания" autocomplete="off"></label><button type="submit">Найти</button></form>
+        <p class="combat-muted" data-spell-search-status role="status"></p>
+        <form data-combat-form="concentration_start" class="concentration-start-form">{% csrf_token %}
+            <label>Заклинание с концентрацией<select name="spell_id" required><option value="">Выбери заклинание</option></select></label>
+            <label class="combat-checkbox" data-concentration-replace hidden><input type="checkbox" name="replace">Заменить текущую концентрацию</label>
+            <button type="submit">Начать концентрацию</button><p class="combat-muted">Это отметка для отслеживания. Ячейка заклинания не расходуется.</p>
+        </form>
+        </details>
+        <section class="concentration-checks" data-concentration-checks-section hidden><h4>Проверки концентрации</h4><p data-concentration-save></p><div data-concentration-checks></div></section>
+        <details data-manual-check-section hidden><summary>Добавить проверку по решению мастера</summary><form data-combat-form="concentration_check_add">{% csrf_token %}<label>Сложность<input type="number" name="dc" min="1" max="1000000000" value="10" required></label><button type="submit">Добавить проверку</button></form></details>
+        <p class="combat-status" data-combat-status role="status" aria-live="polite"></p>
+    </div>
+</details>

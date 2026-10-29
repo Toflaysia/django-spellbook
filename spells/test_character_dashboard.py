@@ -32,5 +32,5 @@ class CharacterDashboardTests(TestCase):
         response=self.client.post(reverse('spellbook_create_page')+'?owner='+str(self.person.pk),{})
         self.assertContains(response,reverse('character_detail_page',args=[self.person.pk])+'#character-spellbooks')
         response=self.client.get(reverse('character_detail_page',args=[self.person.pk]))
-        self.assertContains(response,'data-hp-current class="hp-low"',count=2)
+        self.assertContains(response,'data-hp-current class="hp-low"',count=3)
         self.assertContains(self.client.get(reverse('character_list_page')),'class="hp-current hp-low"')

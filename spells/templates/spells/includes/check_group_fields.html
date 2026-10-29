@@ -1,0 +1,28 @@
+{% if group.id == 'skills' or group.id == 'saves' %}
+                    <h2>{{ group.title }}</h2>
+                    <p class="training-legend">○ Без владения · ● Владение{% if group.id == 'skills' %} · ◎ Компетентность · ◐ Половина мастерства{% endif %}. Выбери нужный кружок в строке.</p>
+                    <div class="training-edit-list">
+                    {% for row in group.rows %}
+                        <fieldset class="training-edit-row" data-check-kind="{{ row.kind }}" data-check-key="{{ row.key }}">
+                            <legend>{{ row.title }} <small>({{ row.ability }})</small></legend>
+                            <div class="training-edit-main">{{ row.fields.0 }}{{ row.fields.0.errors }}<output class="check-preview" aria-live="polite"></output></div>
+                            <details class="training-bonus"{% if row.fields.1.errors %} open{% endif %}><summary>Бонус и расчёт</summary><div class="character-form-field">{{ row.fields.1.label_tag }}{{ row.fields.1 }}{{ row.fields.1.errors }}</div><p class="check-formula"></p></details>
+                        </fieldset>
+                    {% endfor %}
+                    </div>
+{% else %}
+                    <h2>{{ group.title }}</h2>
+                    {% if group.id == 'skills' %}<p class="play-muted">Итог = модификатор характеристики + мастерство по выбранному владению + дополнительный бонус. Половина мастерства округляется вниз.</p>{% endif %}
+                    {% if group.id == 'saves' %}<p class="play-muted">Выбери владение спасбросками, полученное от класса и других особенностей.</p>{% endif %}
+                    {% if group.id == 'speeds' %}<p class="play-muted">Скорость ходьбы берётся из вкладки «Бой и магия». Базовые скорости задай по расе и особенностям; от Ловкости они не рассчитываются.</p>{% endif %}
+                    {% if group.id == 'passives' %}<p class="play-muted">10 + итог навыка + отдельный бонус. Преимущество и помеха взаимно отменяются.</p>{% endif %}
+                    <div class="check-edit-grid">
+                    {% for row in group.rows %}
+                        <fieldset class="check-edit-card" data-check-kind="{{ row.kind }}" data-check-key="{{ row.key }}">
+                            <legend>{{ row.title }}{% if row.ability %} <small>({{ row.ability }})</small>{% endif %}</legend>
+                            {% for field in row.fields %}<div class="character-form-field">{{ field.label_tag }}{{ field }}{{ field.errors }}{% if field.help_text %}<p class="character-form-help">{{ field.help_text }}</p>{% endif %}</div>{% endfor %}
+                            <output class="check-preview" aria-live="polite"></output><p class="check-formula"></p>
+                        </fieldset>
+                    {% endfor %}
+                    </div>
+{% endif %}

@@ -28,7 +28,7 @@
 
     .characters-intro,
     .character-muted {
-        color: #b6b7cb;
+        color: var(--sb-muted, #b6b7cb);
     }
 
     .character-button {
@@ -38,8 +38,8 @@
         padding: 10px 16px;
         border: 1px solid transparent;
         border-radius: 8px;
-        background: #c4b5fd;
-        color: #21163c;
+        background: var(--sb-accent, #c4b5fd);
+        color: var(--sb-on-accent, #21163c);
         font: inherit;
         font-weight: 600;
         text-decoration: none;
@@ -47,17 +47,17 @@
     }
 
     .character-button:hover {
-        background: #ddd6fe;
+        background: var(--sb-accent-hover, #ddd6fe);
     }
 
     .character-button-danger {
-        border-color: #754052;
+        border-color: var(--sb-danger-border, #754052);
         background: transparent;
-        color: #fda4af;
+        color: var(--sb-danger-ink, #fda4af);
     }
 
     .character-button-danger:hover {
-        background: #39232c;
+        background: var(--sb-danger-soft, #39232c);
     }
 
     .characters-search {
@@ -71,10 +71,10 @@
         width: 100%;
         min-width: 0;
         padding: 12px 16px;
-        border: 1px solid #45465f;
+        border: 1px solid var(--sb-border-strong, #45465f);
         border-radius: 8px;
-        background: #1d1e2b;
-        color: #fff;
+        background: var(--sb-surface, #1d1e2b);
+        color: var(--sb-text, #fff);
         font: inherit;
     }
 
@@ -87,16 +87,16 @@
     .character-card {
         min-width: 0;
         overflow: hidden;
-        border: 1px solid #36374d;
+        border: 1px solid var(--sb-border, #36374d);
         border-radius: 16px;
-        background: #1c1d2a;
+        background: var(--sb-surface, #1c1d2a);
     }
 
     .character-portrait {
         aspect-ratio: 7 / 8;
         overflow: hidden;
-        background: #11121a;
-        border-bottom: 1px solid #36374d;
+        background: var(--sb-page, #11121a);
+        border-bottom: 1px solid var(--sb-border, #36374d);
     }
 
     .character-portrait img {
@@ -112,8 +112,8 @@
         justify-content: center;
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, #29233d, #171923);
-        color: #c4b5fd;
+        background: linear-gradient(135deg, var(--sb-accent-soft, #29233d), var(--sb-page, #171923));
+        color: var(--sb-accent-ink, #c4b5fd);
         font-size: 80px;
         font-weight: 600;
     }
@@ -140,7 +140,7 @@
     }
 
     .character-level {
-        color: #c4b5fd;
+        color: var(--sb-accent-ink, #c4b5fd);
         font-weight: 600;
     }
 
@@ -162,16 +162,16 @@
 
     .character-stat span {
         margin-top: 4px;
-        color: #b6b7cb;
+        color: var(--sb-muted, #b6b7cb);
         font-size: 13px;
     }
 
     .characters-empty {
         grid-column: 1 / -1;
         padding: 32px 24px;
-        border: 1px dashed #45465f;
+        border: 1px dashed var(--sb-border-strong, #45465f);
         border-radius: 16px;
-        color: #b6b7cb;
+        color: var(--sb-muted, #b6b7cb);
         text-align: center;
     }
 

@@ -19,15 +19,15 @@
     }
 
     .book-form-muted {
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
     }
 
     .book-form-panel {
         margin-top: 24px;
         padding: 28px;
-        border: 1px solid #343548;
+        border: 1px solid var(--sb-border, #343548);
         border-radius: 16px;
-        background: #1c1d2a;
+        background: var(--sb-surface, #1c1d2a);
     }
 
     .book-form-tabs {
@@ -36,7 +36,7 @@
         gap: 8px;
         margin-bottom: 24px;
         padding-bottom: 20px;
-        border-bottom: 1px solid #343548;
+        border-bottom: 1px solid var(--sb-border, #343548);
     }
 
     .book-form-tab {
@@ -44,20 +44,20 @@
         border: 1px solid transparent;
         border-radius: 10px;
         background: transparent;
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         font: inherit;
         font-weight: 600;
         cursor: pointer;
     }
 
     .book-form-tab:hover {
-        background: #292a3c;
-        color: #ececf3;
+        background: var(--sb-surface-soft, #292a3c);
+        color: var(--sb-text, #ececf3);
     }
 
     .book-form-tab[aria-selected="true"] {
-        background: #c4b5fd;
-        color: #21163c;
+        background: var(--sb-accent, #c4b5fd);
+        color: var(--sb-on-accent, #21163c);
     }
 
     .book-form-section[hidden] {
@@ -93,10 +93,10 @@
     .book-form-field textarea {
         width: 100%;
         padding: 12px;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 8px;
-        background: #11121a;
-        color: #fff;
+        background: var(--sb-page, #11121a);
+        color: var(--sb-text, #fff);
         font: inherit;
     }
 
@@ -110,13 +110,13 @@
 
     .book-form-help {
         margin: 8px 0 0;
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         font-size: 13px;
     }
 
     .book-form-panel .errorlist {
         padding-left: 20px;
-        color: #fca5a5;
+        color: var(--sb-danger-ink, #fca5a5);
     }
 
     .book-form-actions {
@@ -126,7 +126,7 @@
         gap: 16px;
         margin-top: 28px;
         padding-top: 24px;
-        border-top: 1px solid #343548;
+        border-top: 1px solid var(--sb-border, #343548);
     }
 
     @media (max-width: 600px) {
@@ -164,24 +164,24 @@
         gap: 12px;
         margin: 0;
         padding: 12px 16px;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 10px;
-        background: #11121a;
+        background: var(--sb-page, #11121a);
         cursor: pointer;
     }
 
     .book-spell-choice:hover {
-        border-color: #a78bfa;
-        background: #252033;
+        border-color: var(--sb-accent, #a78bfa);
+        background: var(--sb-surface-soft, #252033);
     }
 
     .book-spell-choice:focus-within {
-        border-color: #c4b5fd;
+        border-color: var(--sb-accent, #c4b5fd);
     }
 
     .book-spell-choice:has(input:checked) {
-        border-color: #a78bfa;
-        background: #302943;
+        border-color: var(--sb-accent, #a78bfa);
+        background: var(--sb-accent-soft, #302943);
     }
 
     .book-form-field .book-spell-choice input[type="checkbox"] {
@@ -190,7 +190,7 @@
         height: 20px;
         margin: 0;
         padding: 0;
-        accent-color: #c4b5fd;
+        accent-color: var(--sb-accent, #c4b5fd);
         cursor: pointer;
     }
 

@@ -149,5 +149,5 @@ class DescriptionFormMixin:
 
 class DescriptionModelForm(DescriptionFormMixin, forms.ModelForm):
     class Media:
-        css = {"all": (static("spells/description_editor.css") + "?v=20261020-json-import", static("spells/play_tools.css") + "?v=20261021-neutral-dice")}
-        js = (static("spells/play_tools.js") + "?v=20261020-json-import", static("spells/description_editor.js") + "?v=20261020-json-import")
+        css = {"all": (static("spells/description_editor.css") + "?v=20261021-theme", static("spells/play_tools.css") + "?v=20261028-polish")}
+        js = (static("spells/play_tools.js") + "?v=20261028-polish", static("spells/description_editor.js") + "?v=20261020-json-import")

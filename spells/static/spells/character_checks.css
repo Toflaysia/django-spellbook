@@ -1,0 +1,70 @@
+.check-edit-grid,.check-display-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.check-edit-card{min-width:0;margin:0;padding:18px;border:1px solid var(--sb-border-strong,#484960);border-radius:12px}
+.check-edit-card legend{padding:0 8px;font-weight:600;overflow-wrap:anywhere}
+.check-edit-card .character-form-field{margin:12px 0}
+.check-edit-card legend small,.check-formula{color:var(--sb-muted,#b8b9cc);font-size:13px;line-height:1.6}
+.check-edit-card .check-preview{display:block;margin-top:16px;color:var(--sb-accent-ink,#ddd6fe);font-size:20px;font-weight:600;overflow-wrap:anywhere}
+.check-result{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:16px;border:1px solid var(--sb-border-strong,#484960);border-radius:12px;min-width:0;overflow-wrap:anywhere}
+.check-result small,.check-summary small{display:block;color:var(--sb-muted,#b8b9cc);font-size:13px;margin-top:6px}
+.check-result p{grid-column:1/-1;margin:0;color:var(--sb-muted,#b8b9cc);font-size:13px;line-height:1.5}
+body .check-result .check-roll{min-width:52px;min-height:44px;padding:8px;color:var(--sb-accent-ink,#ddd6fe);background:var(--sb-accent-soft,#302943);border-color:var(--sb-border-strong,#484960)}
+.check-summary{display:flex;flex-wrap:wrap;gap:20px;margin:24px 0;overflow-wrap:anywhere}
+.check-summary>span{min-width:0}
+@media(max-width:700px){.check-edit-grid,.check-display-grid{grid-template-columns:minmax(0,1fr)}}
+/* Compact ability cards: the check stays directly under its ability. */
+.ability-grid.ability-skills-grid{align-items:start;grid-template-columns:repeat(3,minmax(0,1fr))}
+.ability-score-line{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;margin:12px 0}
+.ability-score-line>span{color:var(--sb-muted,#b8b9cc);font-size:13px}
+.ability-skill-row{display:grid;grid-template-columns:44px minmax(0,1fr) 52px;align-items:center;border-top:1px solid var(--sb-border,#343548);padding:6px 0;gap:4px}
+.ability-skill-name{font-size:14px;overflow-wrap:anywhere}
+body .ability-skill-row .training-cycle,body .ability-skill-row .skill-value{padding:0;min-width:0;min-height:44px;border:0;background:transparent;color:var(--sb-accent-ink,#ddd6fe);box-shadow:none;font:inherit}
+body .ability-skill-row .training-cycle{width:44px;font-size:25px;line-height:1}
+body .ability-skill-row .skill-value{font-weight:700;font-size:18px}
+body .ability-skill-row .training-cycle:hover,body .ability-skill-row .skill-value:hover{background:var(--sb-accent-soft,#302943);color:var(--sb-accent-ink,#ddd6fe)}
+.training-cycle[aria-disabled=true]{opacity:.55;cursor:wait}
+.skill-calculation{grid-column:2/-1;margin-top:0!important;font-size:12px;color:var(--sb-muted,#b8b9cc)}
+.skill-calculation summary{min-height:28px;display:flex;align-items:center}
+.skill-calculation summary::before{content:'▸';margin-right:6px}.skill-calculation[open] summary::before{content:'▾'}
+.skill-calculation p{margin:4px 0;overflow-wrap:anywhere;line-height:1.5}
+.training-legend{font-size:13px;line-height:1.8;color:var(--sb-muted,#b8b9cc)}
+.training-edit-list{display:grid;gap:10px}
+.training-edit-row{min-width:0;margin:0;padding:10px 14px;border:1px solid var(--sb-border-strong,#484960);border-radius:10px}
+.training-edit-row legend{font-weight:600;padding:0 6px;overflow-wrap:anywhere}
+.training-edit-row legend small{color:var(--sb-muted,#b8b9cc);font-size:12px}
+.training-edit-main{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.training-edit-main .check-preview{color:var(--sb-accent-ink,#ddd6fe);font-weight:600}
+.training-options{display:flex;align-items:center;gap:2px}
+.training-options .training-option{display:flex;align-items:center;justify-content:center;position:relative;width:44px;height:44px;min-width:44px;margin:0;cursor:pointer}
+.training-option input[type=radio]{position:absolute;opacity:0;width:1px!important;height:1px!important;margin:0;padding:0}
+.training-option-symbol{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid transparent;border-radius:50%;font-size:25px;line-height:1;color:var(--sb-muted,#b8b9cc)}
+.training-option input:checked+.training-option-symbol{color:var(--sb-accent-ink,#ddd6fe);background:var(--sb-accent-soft,#302943);border-color:var(--sb-accent,#c4b5fd)}
+.training-option input:focus-visible+.training-option-symbol{outline:2px solid var(--sb-accent,#c4b5fd);outline-offset:3px}
+.training-option:hover .training-option-symbol{background:var(--sb-accent-soft,#302943)}
+.training-bonus{margin-top:4px}.training-bonus>summary{cursor:pointer;font-size:12px;color:var(--sb-muted,#b8b9cc);padding:8px 0}
+@media(max-width:1000px){.ability-grid.ability-skills-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.ability-grid.ability-skills-grid{grid-template-columns:minmax(0,1fr)}}
+
+[data-training-status]{min-height:1.5em}
+
+.integrated-check-group{margin-top:28px;padding-top:20px;border-top:1px solid var(--sb-border,#343548)}
+.spellcasting-summary{margin:24px 0 28px}
+.spellcasting-summary>h3{margin:0 0 16px}
+.spellcasting-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.spellcasting-stats>div{min-width:0;padding:20px;border:1px solid var(--sb-border-strong,#484960);border-radius:12px;background:var(--sb-surface-soft,#252637);overflow-wrap:anywhere}
+.spellcasting-stats .ability-name{font-size:16px;line-height:1.5}
+.spellcasting-stats strong{display:block;font-size:32px;color:var(--sb-accent-ink,#ddd6fe);margin:16px 0 10px}
+.spellcasting-stats small{display:block;font-size:13px;color:var(--sb-muted,#b8b9cc);line-height:1.6}
+@media(max-width:600px){.spellcasting-stats{grid-template-columns:minmax(0,1fr)}}
+
+.ability-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.ability-edit-card{min-width:0;padding:18px;border:1px solid var(--sb-border-strong,#484960);border-radius:12px;background:var(--sb-surface-soft,#252637)}
+.ability-edit-card .character-form-field{margin:0 0 16px}.ability-edit-card .ability-name{margin-bottom:10px}
+.ability-edit-card .ability-name label{margin:0}
+.ability-edit-save{border-top:1px solid var(--sb-border,#343548);padding-top:14px}
+.ability-edit-save h3{margin:0 0 10px;font-size:15px}
+.ability-edit-save .check-preview{color:var(--sb-accent-ink,#ddd6fe);font-weight:600}
+.skill-bonus-form{margin-top:12px}.skill-bonus-form label{display:block;margin-bottom:6px}
+.skill-bonus-form>div{display:flex;flex-wrap:wrap;gap:8px}
+.skill-bonus-form input{min-width:0;width:100%;max-width:110px;padding:10px;font:inherit;border:1px solid var(--sb-border-strong,#484960);border-radius:8px;background:var(--sb-page,#11121a);color:var(--sb-text,#ececf3)}
+body .skill-bonus-form button{min-height:44px;padding:8px 12px;font-size:13px}
+@media(max-width:650px){.ability-edit-grid{grid-template-columns:minmax(0,1fr)}}

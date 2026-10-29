@@ -1,0 +1,22 @@
+<section class="character-conditions combat-content" id="character-conditions" aria-labelledby="character-conditions-title">
+    <div class="conditions-heading"><div><h2 id="character-conditions-title">Состояния</h2><p class="combat-muted" data-condition-count></p></div><button type="button" data-condition-add>+ Добавить состояние</button></div>
+    <div data-condition-list class="condition-list"></div>
+    <p class="combat-muted">Снимай состояние, когда его действие закончится. Преимущества и помехи выбирай при броске.</p>
+    <p class="combat-status" data-combat-status role="status" aria-live="polite"></p>
+    <dialog class="play-dialog condition-dialog" id="condition-editor" aria-labelledby="condition-editor-title">
+        <button type="button" class="dialog-close" data-condition-cancel aria-label="Закрыть">×</button>
+        <h2 id="condition-editor-title">Добавить состояние</h2>
+        <form data-combat-form="condition_add" class="condition-add-form">{% csrf_token %}
+            <input type="hidden" name="condition_id">
+            <div data-condition-picker><label>Поиск состояния<input type="search" data-condition-search placeholder="Например, отравлен" autocomplete="off"></label><fieldset class="condition-choice-fieldset"><legend>Выбери состояние</legend><div data-condition-options class="condition-options"></div></fieldset><p class="combat-muted" data-condition-no-results hidden>Ничего не найдено. Попробуй другое название.</p></div>
+            <div data-condition-preview class="condition-preview" hidden><h3 data-condition-preview-title></h3><p data-condition-preview-text></p></div>
+            <details class="condition-extra"><summary>Заметка и особые правила</summary>
+                <label>Источник или срок действия <small>Необязательно</small><input name="note" maxlength="200" placeholder="Например, яд — до конца следующего хода"></label>
+                <label class="combat-checkbox"><input type="checkbox" name="incapacitates">Прерывает концентрацию</label>
+                <p class="combat-muted">Отметь, если состояние лишает дееспособности. Пока оно действует, начать концентрацию нельзя.</p>
+            </details>
+            <p class="combat-status" data-combat-status role="status" aria-live="polite"></p>
+            <div class="condition-form-actions"><button type="submit" data-condition-submit disabled>Добавить состояние</button><button type="button" class="btn-secondary" data-condition-cancel>Отмена</button></div>
+        </form>
+    </dialog>
+</section>

@@ -1,16 +1,21 @@
 {% extends "spells/base.html" %}
 {% load static description_tags %}
 {% block title %}{{ character.name }} — Spellbook{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'spells/character_combat.css' %}?v=20261028-conditions-ui"><link rel="stylesheet" href="{% static 'spells/character_rests.css' %}?v=20261028-controls"><link rel="stylesheet" href="{% static 'spells/character_checks.css' %}?v=20261021-editor">{% endblock %}
 {% block content %}
-<main class="character-detail" data-resource-url="{% url 'character_resource_change' character.pk %}">
+<main class="character-detail" data-combat-url="{% url 'character_combat_change' character.pk %}" data-spell-search-url="{% url 'concentration_spell_search' character.pk %}" data-resource-url="{% url 'character_resource_change' character.pk %}">
     <a class="btn btn-secondary" href="{% url 'character_list_page' %}">← Мои персонажи</a>
     <div class="character-detail-heading">
         {% if character.portrait %}<div class="character-detail-portrait"><img src="{{ character.portrait.url }}" alt="Портрет {{ character.name }}" style="object-position:{{ character.portrait_position_x }}% {{ character.portrait_position_y }}%; transform:scale({{ character.portrait_zoom|stringformat:'f' }});"></div>{% endif %}
         <div><h1>{{ character.name }}</h1><p>{{ character.race }} · {{ character.character_class.name|default:'Без класса' }} · Уровень {{ character.level }}</p>{% if character.subclass %}<p>{{ character.subclass.name }}</p>{% endif %}</div>
         <a class="btn btn-secondary" href="{% url 'character_edit_page' character.pk %}">Редактировать</a>
     </div>
+    {{ combat_state|json_script:"character-combat-state" }}
+    {{ condition_catalog|json_script:"condition-choice-catalog" }}
+    <div class="combat-quick" data-combat-quick hidden></div>
     <div class="character-detail-tabs" role="tablist" aria-label="Карточка персонажа">
         <button type="button" role="tab" id="tab-overview" aria-controls="overview" aria-selected="true">Персонаж</button>
+        <button type="button" role="tab" id="tab-checks" aria-controls="character-checks" aria-selected="false">Дополнительно</button>
         <button type="button" role="tab" id="tab-health" aria-controls="health" aria-selected="false">Здоровье</button>
         <button type="button" role="tab" id="tab-spellbooks" aria-controls="character-spellbooks" aria-selected="false">Спеллбуки</button>
         <button type="button" role="tab" id="tab-equipment" aria-controls="equipment" aria-selected="false">Снаряжение и монеты</button>
@@ -18,10 +23,22 @@
     <section id="overview" role="tabpanel" aria-labelledby="tab-overview" class="play-panel">
         <div class="character-combat-stats">
             <div><span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/armor.svg' %}" alt="">Класс доспеха</span><strong>{{ character.armor_class }}</strong></div>
-            <div><span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/speed.svg' %}" alt="">Скорость</span><strong>{{ character.speed }} <small>футов</small></strong></div>
-            <div><span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/proficiency.svg' %}" alt="">Бонус мастерства</span><strong>+{{ character.proficiency_bonus }}</strong></div>
+            <div><span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/speed.svg' %}" alt="">Скорость</span><strong>{{ checks.speeds.0.total }} <small>футов</small></strong></div>
+            <div><span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/proficiency.svg' %}" alt="">Бонус мастерства</span><strong>+{{ character.effective_proficiency_bonus }}</strong></div>
         </div>
-        <div class="ability-grid">{% for icon,label,value,modifier in abilities %}<div><span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/' %}{{ icon }}.svg" alt="">{{ label }}</span><strong>{{ value }}</strong><span>Модификатор {{ modifier|stringformat:'+d' }}</span></div>{% endfor %}</div>
+        <div class="check-summary"><span>Инициатива <button type="button" class="description-dice-link" data-dice-expression="{{ checks.initiative.dice }}" title="{{ checks.initiative.formula }}">{{ checks.initiative.total|stringformat:'+d' }}</button></span></div>
+        <p class="training-legend">Кружок слева меняет владение: ○ нет · ● владение · ◎ компетентность · ◐ половина мастерства. Число справа бросает d20.</p>
+        <p class="play-muted" data-training-status role="status" aria-live="polite"></p>
+        <div class="ability-grid ability-skills-grid">
+        {% for ability in ability_cards %}
+            <div class="ability-skills-card">
+                <span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/' %}{{ ability.key }}.svg" alt="">{{ ability.label }}</span>
+                <div class="ability-score-line"><strong>{{ ability.score }}</strong><span>Модификатор {{ ability.modifier|stringformat:'+d' }}</span></div>
+                {% include "spells/includes/ability_skill_row.html" with row=ability.save group='saves' save=True %}
+                {% for row in ability.skills %}{% include "spells/includes/ability_skill_row.html" with group='skills' save=False %}{% endfor %}
+            </div>
+        {% endfor %}
+        </div>
 
         <form data-active-form method="post">{% csrf_token %}<label class="character-active"><input type="checkbox" name="is_active" {% if character.is_active %}checked{% endif %}> Активный персонаж</label><span role="status" data-active-status></span></form>
         <div class="character-background"><span>Предыстория</span><strong>{{ character.background|default:'Не указана' }}</strong></div>
@@ -29,6 +46,23 @@
     </section>
     <section id="character-spellbooks" role="tabpanel" aria-labelledby="tab-spellbooks" class="play-panel" hidden>
         <h2>Спеллбуки {{ character.name }}</h2>
+        <section class="spellcasting-summary" aria-labelledby="spellcasting-summary-title">
+            <h3 id="spellcasting-summary-title">Магия персонажа</h3>
+            <div class="spellcasting-stats">
+                <div>
+                    <span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/intelligence.svg' %}" alt="">Сложность заклинаний</span>
+                    <strong>{% if character.spellcasting_ability %}{{ character.spell_save_dc }}{% else %}—{% endif %}</strong>
+                    {% if character.spellcasting_ability %}<small>8 + {{ checks.proficiency }} (мастерство) {{ character.spellcasting_modifier|stringformat:'+d' }} ({{ character.get_spellcasting_ability_display }})</small>{% endif %}
+                </div>
+                <div>
+                    <span class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/spellbook.svg' %}" alt="">Атака заклинанием</span>
+                    <strong>{% if character.spellcasting_ability %}{{ character.spell_attack_bonus|stringformat:'+d' }}{% else %}—{% endif %}</strong>
+                    {% if character.spellcasting_ability %}<small>{{ checks.proficiency }} (мастерство) {{ character.spellcasting_modifier|stringformat:'+d' }} ({{ character.get_spellcasting_ability_display }})</small>{% endif %}
+                </div>
+            </div>
+            {% if not character.spellcasting_ability %}<p class="play-muted">Для расчёта <a href="{% url 'character_edit_page' character.pk %}#section-combat">выбери заклинательную характеристику</a>.</p>{% endif %}
+        </section>
+        {% include "spells/includes/character_combat.html" %}
         <a class="btn" href="{% url 'spellbook_create_page' %}?owner={{ character.pk }}">+ Создать спеллбук</a>
         <div class="character-books">
             {% for book in character_spellbooks %}
@@ -39,9 +73,14 @@
             {% empty %}<p class="play-muted">У этого персонажа пока нет спеллбуков.</p>{% endfor %}
         </div>
     </section>
+    <section id="character-checks" role="tabpanel" aria-labelledby="tab-checks" class="play-panel" hidden>
+        {% include "spells/includes/character_checks.html" %}
+    </section>
     <section id="health" role="tabpanel" aria-labelledby="tab-health" class="play-panel" hidden>
         <h2>Здоровье</h2><p class="hp-display"><img class="hp-icon" src="{% static 'spells/icons/heart.svg' %}" alt="Хиты"><span class="hp-values"><span data-hp-current class="{% if character.current_hit_points|add:character.current_hit_points <= character.max_hit_points %}hp-low{% endif %}">{{ character.current_hit_points }}</span><span class="hp-divider">/</span><span data-hp-max>{{ character.max_hit_points }}</span><span class="hp-temporary" {% if not character.temporary_hit_points %}hidden{% endif %} title="Временные хиты" aria-label="Временные хиты">(<span data-hp-temp>{{ character.temporary_hit_points }}</span>)</span></span></p>
         <button type="button" data-open-calculator="hp-calculator">Рассчитать хиты</button>
+        {% include "spells/includes/character_conditions.html" %}
+        {% include "spells/includes/character_rests.html" %}
     </section>
     <section id="equipment" role="tabpanel" aria-labelledby="tab-equipment" class="play-panel" hidden>
         <h2>Монеты</h2><p>Всего в золоте: <strong data-gold-total>{{ character_state.gold_total }}</strong> зм</p>
@@ -64,7 +103,7 @@
                 <button type="button" data-potion="supreme" title="Высшее зелье: 10d4+20" aria-label="Высшее зелье, лечение 10d4+20"><img src="{% static 'spells/icons/potion-supreme.svg' %}" alt=""><small>10d4+20</small></button>
             </div>
             <details><summary>Максимум хитов</summary><p>Введи новый максимум в поле выше.</p><button type="submit" name="action" value="maximum">Установить максимум</button></details>
-            <p class="calculator-status" role="status" aria-live="polite"></p>
+            <p class="calculator-status" role="status" aria-live="polite"></p><button type="button" data-open-concentration hidden>К проверкам концентрации</button>
         </form>
     </dialog>
     <dialog id="coin-calculator" class="play-dialog calculator-dialog coin-calculator-dialog" aria-labelledby="coin-title">
@@ -97,4 +136,4 @@
     </dialog>
 </main>
 {% endblock %}
-{% block scripts %}<script src="{% static 'spells/character_tools.js' %}?v=20261009-1041"></script>{% endblock %}
+{% block scripts %}<script src="{% static 'spells/character_combat.js' %}?v=20261028-concentration-tab" defer></script><script src="{% static 'spells/character_rests.js' %}?v=20261028-controls" defer></script><script src="{% static 'spells/character_skill_circles.js' %}?v=20261021-editor" defer></script><script src="{% static 'spells/character_tools.js' %}?v=20261028-concentration"></script>{% endblock %}

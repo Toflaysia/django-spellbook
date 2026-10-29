@@ -1,0 +1,8 @@
+<h2>Пассивные значения и передвижение</h2>
+<p class="play-muted">Навыки и спасброски находятся под характеристиками во вкладке «Персонаж».</p>
+<a class="btn btn-secondary" href="{% url 'character_edit_page' character.pk %}#section-derived">Настроить пассивные значения</a>
+<div class="check-summary"><span>Мастерство <strong>+{{ checks.proficiency }}</strong></span><span>Инициатива <button type="button" class="description-dice-link" data-dice-expression="{{ checks.initiative.dice }}">{{ checks.initiative.total|stringformat:'+d' }}</button><small>{{ checks.initiative.formula }}</small></span></div>
+<h3>Пассивные значения</h3>
+<div class="check-display-grid">{% for row in checks.passives %}<article class="check-result" data-check-group="passives" data-check-key="{{ row.key }}"><strong>{{ row.label }}</strong><b data-check-total>{{ row.total }}</b><p data-check-formula>{{ row.formula }}</p></article>{% endfor %}</div>
+<h3>Передвижение</h3>
+<div class="check-display-grid">{% for row in checks.speeds %}<article class="check-result"><strong>{{ row.label }}</strong><b>{{ row.total }} фут.</b><p>{{ row.formula }}</p></article>{% endfor %}</div>

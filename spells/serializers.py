@@ -25,6 +25,8 @@ class CharacterSerializer(serializers.ModelSerializer):
         read_only=True,
         default=None,
     )
+    computed_checks = serializers.JSONField(read_only=True)
+    effective_proficiency_bonus = serializers.IntegerField(read_only=True)
     level = serializers.IntegerField(read_only=True)
     spellcasting_modifier = serializers.IntegerField(read_only=True)
     spell_save_dc = serializers.IntegerField(read_only=True)
@@ -57,6 +59,9 @@ class CharacterSerializer(serializers.ModelSerializer):
             "initiative_bonus",
             "speed",
             "proficiency_bonus",
+            "check_settings",
+            "computed_checks",
+            "effective_proficiency_bonus",
             "spellcasting_ability",
             "is_active",
             "is_favorite",
@@ -77,6 +82,7 @@ class CharacterSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        data["proficiency_bonus"] = instance.effective_proficiency_bonus
         request = self.context.get('request')
         if instance.character_class_id and not visible_classes(request.user if request else None).filter(pk=instance.character_class_id).exists():
             data['character_class'] = None
@@ -85,6 +91,11 @@ class CharacterSerializer(serializers.ModelSerializer):
         return data
 
     def validate(self, attrs):
+        if 'proficiency_bonus' in attrs:
+            from copy import deepcopy
+            config=deepcopy(attrs.get('check_settings', self.instance.check_settings if self.instance else {}))
+            config['proficiency_override']=attrs['proficiency_bonus']
+            attrs['check_settings']=config
         def current_value(field_name):
             if field_name in attrs:
                 return attrs[field_name]

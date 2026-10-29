@@ -23,15 +23,15 @@
     }
 
     .class-muted {
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
     }
 
     .class-panel {
         margin-top: 24px;
         padding: 24px;
-        border: 1px solid #343548;
+        border: 1px solid var(--sb-border, #343548);
         border-radius: 16px;
-        background: #1c1d2a;
+        background: var(--sb-surface, #1c1d2a);
     }
 
     .class-panel h2 {
@@ -49,8 +49,8 @@
     .class-tag {
         padding: 6px 12px;
         border-radius: 8px;
-        background: #302943;
-        color: #ddd6fe;
+        background: var(--sb-accent-soft, #302943);
+        color: var(--sb-accent-ink, #ddd6fe);
     }
 
     .class-selection label {
@@ -69,10 +69,10 @@
         flex: 1;
         min-width: 180px;
         padding: 12px;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 10px;
-        background: #11121a;
-        color: #ececf3;
+        background: var(--sb-page, #11121a);
+        color: var(--sb-text, #ececf3);
         font: inherit;
     }
 
@@ -89,17 +89,17 @@
     .class-table th,
     .class-table td {
         padding: 12px;
-        border-bottom: 1px solid #343548;
+        border-bottom: 1px solid var(--sb-border, #343548);
         vertical-align: top;
     }
 
     .class-table th {
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         font-weight: 600;
     }
 
     .class-table tbody tr:hover {
-        background: #252637;
+        background: var(--sb-surface-soft, #252637);
     }
 
     .class-feature-links {
@@ -112,8 +112,8 @@
         display: inline-block;
         padding: 4px 10px;
         border-radius: 8px;
-        background: #302943;
-        color: #ddd6fe;
+        background: var(--sb-accent-soft, #302943);
+        color: var(--sb-accent-ink, #ddd6fe);
         text-decoration: none;
     }
 
@@ -122,8 +122,8 @@
     }
 
     .class-feature-link-subclass {
-        background: #193b38;
-        color: #99f6e4;
+        background: var(--sb-success-soft, #193b38);
+        color: var(--sb-success-ink, #99f6e4);
     }
 
     .class-feature {
@@ -161,24 +161,24 @@
         justify-content: center;
         min-height: 44px;
         padding: 10px 16px;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 10px;
-        background: #252637;
-        color: #ececf3;
+        background: var(--sb-surface-soft, #252637);
+        color: var(--sb-text, #ececf3);
         font-weight: 600;
         text-decoration: none;
         text-align: center;
     }
 
     .subclass-button:hover {
-        border-color: #a78bfa;
-        background: #343047;
+        border-color: var(--sb-accent, #a78bfa);
+        background: var(--sb-accent-soft-hover, #343047);
     }
 
     .subclass-button.is-selected {
-        border-color: #c4b5fd;
-        background: #c4b5fd;
-        color: #21163c;
+        border-color: var(--sb-accent, #c4b5fd);
+        background: var(--sb-accent, #c4b5fd);
+        color: var(--sb-on-accent, #21163c);
     }
     .class-section-buttons {
         display: flex;
@@ -206,7 +206,7 @@
     .class-collapsible > summary::after {
         content: "▸";
         flex-shrink: 0;
-        color: #c4b5fd;
+        color: var(--sb-accent-ink, #c4b5fd);
         font-size: 22px;
     }
 
@@ -219,7 +219,7 @@
     }
 
     .class-collapsible > summary:hover h2 {
-        color: #c4b5fd;
+        color: var(--sb-accent-ink, #c4b5fd);
     }
 
     .class-collapsible-content {
@@ -245,8 +245,8 @@
 .description-display-table td {
     min-width: 100px;
     padding: 12px;
-    border: 1px solid #484960;
-    background: #191a25;
+    border: 1px solid var(--sb-border-strong, #484960);
+    background: var(--sb-header, #191a25);
     vertical-align: top;
     white-space: normal;
     overflow-wrap: anywhere;
@@ -296,10 +296,10 @@
     }
 }
 /* Optional features retain a distinct colour for class and subclass alike. */
-.class-feature-links .class-feature-link-optional {background:#403726;color:#edd49b;border-color:#9b8050}
-.class-feature-links .class-feature-link-optional:hover {background:#57472e;color:#fff0c9}
-.class-panel.class-feature-optional {border-color:#9b8050;background:#2c281f}
-.optional-feature-label {display:block;margin-top:8px;color:#edd49b;font-size:13px;font-weight:400}
+.class-feature-links .class-feature-link-optional {background:var(--sb-warning-soft, #403726);color:var(--sb-warning-ink, #edd49b);border-color:var(--sb-warning-border, #9b8050)}
+.class-feature-links .class-feature-link-optional:hover {background:#57472e;color:var(--sb-warning-ink, #fff0c9)}
+.class-panel.class-feature-optional {border-color:var(--sb-warning-border, #9b8050);background:var(--sb-warning-soft, #2c281f)}
+.optional-feature-label {display:block;margin-top:8px;color:var(--sb-warning-ink, #edd49b);font-size:13px;font-weight:400}
 .class-identity {display:flex;flex-direction:column;gap:24px;align-items:flex-start;margin:24px 0}.class-portrait{width:144px;height:144px;object-fit:cover;border-radius:16px;flex:none}
 @media(max-width:600px){.class-identity{align-items:flex-start;flex-direction:column}.class-portrait{width:110px;height:110px}}
 </style>
@@ -314,7 +314,7 @@
             — {{ selected_subclass.name }}
         {% endif %}
     </h1>
-    <p class="class-muted">{% if character_class.created_by_id %}Автор: {{ character_class.created_by }} · {% if character_class.is_public %}Публичный класс{% else %}Приватный класс{% endif %}{% elif character_class.is_official %}Официальный класс{% else %}Неофициальный класс{% endif %}</p></div></div>
+    <p class="class-muted">{% if character_class.created_by_id %}Автор: <a href="{% url 'profile_page' character_class.created_by.user_id %}">{{ character_class.created_by }}</a> · {% if character_class.is_public %}Публичный класс{% else %}Приватный класс{% endif %}{% elif character_class.is_official %}Официальный класс{% else %}Неофициальный класс{% endif %}</p></div></div>
 
     {% if can_edit_class %}
         <a

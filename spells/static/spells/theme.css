@@ -1,0 +1,67 @@
+:root{color-scheme:dark}
+:root[data-theme="light"]{
+    color-scheme:light;
+    --sb-native-scheme:light;
+    --sb-page:#f7f6fb;
+    --sb-surface:#ffffff;
+    --sb-header:#efecf6;
+    --sb-surface-soft:#f0edf7;
+    --sb-text:#282532;
+    --sb-muted:#625d70;
+    --sb-accent:#6b42b5;
+    --sb-accent-hover:#55318f;
+    --sb-accent-ink:#59348f;
+    --sb-on-accent:#ffffff;
+    --sb-accent-soft:#eee7fa;
+    --sb-accent-soft-hover:#e2d7f3;
+    --sb-accent-border:#9d84c7;
+    --sb-border:#d5cfdf;
+    --sb-border-strong:#95899f;
+    --sb-danger-ink:#a12443;
+    --sb-danger-soft:#fff0f3;
+    --sb-danger-soft-hover:#fbdce5;
+    --sb-danger-border:#c18093;
+    --sb-success-ink:#146d62;
+    --sb-success-soft:#e1f3ed;
+    --sb-warning-ink:#826014;
+    --sb-warning-soft:#fff4da;
+    --sb-warning-border:#a98741;
+    --sb-silver-ink:#606275;
+    --sb-copper-ink:#95551c;
+    --sb-electrum-ink:#3f6593;
+    --sb-shadow:rgb(46 31 69 / 14%);
+    --sb-inline-hover:rgb(80 55 110 / 7%);
+}
+.site-header-inner>.site-account{margin-left:0}
+html body .site-header button.theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-left:auto;min-width:44px;min-height:44px;padding:8px 12px;border:1px solid var(--sb-border-strong,#484960);border-radius:10px;background:var(--sb-surface-soft,#252637);color:var(--sb-muted,#b8b9cc);font:inherit;font-size:14px;font-weight:600;line-height:1.4;white-space:nowrap;box-shadow:none}
+html body .site-header button.theme-toggle:hover{background:var(--sb-accent-soft-hover,#343047);color:var(--sb-accent-ink,#ddd6fe);border-color:var(--sb-accent-border,#81719f);box-shadow:none}
+html body .site-header button.theme-toggle[aria-pressed="true"]{background:var(--sb-accent-soft,#302943);color:var(--sb-accent-ink,#ddd6fe);border-color:var(--sb-accent,#c4b5fd)}
+.theme-toggle svg{display:block;width:20px;height:20px;flex:none}
+:root[data-theme="light"] ::placeholder{color:var(--sb-muted);opacity:1}
+:root[data-theme="light"] .site-brand-icon{filter:brightness(.55) saturate(1.2)}
+:root[data-theme="light"] body button.dice-toggle,:root[data-theme="light"] body button.dice-toggle:hover{color:var(--sb-on-accent)}
+@media(max-width:600px){.theme-toggle-text{display:none}html body .site-header button.theme-toggle{padding:8px}}
+@media print{.theme-toggle{display:none!important}}
+:root[data-theme="light"] .ability-icon{filter:brightness(.6) saturate(1.2)}
+:root[data-theme="light"] .hp-icon{filter:brightness(.8)}
+
+/* Короткое движение логотипа; размеры и положение шапки не меняются. */
+@media (prefers-reduced-motion: no-preference) {
+    .site-brand-icon {
+        transform-origin: 50% 85%;
+        animation: spellbook-arrive 650ms ease-out both;
+    }
+    .site-menu > summary:is(:hover, :focus-visible) .site-brand-icon {
+        animation: spellbook-nod 450ms ease-in-out both;
+    }
+    @keyframes spellbook-arrive {
+        0% { opacity: 0; transform: translateY(3px) rotate(-5deg); }
+        65% { opacity: 1; transform: translateY(0) rotate(2deg); }
+        100% { opacity: 1; transform: none; }
+    }
+    @keyframes spellbook-nod {
+        0%, 100% { transform: none; }
+        40% { transform: rotate(-5deg); }
+        75% { transform: rotate(2deg); }
+    }
+}

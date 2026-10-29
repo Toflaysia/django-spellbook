@@ -47,6 +47,7 @@
         root.querySelectorAll('[data-gold-total]').forEach(n=>n.textContent=data.gold_total);
         root.querySelectorAll('[data-coin]').forEach(n=>n.textContent=data.coins[n.dataset.coin]);
     }
+    root.addEventListener('spellbook:rest-updated',event=>paint(event.detail));
     const coinNames={gold:'Золотые',silver:'Серебряные',copper:'Медные',platinum:'Платиновые',electrum:'Электрумовые'};
     const rates={gold:100n,silver:10n,copper:1n,platinum:1000n,electrum:50n};
     function previewConversion(){
@@ -88,6 +89,7 @@
             const result=await response.json();
             if(!response.ok)throw Error(result.error||'Не удалось сохранить.');
             paint(result);status.textContent=result.message;
+            if(result.combat)root.dispatchEvent(new CustomEvent('spellbook:combat-updated',{detail:result.combat}));
             if(action==='equipment'){
                 // Reload only after saving: the server renders tables and spell links safely.
                 location.replace(`${location.pathname}#equipment`);

@@ -1,3 +1,6 @@
+from spells.views.combat import character_combat_change, concentration_spell_search
+from spells.views.rests import character_rest_change
+from spells.views.profiles import profile_page, my_profile_page, profile_edit_page
 from spells.account_forms import EmailAuthenticationForm
 from spells.views.accounts import account_email_page, resend_confirmation, confirm_email, EmailPasswordResetView
 from django.contrib.auth import views as password_views
@@ -59,6 +62,12 @@ from spells.views.catalog import (
 )
 
 urlpatterns = [
+    path('characters/<int:pk>/combat/', character_combat_change, name='character_combat_change'),
+    path('characters/<int:pk>/concentration/spells/', concentration_spell_search, name='concentration_spell_search'),
+    path('characters/<int:pk>/rest/', character_rest_change, name='character_rest_change'),
+    path('users/<int:pk>/', profile_page, name='profile_page'),
+    path('profile/', my_profile_page, name='my_profile_page'),
+    path('profile/edit/', profile_edit_page, name='profile_edit_page'),
     path('account/email/',account_email_page,name='account_email_page'),
     path('account/email/resend/',resend_confirmation,name='resend_confirmation'),
     path('account/email/confirm/<str:token>/',confirm_email,name='confirm_email'),

@@ -1,3 +1,4 @@
+from django.utils.html import strip_tags
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -50,7 +51,7 @@ class PublicSpellTests(TestCase):
         self.assertNotContains(official,self.public.name)
         public=self.client.get(url,{'group':'unofficial','level':'1','school':self.school.pk})
         self.assertContains(public,self.public.name)
-        self.assertContains(public,'Автор: spell-author')
+        self.assertIn('Автор: spell-author',strip_tags(public.content.decode()))
         self.assertNotContains(public,self.official.name)
         self.assertNotContains(public,self.private.name)
         self.assertContains(public,'type="hidden" name="group" value="unofficial"')

@@ -1,0 +1,25 @@
+{% extends 'spells/base.html' %}
+{% load static %}
+{% block title %}{{ profile.nickname|default:account.username }} — профиль — Spellbook{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{% static 'spells/profiles.css' %}?v=20261028-profiles">{% endblock %}
+{% block content %}
+<main class="profile-page">
+    <section class="profile-header">
+        {% if profile.avatar %}<img class="profile-avatar" src="{{ profile.avatar.url }}" alt="Аватар {{ profile.nickname|default:account.username }}">{% else %}<div class="profile-avatar profile-avatar-placeholder" aria-hidden="true">{{ profile.nickname|default:account.username|first|upper }}</div>{% endif %}
+        <div class="profile-heading"><h1>{{ profile.nickname|default:account.username }}</h1><p class="profile-muted">@{{ account.username }}{% if profile.table_role %} · {{ profile.get_table_role_display }}{% endif %}</p>
+            <p class="profile-muted">На сайте с {{ account.date_joined|date:'d.m.Y' }}</p>
+            {% if profile.show_activity %}{% if online %}<span class="profile-status online" title="Активность за последние 5 минут">● В сети</span>{% elif last_seen %}<p class="profile-muted">Не в сети · Последняя активность: {{ last_seen|date:'d.m.Y H:i' }}</p>{% else %}<p class="profile-muted">Нет данных об активности</p>{% endif %}{% else %}<p class="profile-muted">Активность скрыта</p>{% endif %}
+        </div>
+        {% if owner %}<a class="btn btn-secondary profile-edit-link" href="{% url 'profile_edit_page' %}">Редактировать профиль</a>{% endif %}
+    </section>
+    {% if profile.bio %}<section class="profile-about"><h2>О себе</h2><p>{{ profile.bio|linebreaksbr }}</p></section>{% elif owner %}<p class="profile-muted">Расскажи о себе и добавь аватар в настройках профиля.</p>{% endif %}
+    <section class="profile-stats" aria-label="Опубликованные работы"><div><span>Заклинания</span><strong>{{ spell_count }}</strong></div><div><span>Классы</span><strong>{{ class_count }}</strong></div><div><span>Всего публикаций</span><strong>{{ spell_count|add:class_count }}</strong></div></section>
+    <section class="profile-publications"><h2>Опубликованные работы</h2><p class="profile-muted">Здесь показаны доступные всем заклинания и классы автора.</p>
+        <nav class="profile-tabs" aria-label="Работы автора"><a href="?tab=spells"{% if tab == 'spells' %} aria-current="page"{% endif %}>Заклинания · {{ spell_count }}</a><a href="?tab=classes"{% if tab == 'classes' %} aria-current="page"{% endif %}>Классы · {{ class_count }}</a></nav>
+        <div class="profile-work-grid">
+            {% for item in page_obj %}<article class="profile-work"><h3><a href="{% if tab == 'classes' %}{% url 'catalog_detail_page' 'classes' item.pk %}{% else %}{% url 'spell_detail_page' item.pk %}{% endif %}">{{ item.name }}</a></h3><p class="profile-muted">{% if tab == 'classes' %}Авторский класс{% elif item.is_official %}Официальное заклинание{% else %}Авторское заклинание{% endif %}</p></article>{% empty %}<p class="profile-muted">{% if tab == 'classes' %}Пока нет опубликованных классов.{% else %}Пока нет опубликованных заклинаний.{% endif %}</p>{% endfor %}
+        </div>
+        {% if page_obj.has_other_pages %}<nav class="profile-pagination" aria-label="Страницы публикаций">{% if page_obj.has_previous %}<a href="?tab={{ tab }}&page={{ page_obj.previous_page_number }}">← Назад</a>{% endif %}<span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a href="?tab={{ tab }}&page={{ page_obj.next_page_number }}">Далее →</a>{% endif %}</nav>{% endif %}
+    </section>
+</main>
+{% endblock %}

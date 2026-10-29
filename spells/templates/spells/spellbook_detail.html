@@ -18,15 +18,15 @@
     }
 
     .book-muted {
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
     }
 
     .book-panel {
         margin-top: 24px;
         padding: 24px;
-        border: 1px solid #343548;
+        border: 1px solid var(--sb-border, #343548);
         border-radius: 16px;
-        background: #1c1d2a;
+        background: var(--sb-surface, #1c1d2a);
     }
 
     .book-panel h2 {
@@ -42,9 +42,9 @@
 
     .book-slot {
         padding: 12px 16px;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 8px;
-        background: #292a3c;
+        background: var(--sb-surface-soft, #292a3c);
     }
 
     .book-spells {
@@ -62,12 +62,12 @@
     }
 
     .book-spells li + li {
-        border-top: 1px solid #343548;
+        border-top: 1px solid var(--sb-border, #343548);
     }
 
     .book-spell-level {
         flex-shrink: 0;
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         font-size: 14px;
     }
 
@@ -98,17 +98,17 @@
         justify-content: center;
         width: 40px;
         height: 40px;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 8px;
-        background: #302943;
-        color: #c4b5fd;
+        background: var(--sb-accent-soft, #302943);
+        color: var(--sb-accent-ink, #c4b5fd);
         font: inherit;
         font-size: 22px;
         cursor: pointer;
     }
 
     .book-slot-actions button:hover {
-        background: #403557;
+        background: var(--sb-accent-soft-hover, #403557);
     }
 
     .book-slot-actions button:disabled {
@@ -123,7 +123,7 @@
     }
 
     .book-actions .book-delete-link {
-        color: #fda4af;
+        color: var(--sb-danger-ink, #fda4af);
     }
 </style>
 {% endblock %}

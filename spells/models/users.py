@@ -57,6 +57,7 @@ class Player(models.Model):
     avatar = models.ImageField(
         upload_to="player_avatars/",
         null=True,
+        blank=True,
         verbose_name="Аватар",
     )
 
@@ -69,6 +70,10 @@ class Player(models.Model):
         default=now,
         verbose_name="Последний вход",
     )
+
+    table_role = models.CharField(max_length=8, blank=True, choices=[('player','Игрок'),('master','Мастер'),('both','Игрок и мастер')], verbose_name='Роль за столом')
+    show_activity = models.BooleanField(default=True, verbose_name='Показывать мою активность')
+    last_seen_at = models.DateTimeField(null=True, blank=True, verbose_name='Последняя активность')
 
     def __str__(self):
         return self.nickname or self.user.username

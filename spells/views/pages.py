@@ -70,9 +70,10 @@ def character_create_page(request):
         {"form": form},
     )
 @login_required
+@transaction.atomic
 def character_edit_page(request, pk):
     character = get_object_or_404(
-        Person,
+        Person.objects.select_for_update(),
         pk=pk,
         player__user=request.user,
     )
@@ -85,8 +86,15 @@ def character_edit_page(request, pk):
     )
 
     if request.method == "POST" and form.is_valid():
-        form.save()
-        return redirect("character_list_page")
+        character = form.save(commit=False)
+        from spells.combat import end_concentration
+        if character.current_hit_points == 0:
+            end_concentration(character)
+        character.combat_revision += 1
+        character.rest_revision += 1
+        character.save()
+        form.save_m2m()
+        return redirect("character_detail_page", pk=character.pk)
 
     return render(
         request,

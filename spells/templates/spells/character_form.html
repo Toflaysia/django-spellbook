@@ -7,6 +7,7 @@
 {% endblock %}
 
 {% block styles %}
+<link rel="stylesheet" href="{% static 'spells/character_checks.css' %}?v=20261021-editor">
 <style>
     .character-form-main {
         max-width: 1000px;
@@ -26,14 +27,14 @@
 
     .character-form-muted,
     .character-form-help {
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
     }
 
     .character-form-panel {
         padding: 28px;
-        border: 1px solid #343548;
+        border: 1px solid var(--sb-border, #343548);
         border-radius: 16px;
-        background: #1c1d2a;
+        background: var(--sb-surface, #1c1d2a);
     }
 
     .character-form-tabs {
@@ -42,7 +43,7 @@
         gap: 8px;
         margin-bottom: 24px;
         padding-bottom: 20px;
-        border-bottom: 1px solid #343548;
+        border-bottom: 1px solid var(--sb-border, #343548);
     }
 
     .character-form-tab {
@@ -50,19 +51,19 @@
         border: none;
         border-radius: 10px;
         background: transparent;
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         font: inherit;
         font-weight: 600;
         cursor: pointer;
     }
 
     .character-form-tab:hover {
-        background: #292a3c;
+        background: var(--sb-surface-soft, #292a3c);
     }
 
     .character-form-tab[aria-selected="true"] {
-        background: #c4b5fd;
-        color: #21163c;
+        background: var(--sb-accent, #c4b5fd);
+        color: var(--sb-on-accent, #21163c);
     }
 
     .character-form-section[hidden] {
@@ -95,10 +96,10 @@
     .character-form-field textarea {
         width: 100%;
         padding: 12px;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 8px;
-        background: #11121a;
-        color: #f3f4f6;
+        background: var(--sb-page, #11121a);
+        color: var(--sb-text, #f3f4f6);
         font: inherit;
     }
 
@@ -109,24 +110,24 @@
     .character-form-field input[type="checkbox"] {
         width: 20px;
         height: 20px;
-        accent-color: #c4b5fd;
+        accent-color: var(--sb-accent, #c4b5fd);
     }
 
     .character-form-field input[type="range"] {
         padding: 0;
-        accent-color: #c4b5fd;
+        accent-color: var(--sb-accent, #c4b5fd);
     }
 
     .character-form-help,
     .character-form-panel .help {
         margin: 8px 0 0;
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         font-size: 13px;
     }
 
     .character-form-panel .errorlist {
         padding-left: 20px;
-        color: #fca5a5;
+        color: var(--sb-danger-ink, #fca5a5);
     }
 
     .character-form-actions {
@@ -135,7 +136,7 @@
         flex-wrap: wrap;
         gap: 16px;
         padding-top: 24px;
-        border-top: 1px solid #343548;
+        border-top: 1px solid var(--sb-border, #343548);
     }
 
     .portrait-layout {
@@ -150,9 +151,9 @@
         display: grid;
         gap: 24px;
         padding: 24px;
-        border: 1px solid #343548;
+        border: 1px solid var(--sb-border, #343548);
         border-radius: 12px;
-        background: #161722;
+        background: var(--sb-page, #161722);
     }
 
     .portrait-frame {
@@ -161,9 +162,9 @@
         aspect-ratio: 7 / 8;
         margin-top: 20px;
         overflow: hidden;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 12px;
-        background: #11121a;
+        background: var(--sb-page, #11121a);
     }
 
     .portrait-frame img {
@@ -242,6 +243,7 @@
         enctype="multipart/form-data"
     >
         {% csrf_token %}
+        {{ form.checks_present }}
 
         {% if form.non_field_errors %}
             <div role="alert">{{ form.non_field_errors }}</div>
@@ -336,6 +338,26 @@
                             {% endfor %}
                         </div>
                     </div>
+                {% elif group.ability_rows %}
+                    <h2>{{ group.title }}</h2>
+                    <p class="play-muted">Под каждой характеристикой — её спасбросок. Кружок выбирает владение, дополнительный бонус можно раскрыть ниже.</p>
+                    <div class="ability-edit-grid">
+                    {% for ability in group.ability_rows %}
+                        <div class="ability-edit-card" data-ability="{{ ability.field.name }}">
+                            <div class="character-form-field">
+                                <div class="ability-name"><img class="ability-icon" src="{% static 'spells/icons/' %}{{ ability.field.name }}.svg" alt="">{{ ability.field.label_tag }}</div>
+                                {{ ability.field }}{{ ability.field.errors }}
+                            </div>
+                            <div class="ability-edit-save" data-check-kind="saves" data-check-key="{{ ability.save.key }}">
+                                <h3>Спасбросок</h3>
+                                <div class="training-edit-main">{{ ability.save.fields.0 }}{{ ability.save.fields.0.errors }}<output class="check-preview" aria-live="polite"></output></div>
+                                <details class="training-bonus"{% if ability.save.fields.1.errors %} open{% endif %}><summary>Бонус и расчёт</summary><div class="character-form-field">{{ ability.save.fields.1.label_tag }}{{ ability.save.fields.1 }}{{ ability.save.fields.1.errors }}</div><p class="check-formula"></p></details>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    </div>
+                {% elif group.rows %}
+                    {% include "spells/includes/check_group_fields.html" %}
                 {% else %}
                     <h2>{{ group.title }}</h2>
 
@@ -358,6 +380,11 @@
                         {% endfor %}
                     </div>
                 {% endif %}
+                {% for extra in group.subgroups %}
+                    <div class="integrated-check-group" id="section-{{ extra.id }}">
+                        {% include "spells/includes/check_group_fields.html" with group=extra %}
+                    </div>
+                {% endfor %}
             </section>
         {% endfor %}
 
@@ -370,13 +397,15 @@
                 {% endif %}
             </button>
 
-            <a class="btn btn-secondary" href="{% url 'character_list_page' %}">Отмена</a>
+            <a class="btn btn-secondary" href="{% if editing %}{% url 'character_detail_page' form.instance.pk %}{% else %}{% url 'character_list_page' %}{% endif %}">Отмена</a>
         </div>
     </form>
+{{ form.check_data|json_script:"character-check-data" }}
 </main>
 {% endblock %}
 
 {% block scripts %}
+<script src="{% static 'spells/character_checks.js' %}?v=20261021-editor" defer></script>
 <script>
     (() => {
         const form = document.getElementById('character-form');
@@ -435,6 +464,15 @@
             });
         });
 
+        function openRequestedSection() {
+            const requested = document.getElementById(location.hash.slice(1));
+            const section = requested?.closest('.character-form-section');
+            if (!section) return false;
+            openSection(section);
+            return true;
+        }
+        window.addEventListener('hashchange', openRequestedSection);
+
         const sectionWithError = sections.find(
             (section) => section.querySelector('.errorlist')
         );
@@ -442,7 +480,7 @@
         if (sectionWithError) {
             openSection(sectionWithError);
         } else if (tabs.length) {
-            activateTab(tabs[0]);
+            if (!openRequestedSection()) activateTab(tabs[0]);
         }
 
         form.noValidate = true;

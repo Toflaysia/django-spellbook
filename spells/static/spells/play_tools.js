@@ -156,16 +156,33 @@ function initPlayTools() {
     let notices=document.querySelector('.dice-notifications');
     if(!notices){notices=document.createElement('div');notices.className='dice-notifications';notices.setAttribute('aria-live','polite');notices.setAttribute('aria-label','Уведомления о бросках');document.body.append(notices);}
     if(typeof notices.showPopover==='function')notices.setAttribute('popover','manual');
+    function animateDice(){
+        const graphic=document.querySelector('.dice-toggle svg');
+        if(!graphic||typeof graphic.animate!=='function'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+        graphic.getAnimations().forEach(animation=>animation.cancel());
+        graphic.animate([
+            {transform:'rotate(0deg) scale(1)'},
+            {transform:'rotate(-18deg) scale(.9)',offset:.15},
+            {transform:'rotate(165deg) scale(1.08)',offset:.55},
+            {transform:'rotate(360deg) scale(1)'}
+        ],{duration:650,easing:'ease-out'});
+    }
     function showRoll(expression){
         const notice=document.createElement('article');notice.className='dice-notification';
         const title=document.createElement('strong'),details=document.createElement('p');
         let success=true;
-        try{const value=roll(expression);title.textContent=`${expression} = ${value.total}`;details.textContent=value.details;}
+        try{const value=roll(expression);animateDice();title.textContent=`${expression} = ${value.total}`;details.textContent=value.details;}
         catch(error){success=false;title.textContent='Не удалось бросить кубики';details.textContent=error.message;}
         const dismiss=document.createElement('button');dismiss.type='button';dismiss.className='dice-notification-close';dismiss.textContent='×';dismiss.setAttribute('aria-label','Закрыть уведомление о броске');
-        function removeNotice(){notice.remove();if(!notices.children.length)notices.hidePopover?.();}
-        const timeout=setTimeout(removeNotice,15000);
-        dismiss.addEventListener('click',()=>{clearTimeout(timeout);removeNotice();});
+        let fadeTimeout,removeTimeout;
+        function removeNotice(){
+            clearTimeout(fadeTimeout);clearTimeout(removeTimeout);
+            notice.remove();
+            if(!notices.children.length)notices.hidePopover?.();
+        }
+        fadeTimeout=setTimeout(()=>notice.classList.add('is-fading'),11000);
+        removeTimeout=setTimeout(removeNotice,15000);
+        dismiss.addEventListener('click',removeNotice);
         notice.append(title,details,dismiss);
         const dialog=document.querySelector('dialog[open]');
         (notices.hasAttribute('popover')?document.body:(dialog||document.body)).append(notices);notices.append(notice);notices.showPopover?.();
@@ -182,7 +199,7 @@ function initPlayTools() {
     const toggle=widget.querySelector('.dice-toggle'),panel=widget.querySelector('.dice-panel');
     const form=widget.querySelector('form'),input=form.elements.expression,result=widget.querySelector('.dice-result');
     function close(){panel.hidden=true;toggle.setAttribute('aria-expanded','false');toggle.focus();}
-    toggle.addEventListener('click',()=>{panel.hidden=!panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden)input.focus();});
+    toggle.addEventListener('click',()=>{animateDice();panel.hidden=!panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden)input.focus();});
     widget.querySelector('[data-dice-close]').addEventListener('click',close);
     widget.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
     form.addEventListener('submit',e=>{e.preventDefault();showRoll(input.value);});

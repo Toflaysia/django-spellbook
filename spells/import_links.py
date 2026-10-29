@@ -13,6 +13,27 @@ DIE = r'\d{0,3}\s*[dDдДкКkK]\s*\d{1,4}(?:k[hl]\d{1,3})?'
 DICE = re.compile(r'(?<![\w.])(?:'+DIE+r')(?:\s*[+−-]\s*(?:'+DIE+r'|\d{1,7})){0,20}(?!\w|\.\d|\s*[+−-]\s*(?:\d|[dDдДкКkK]))',re.I)
 FOUNDRY_ROLL = re.compile(r'\[\[(?:/(?:r|roll)\s+)?('+DIE+r'(?:\s*[+−-]\s*(?:'+DIE+r'|\d{1,7})){0,20})\]\]',re.I)
 
+# Foundry identifiers are external IDs, never local database primary keys.
+FOUNDRY_REFERENCE = re.compile(r'@(?:Compendium|UUID)\[(?P<target>[^\]\r\n]+)\](?:\{(?P<label>[^{}\r\n]*)\})?')
+INLINE_REFERENCE = re.compile(TOKEN.pattern + '|' + FOUNDRY_REFERENCE.pattern)
+FOUNDRY_KINDS = {
+    'spells': 'spell', 'spell': 'spell',
+    'conditions': 'condition', 'condition': 'condition',
+    'effects': 'effect', 'effect': 'effect',
+    'classes': 'class', 'class': 'class',
+    'traits': 'trait', 'feats': 'trait',
+    'schools': 'school', 'damage-types': 'damage', 'casting-times': 'time',
+}
+
+
+def reference_names(name):
+    """Keep full titles and support the common Russian [English] title format."""
+    result = {name}
+    match = re.fullmatch(r'(.+?)\s*\[([^\[\]]+)\]', name)
+    if match:
+        result.update(part.strip() for part in match.groups() if part.strip())
+    return result
+
 
 def key(value):
     return ' '.join(value.casefold().replace('ё','е').split())
@@ -81,6 +102,7 @@ class ImportLinker:
         self.candidates=defaultdict(set)
         self.exact=defaultdict(set)
         self.warnings=set()
+        self.reference_exact=defaultdict(set)
         groups=[('condition',Effect.objects.filter(category='COND'),'name'),
                 ('effect',Effect.objects.exclude(category='COND'),'name'),
                 ('damage',DamageType.objects.all(),'name'),('school',MagicSchool.objects.all(),'name'),
@@ -92,6 +114,7 @@ class ImportLinker:
                 if not name or len(name)>160:continue
                 item=(kind,pk)
                 self.exact[key(name)].add(item)
+                for title in reference_names(name):self.reference_exact[key(title)].add(item)
                 for alias in aliases(name):self.candidates[key(alias)].add(item)
         patterns=[]
         for name in sorted(self.candidates,key=len,reverse=True):
@@ -123,24 +146,55 @@ class ImportLinker:
         result.append(catalogs(text[last:]))
         return ''.join(result)
 
+    def foundry_reference(self, match):
+        label = match['label']
+        if not label:
+            self.warnings.add('У ссылки Foundry нет названия: внешний идентификатор удалён.')
+            return ''
+        choices = self.reference_exact.get(key(label)) or self.candidates.get(key(label), set())
+        parts = match['target'].casefold().split('.')
+        kind = next((FOUNDRY_KINDS[part] for part in reversed(parts) if part in FOUNDRY_KINDS), None)
+        if kind:
+            choices = {item for item in choices if item[0] == kind}
+        if len(choices) == 1:
+            kind, pk = next(iter(choices))
+            return f'[[{kind}:{pk}|{quote(label,safe="")}]]'
+        self.warnings.add('Ссылка Foundry «'+label+'»: '+('найдено несколько записей' if choices else 'запись не найдена')+'. Оставлен обычный текст.')
+        return label
+
+    def link_foundry(self, text, *, plain_links=False):
+        result = []
+        last = 0
+        for match in INLINE_REFERENCE.finditer(text):
+            between = text[last:match.start()]
+            result.append(self.link_plain(between) if plain_links else between)
+            result.append(self.foundry_reference(match) if match['target'] is not None else match[0])
+            last = match.end()
+        between = text[last:]
+        result.append(self.link_plain(between) if plain_links else between)
+        return ''.join(result)
+
     def link_text(self,text):
         def foundry(match):
             expression=dice_formula(match[1])
             return f'[[dice:{quote(expression,safe="")}|{quote(match[1],safe="")}]]' if expression else match[0]
-        text=FOUNDRY_ROLL.sub(foundry,text)
+        # Protect reference labels and IDs before applying dice detection.
         result=[];last=0
-        for match in TOKEN.finditer(text):
-            result.extend([self.link_plain(text[last:match.start()]),match[0]])
-            last=match.end()
-        result.append(self.link_plain(text[last:]))
-        return ''.join(result)
+        for match in INLINE_REFERENCE.finditer(text):
+            result.append(FOUNDRY_ROLL.sub(foundry,text[last:match.start()]))
+            result.append(match[0]);last=match.end()
+        result.append(FOUNDRY_ROLL.sub(foundry,text[last:]))
+        return self.link_foundry(''.join(result), plain_links=True)
 
-    def description(self,value):
+    def description(self,value,*,references_only=False):
         if len(value)>100000:raise ValueError('Описание длиннее 100 000 символов.')
-        if not value.startswith(DESCRIPTION_PREFIX):return self.link_text(value)
+        transform=self.link_foundry if references_only else self.link_text
+        if not value.startswith(DESCRIPTION_PREFIX):return transform(value)
+        # Preserve descriptions without Foundry markup byte-for-byte during repair.
+        if references_only and not FOUNDRY_REFERENCE.search(value):return value
         blocks=parse_description(value)
         for block in blocks:
-            if block['type'] in ('text','heading','quote'):block['text']=self.link_text(block['text'])
-            elif block['type']=='list':block['items']=[self.link_text(x) for x in block['items']]
-            elif block['type']=='table':block['rows']=[[self.link_text(x) for x in row] for row in block['rows']]
+            if block['type'] in ('text','heading','quote'):block['text']=transform(block['text'])
+            elif block['type']=='list':block['items']=[transform(x) for x in block['items']]
+            elif block['type']=='table':block['rows']=[[transform(x) for x in row] for row in block['rows']]
         return DESCRIPTION_PREFIX+json.dumps(blocks,ensure_ascii=False)

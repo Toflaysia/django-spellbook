@@ -12,8 +12,8 @@
 
     .auth-panel {
         padding: 28px;
-        background: #1c1d2a;
-        border: 1px solid #343548;
+        background: var(--sb-surface, #1c1d2a);
+        border: 1px solid var(--sb-border, #343548);
         border-radius: 16px;
     }
 
@@ -25,7 +25,7 @@
 
     .auth-intro {
         margin: 0 0 24px;
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
     }
 
     .auth-field {
@@ -41,10 +41,10 @@
         width: 100%;
         min-width: 0;
         padding: 12px;
-        border: 1px solid #484960;
+        border: 1px solid var(--sb-border-strong, #484960);
         border-radius: 8px;
-        background: #11121a;
-        color: #f3f4f6;
+        background: var(--sb-page, #11121a);
+        color: var(--sb-text, #f3f4f6);
         font: inherit;
     }
 
@@ -53,25 +53,25 @@
         padding: 12px;
         border: none;
         border-radius: 8px;
-        background: #c4b5fd;
-        color: #21163c;
+        background: var(--sb-accent, #c4b5fd);
+        color: var(--sb-on-accent, #21163c);
         font: inherit;
         font-weight: 600;
         cursor: pointer;
     }
 
     .auth-submit:hover {
-        background: #ddd6fe;
+        background: var(--sb-accent-hover, #ddd6fe);
     }
 
     .auth-errors {
         margin-bottom: 20px;
-        color: #fca5a5;
+        color: var(--sb-danger-ink, #fca5a5);
     }
 
     .auth-panel .errorlist {
         padding-left: 20px;
-        color: #fca5a5;
+        color: var(--sb-danger-ink, #fca5a5);
     }
 
     .auth-registration {
@@ -83,7 +83,7 @@
         align-items: center;
         gap: 12px;
         margin-bottom: 20px;
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         font-size: 13px;
     }
 
@@ -98,22 +98,22 @@
     .auth-register-link {
         display: block;
         padding: 12px 16px;
-        border: 1px solid #8975c8;
+        border: 1px solid var(--sb-accent-border, #8975c8);
         border-radius: 8px;
-        background: #29233e;
-        color: #e9dfff;
+        background: var(--sb-surface-soft, #29233e);
+        color: var(--sb-accent-ink, #e9dfff);
         text-align: center;
         text-decoration: none;
         font-weight: 600;
     }
 
     .auth-register-link:hover {
-        background: #382c53;
+        background: var(--sb-accent-soft, #382c53);
     }
 
     .auth-note {
         margin: 12px 0 0;
-        color: #b8b9cc;
+        color: var(--sb-muted, #b8b9cc);
         text-align: center;
         font-size: 12px;
     }

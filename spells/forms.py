@@ -1,3 +1,4 @@
+from spells.character_check_forms import CharacterChecksFormMixin
 from spells.spell_access import collected_spells
 from spells.class_access import visible_classes
 from spells.models import Subclass
@@ -20,7 +21,7 @@ class PortraitInput(forms.ClearableFileInput):
     template_name = "spells/widgets/portrait_input.html"
 
 
-class CharacterCreateForm(DescriptionFormMixin, forms.ModelForm):
+class CharacterCreateForm(CharacterChecksFormMixin, DescriptionFormMixin, forms.ModelForm):
     class Meta:
         model = Person
         fields = [
@@ -41,6 +42,7 @@ class CharacterCreateForm(DescriptionFormMixin, forms.ModelForm):
             "wisdom",
             "charisma",
             "max_hit_points",
+            "fallback_hit_die",
             "armor_class",
             "speed",
             "spellcasting_ability",
@@ -123,6 +125,7 @@ class CharacterCreateForm(DescriptionFormMixin, forms.ModelForm):
                 "Бой и магия",
                 [
                     "max_hit_points",
+                    "fallback_hit_die",
                     "current_hit_points",
                     "temporary_hit_points",
                     "armor_class",
@@ -132,7 +135,7 @@ class CharacterCreateForm(DescriptionFormMixin, forms.ModelForm):
             ),
         ]
 
-        return [
+        base_groups = [
             {
                 "id": group_id,
                 "title": title,
@@ -144,6 +147,14 @@ class CharacterCreateForm(DescriptionFormMixin, forms.ModelForm):
             }
             for group_id, title, field_names in groups
         ]
+        checks = {group['id']: group for group in self.check_groups}
+        for group in base_groups:
+            if group['id'] == 'abilities':
+                group['ability_rows'] = [{'field':field,'save':checks['saves']['rows'][index]} for index,field in enumerate(group['fields'])]
+            elif group['id'] == 'combat':
+                group['subgroups'] = [checks['speeds']]
+        derived = dict(checks['derived'], subgroups=[checks['passives']])
+        return base_groups + [derived]
 
     def clean_max_hit_points(self):
         value = self.cleaned_data["max_hit_points"]
